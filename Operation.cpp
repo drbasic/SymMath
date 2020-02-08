@@ -197,8 +197,7 @@ bool Operation::SimplifyChain() {
 
   if (op_info_->op == Op::Mult) {
     for (size_t i = 1; i < new_nodes.size(); ++i) {
-      auto un_minus_sub_node =
-          new_nodes[i]->TakeOperands(Op::UnMinus);
+      auto un_minus_sub_node = new_nodes[i]->TakeOperands(Op::UnMinus);
       assert(un_minus_sub_node.empty() || un_minus_sub_node.size() == 1);
       if (!un_minus_sub_node.empty()) {
         is_optimized = true;
@@ -277,7 +276,6 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     *new_node = SymCalc();
     return true;
   }
-
   const_count = 0;
   double accumulator = op_info_->op == Op::Mult ? 1 : 0;
   for (size_t i = 0; i < operands_.size(); ++i) {
@@ -300,19 +298,22 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     *new_node = Const(accumulator);
     return true;
   }
+  if (op_info_->op == Op::Mult && accumulator == -1.0) {
+    operands_[0] = std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
+                                               std::move(operands_[0]));
+    is_optimized = true;
+  }
+
   if (const_count) {
-    if (op_info_->op == Op::Mult && accumulator == -1.0) {
-      operands_[0] = std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
-                                                 std::move(operands_[0]));
-    } else {
-      operands_.reserve(operands_.size() + 1);
-      operands_.push_back(Const(accumulator));
-    }
+    operands_.reserve(operands_.size() + 1);
+    operands_.push_back(Const(accumulator));
+    is_optimized = const_count > 1;
   }
   if (operands_.size() == 1) {
     *new_node = std::move(operands_[0]);
+    return true;
   }
-  return true;
+  return is_optimized;
 }
 
 void Operation::ConvertToPlus() {
