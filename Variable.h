@@ -24,14 +24,17 @@ class Variable : public INode {
   bool NeedBrackets() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
-  INode* GetVisibleNode() override;
-  const INode* GetVisibleNode() const override;
   bool IsUnMinus() const override;
+  Operation* AsUnMinus() override;
+  Constant* AsConstant() override;
+  const Variable* AsVariable() const override;
+  std::vector<std::unique_ptr<INode>> TakeOperands(Op op) override;
+
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
   friend class VariableRef;
-  INode* GetVisibleNodeImpl() const;
+  INode* GetVisibleNode() const;
   std::string PrintRef(bool ommit_front_minus) const;
   std::string name_;
   std::unique_ptr<INode> value_;

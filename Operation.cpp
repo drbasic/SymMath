@@ -171,7 +171,7 @@ bool Operation::IsUnMinus() const {
 bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   if (!AsUnMinus())
     return false;
-  Operation* sub_un_minus = operands_[0]->GetVisibleNode()->AsUnMinus();
+  Operation* sub_un_minus = operands_[0]->AsUnMinus();
   if (!sub_un_minus)
     return false;
 
@@ -189,7 +189,7 @@ bool Operation::SimplifyChain() {
   std::vector<std::unique_ptr<INode>> new_nodes;
 
   for (auto& node : operands_) {
-    auto sub_nodes = node->GetVisibleNode()->TakeOperands(op_info_->op);
+    auto sub_nodes = node->TakeOperands(op_info_->op);
     if (sub_nodes.empty()) {
       new_nodes.push_back(std::move(node));
     } else {
@@ -203,7 +203,7 @@ bool Operation::SimplifyChain() {
   if (op_info_->op == Op::Mult) {
     for (size_t i = 1; i < new_nodes.size(); ++i) {
       auto un_minus_sub_node =
-          new_nodes[i]->GetVisibleNode()->TakeOperands(Op::UnMinus);
+          new_nodes[i]->TakeOperands(Op::UnMinus);
       assert(un_minus_sub_node.empty() || un_minus_sub_node.size() == 1);
       if (!un_minus_sub_node.empty()) {
         is_optimized = true;
@@ -228,7 +228,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    Constant* constant = operands_[i]->GetVisibleNode()->AsConstant();
+    Constant* constant = operands_[i]->AsConstant();
     if (!constant)
       continue;
     ++const_count;
@@ -288,7 +288,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    Constant* constant = operands_[i]->GetVisibleNode()->AsConstant();
+    Constant* constant = operands_[i]->AsConstant();
     if (!constant)
       continue;
     if (op_info_->op != Op::Div) {

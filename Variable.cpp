@@ -103,23 +103,44 @@ std::unique_ptr<INode> Variable::SymCalc() const {
   return value_->SymCalc();
 }
 
-INode* Variable::GetVisibleNode() {
-  return GetVisibleNodeImpl();
-}
-const INode* Variable::GetVisibleNode() const {
-  return GetVisibleNodeImpl();
-}
-
 bool Variable::IsUnMinus() const {
   if (auto vn = GetVisibleNode())
     return vn != this && vn->IsUnMinus();
   return false;
 }
 
-INode* Variable::GetVisibleNodeImpl() const {
+Operation* Variable::AsUnMinus() {
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->AsUnMinus() : nullptr;
+  return nullptr;
+}
+
+Constant* Variable::AsConstant() {
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->AsConstant() : nullptr;
+  return nullptr;
+}
+
+const Variable* Variable::AsVariable() const {
+  return this;
+}
+
+std::vector<std::unique_ptr<INode>> Variable::TakeOperands(Op op) {
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->TakeOperands(op) : std::vector<std::unique_ptr<INode>>{};
+  return {};
+}
+
+INode* Variable::GetVisibleNode() const {
   if (!name_.empty())
     return const_cast<INode*>(static_cast<const INode*>(this));
-  return (value_) ? value_->GetVisibleNode() : nullptr;
+  INode* inner = const_cast<INode*>(value_.get());
+  if (!inner)
+    return nullptr;
+  if (auto* inner_variable = inner->AsVariable()) {
+    return inner_variable->GetVisibleNode();
+  }
+  return inner;
 }
 
 Variable::operator std::unique_ptr<INode>() const {

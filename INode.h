@@ -26,13 +26,10 @@ class INode {
   virtual bool HasFrontMinus() const = 0;
   virtual bool CheckCircular(const INode* other) const = 0;
 
-  virtual INode* GetVisibleNode() { return this; }
-  virtual const INode* GetVisibleNode() const { return this; }
-
   virtual bool IsUnMinus() const = 0;
   virtual Operation* AsUnMinus() { return nullptr; }
   virtual Constant* AsConstant() { return nullptr; }
-
+  virtual const Variable* AsVariable() const { return nullptr; }
   virtual std::vector<std::unique_ptr<INode>> TakeOperands(Op op) { return {}; }
 
   virtual bool SimplifyImpl(std::unique_ptr<INode>* new_node) { return false; }
