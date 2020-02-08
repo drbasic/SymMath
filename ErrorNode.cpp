@@ -14,11 +14,6 @@ int ErrorNode::Priority() const {
   return 0;
 }
 
-bool ErrorNode::NeedBrackets() const
-{
-  return false;
-}
-
 bool ErrorNode::HasFrontMinus() const
 {
   return false;

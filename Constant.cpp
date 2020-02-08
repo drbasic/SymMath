@@ -8,13 +8,8 @@ std::string Constant::PrintImpl(bool ommit_front_minus) const {
   return std::to_string(value_);
 }
 
-int Constant::Priority() const
-{
+int Constant::Priority() const {
   return 100;
-}
-
-bool Constant::NeedBrackets() const {
-  return false;
 }
 
 bool Constant::HasFrontMinus() const {
@@ -25,13 +20,11 @@ bool Constant::CheckCircular(const INode* other) const {
   return false;
 }
 
-bool Constant::IsUnMinus() const
-{
+bool Constant::IsUnMinus() const {
   return false;
 }
 
-Constant* Constant::AsConstant()
-{
+Constant* Constant::AsConstant() {
   return this;
 }
 

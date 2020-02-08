@@ -82,11 +82,6 @@ std::unique_ptr<INode> Operation::SymCalc() const {
   return CalcMinusPlusMultDiv();
 }
 
-bool Operation::NeedBrackets() const {
-  return false;
-  // return !IsUnMinus();// && operands_.size() <= 2;
-}
-
 bool Operation::HasFrontMinus() const {
   if (IsUnMinus()) {
     return !operands_[0]->HasFrontMinus();

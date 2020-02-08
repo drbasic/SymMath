@@ -22,7 +22,6 @@ class INode {
   virtual std::string PrintImpl(bool ommit_front_minus) const = 0;
 
   virtual int Priority() const = 0;
-  virtual bool NeedBrackets() const = 0;
   virtual bool HasFrontMinus() const = 0;
   virtual bool CheckCircular(const INode* other) const = 0;
 

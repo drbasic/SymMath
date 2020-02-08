@@ -30,10 +30,6 @@ int Variable::Priority() const {
   return 100;
 }
 
-bool Variable::NeedBrackets() const {
-  return false;
-}
-
 bool Variable::HasFrontMinus() const {
   if (!name_.empty())
     return false;

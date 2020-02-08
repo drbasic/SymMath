@@ -13,10 +13,6 @@ int VariableRef::Priority() const
   return var_->Priority();
 }
 
-bool VariableRef::NeedBrackets() const {
-  return var_->NeedBrackets();
-}
-
 bool VariableRef::HasFrontMinus() const {
   return var_->HasFrontMinus();
 }
@@ -56,8 +52,4 @@ std::vector<std::unique_ptr<INode>> VariableRef::TakeOperands(Op op)
 
 bool VariableRef::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   return const_cast<Variable*>(var_)->SimplifyImpl(new_node);
-}
-
-std::string VariableRef::GetName() const {
-  return var_->GetName();
 }

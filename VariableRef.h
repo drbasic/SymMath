@@ -10,7 +10,6 @@ class VariableRef : public INode {
 
  protected:
   int Priority() const override;
-  bool NeedBrackets() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
   std::unique_ptr<INode> SymCalc() const override;
@@ -21,7 +20,6 @@ class VariableRef : public INode {
   std::vector<std::unique_ptr<INode>> TakeOperands(Op op) override;
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
-  std::string GetName() const;
  private:
   const Variable* var_ = nullptr;
 };

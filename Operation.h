@@ -19,7 +19,6 @@ class Operation : public INode {
  protected:
   std::string PrintImpl(bool ommit_front_minus) const override;
   int Priority() const override;
-  bool NeedBrackets() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
