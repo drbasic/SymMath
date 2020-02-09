@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <map>
 #include <numeric>
 #include <optional>
 #include <sstream>
@@ -12,14 +13,27 @@
 #include "Operation.h"
 #include "ValueHelpers.h"
 
-namespace {
-
 class INodeAcessor {
  public:
   static bool IsNodesEqual(const INode* lh, const INode* rh) {
     return lh->IsEqual(rh);
   }
+
+  static const Constant* AsConstant(const INode* lh) {
+    return lh->AsConstant();
+  }
+
+  static const Operation* AsOperation(const INode* lh) {
+    return lh->AsOperation();
+  }
+  static Operation* AsOperation(INode* lh) { return lh->AsOperation(); }
+
+  static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op) {
+    return op->operands_;
+  }
 };
+
+namespace {
 
 std::vector<std::unique_ptr<INode>> CalcOperands(
     const std::vector<std::unique_ptr<INode>>& operands) {
@@ -110,7 +124,20 @@ std::vector<std::unique_ptr<INode>*> GetNodesPointers(
   return result;
 }
 
-std::vector<std::unique_ptr<INode>*> TakeTransitiveEqualNodes(
+std::vector<std::unique_ptr<INode>*> GetNodesPointersWithoutConstant(
+    const std::vector<std::unique_ptr<INode>*>& src,
+    double* constant) {
+  std::vector<std::unique_ptr<INode>*> result;
+  for (auto node : src) {
+    if (auto c = INodeAcessor::AsConstant(node->get()))
+      *constant += c->Value();
+    else
+      result.push_back(node);
+  }
+  return result;
+}
+
+bool TakeTransitiveEqualNodesTheSame(
     const std::vector<std::unique_ptr<INode>*>& lhs,
     const std::vector<std::unique_ptr<INode>*>& rhs) {
   std::vector<bool> used;
@@ -127,15 +154,91 @@ std::vector<std::unique_ptr<INode>*> TakeTransitiveEqualNodes(
       break;
     }
     if (!equal_found)
-      return {};
+      return false;
   }
-  std::vector<std::unique_ptr<INode>*> result;
   for (size_t i = 0; i < used.size(); ++i) {
     if (used[i])
-      result.push_back(rhs[i]);
+      rhs[i]->reset();
+  }
+  return true;
+}
+
+double TakeTransitiveEqualNodesCount(
+    const std::vector<std::unique_ptr<INode>*>& lhs,
+    const std::vector<std::unique_ptr<INode>*>& rhs) {
+  std::vector<double> used;
+  used.resize(rhs.size());
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    bool equal_found = false;
+    ConanicMultDiv canonic_lh = Operation::GetConanic(lhs[i]);
+
+    for (size_t j = 0; j < rhs.size(); ++j) {
+      if (used[j])
+        continue;
+      ConanicMultDiv canonic_rh = Operation::GetConanic(rhs[i]);
+      bool eq = IsNodesTransitiveEqual(canonic_lh.nodes, canonic_rh.nodes);
+      if (!eq)
+        continue;
+      used[j] = (canonic_rh.a * canonic_lh.b) / (canonic_lh.a * canonic_rh.b);
+      equal_found = true;
+      break;
+    }
+    if (!equal_found)
+      return 0;
   }
 
-  return result;
+  std::map<double, size_t> popular;
+  for (size_t i = 0; i < used.size(); ++i) {
+    if (used[i] != 0.0)
+      popular[used[i]]++;
+  }
+
+  auto it =
+      std::max_element(std::begin(popular), std::end(popular),
+                       [](auto lh, auto rh) { return lh.second < rh.second; });
+  double counter = it->first;
+  for (size_t i = 0; i < used.size(); ++i) {
+    if (used[i] == 0.0)
+      continue;
+    if (used[i] == counter)
+      rhs[i]->reset();
+    else
+      assert(false);
+  }
+  return counter;
+}
+
+double TakeTransitiveEqualNodes(const std::vector<std::unique_ptr<INode>*>& lhs,
+                                const std::vector<std::unique_ptr<INode>*>& rhs,
+                                double* remains) {
+  if (TakeTransitiveEqualNodesTheSame(lhs, rhs)) {
+    remains = 0;
+    return 1;
+  }
+  std::vector<std::unique_ptr<INode>*> without_consts =
+      GetNodesPointersWithoutConstant(lhs, remains);
+  double count = TakeTransitiveEqualNodesCount(without_consts, rhs);
+  *remains *= -count;
+  return count;
+}
+
+double TryExctractSum(const ConanicMultDiv& canonic,
+                      std::vector<std::unique_ptr<INode>*> free_operands,
+                      double* remains) {
+  if (canonic.nodes.size() != 1)
+    return 0.0;
+  Operation* canonic_op = INodeAcessor::AsOperation(canonic.nodes[0]->get());
+  if (!canonic_op)
+    return 0.0;
+
+  if (INodeAcessor::GetOperands(canonic_op).size() > free_operands.size())
+    return 0.0;
+
+  double count = TakeTransitiveEqualNodes(
+      GetNodesPointers(INodeAcessor::GetOperands(canonic_op),
+                       std::numeric_limits<size_t>::max()),
+      free_operands, remains);
+  return count;
 }
 
 }  // namespace
@@ -273,12 +376,14 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
     CheckIntegrity();
     simplified = true;
   }
+
   while (SimplifySame(new_node)) {
     if (new_node->get())
       return true;
     CheckIntegrity();
     simplified = true;
   }
+
   if (SimplifyConsts(new_node)) {
     if (new_node->get())
       return true;
@@ -404,8 +509,12 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
     }
     if (is_operand_optimized)
       continue;
-    if (TryExctractSum(conanic_1, GetNodesPointers(operands_, i))) {
-      double k = op_info_->trivial_f(conanic_1.a, conanic_1.b) / conanic_1.b;
+    double remains = 0;
+    double count =
+        TryExctractSum(conanic_1, GetNodesPointers(operands_, i), &remains);
+    if (count != 0.0) {
+      double k =
+          op_info_->trivial_f(conanic_1.a, count * conanic_1.b) / conanic_1.b;
       std::vector<std::unique_ptr<INode>> operands;
       operands.push_back(Const(k));
       for (auto& node : conanic_1.nodes) {
@@ -413,6 +522,8 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
       }
       operands_[i] =
           std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+      if (remains)
+        operands_.push_back(Const(remains));
       is_optimized = true;
     }
   }
@@ -422,27 +533,6 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
     *new_node = std::move(operands_[0]);
   }
   return is_optimized;
-}
-
-bool Operation::TryExctractSum(
-    const ConanicMultDiv& canonic,
-    std::vector<std::unique_ptr<INode>*> free_operands) {
-  if (canonic.nodes.size() != 1)
-    return false;
-  Operation* canonic_op = canonic.nodes[0]->get()->AsOperation();
-  if (!canonic_op)
-    return false;
-
-  auto equal_nodes = TakeTransitiveEqualNodes(
-      GetNodesPointers(canonic_op->operands_,
-                       std::numeric_limits<size_t>::max()),
-      free_operands);
-  if (equal_nodes.empty())
-    return false;
-
-  for (auto jj : equal_nodes)
-    jj->reset();
-  return true;
 }
 
 bool Operation::IsAllOperandsConst() const {

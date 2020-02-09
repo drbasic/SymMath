@@ -23,6 +23,8 @@ class Operation : public INode {
   std::unique_ptr<INode> SymCalc() const override;
   std::unique_ptr<INode> Clone() const override;
 
+  static ConanicMultDiv GetConanic(std::unique_ptr<INode>* node);
+
  protected:
   std::string PrintImpl(bool ommit_front_minus) const override;
   int Priority() const override;
@@ -44,6 +46,7 @@ class Operation : public INode {
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
+  friend class INodeAcessor;
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyChain();
@@ -54,13 +57,10 @@ class Operation : public INode {
   void ConvertToPlus();
   void ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
                      std::vector<std::unique_ptr<INode>>* sub_nodes);
-  ConanicMultDiv GetConanic(std::unique_ptr<INode>* node);
+
   ConanicMultDiv GetConanicMult();
   ConanicMultDiv GetConanicDiv();
   ConanicMultDiv GetConanicUnMinus();
-  static bool TryExctractSum(
-      const ConanicMultDiv& canonic,
-      std::vector<std::unique_ptr<INode>*> free_operands);
   void RemoveEmptyOperands();
 
   std::string PrintUnMinus(bool ommit_front_minus) const;

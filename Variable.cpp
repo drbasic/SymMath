@@ -46,7 +46,7 @@ bool Variable::CheckCircular(const INode* other) const {
 bool Variable::IsEqual(const INode* rh) const {
   if (!name_.empty()) {
     const Variable* rh_var = rh->AsVariable();
-    return rh_var && (name_ == rh_var->name_ || value_ == rh_var->value_);
+    return rh_var && (name_ == rh_var->name_);
   }
   if (value_)
     return value_->IsEqual(rh);
