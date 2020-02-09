@@ -47,8 +47,12 @@ class Operation : public INode {
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyChain();
   bool SimplifySame(std::unique_ptr<INode>* new_node);
+  bool IsAllOperandsConst() const;
   bool SimplifyConsts(std::unique_ptr<INode>* new_node);
+  bool NeedConvertToChain() const;
   void ConvertToPlus();
+  void ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
+                     std::vector<std::unique_ptr<INode>>* sub_nodes);
   ConanicMultDiv GetConanic(std::unique_ptr<INode>* node);
   ConanicMultDiv GetConanicMult();
   ConanicMultDiv GetConanicDiv();

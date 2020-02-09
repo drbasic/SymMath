@@ -212,17 +212,12 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
       simplified = true;
       if (new_sub_node)
         node = std::move(new_sub_node);
+      CheckIntegrity();
     }
   }
-  if (SimplifyConsts(new_node)) {
-    // if (new_node->get())
-    return true;
-    CheckIntegrity();
-    simplified = true;
-  }
   if (SimplifyUnMinus(new_node)) {
-    // if (new_node->get())
-    return true;
+    if (new_node->get())
+      return true;
     simplified = true;
   }
   while (SimplifyChain()) {
@@ -230,6 +225,12 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
     simplified = true;
   }
   while (SimplifySame(new_node)) {
+    if (new_node->get())
+      return true;
+    CheckIntegrity();
+    simplified = true;
+  }
+  if (SimplifyConsts(new_node)) {
     if (new_node->get())
       return true;
     CheckIntegrity();
@@ -278,10 +279,12 @@ bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
 }
 
 bool Operation::SimplifyChain() {
-  ConvertToPlus();
-
   if (op_info_->op != Op::Plus && op_info_->op != Op::Mult)
     return false;
+
+  if (NeedConvertToChain()) {
+    ConvertToPlus();
+  }
 
   bool is_optimized = false;
   std::vector<std::unique_ptr<INode>> new_nodes;
@@ -320,10 +323,14 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
     return false;
   bool is_optimized = false;
   for (size_t i = 0; i < operands_.size() - 1; ++i) {
+    if (!operands_[i])
+      continue;
     ConanicMultDiv conanic_1 = GetConanic(&operands_[i]);
     if (conanic_1.nodes.empty())
       continue;
     for (size_t j = i + 1; j < operands_.size(); ++j) {
+      if (!operands_[j])
+        continue;
       ConanicMultDiv conanic_2 = GetConanic(&operands_[j]);
       if (conanic_2.nodes.empty())
         continue;
@@ -341,6 +348,7 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
           std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
       operands_[j].reset();
       is_optimized = true;
+      break;
     }
   }
   if (is_optimized)
@@ -351,7 +359,20 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
   return is_optimized;
 }
 
+bool Operation::IsAllOperandsConst() const {
+  for (const auto& operand : operands_) {
+    Constant* constant = operand->AsConstant();
+    if (!constant)
+      return false;
+  }
+  return true;
+}
+
 bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
+  if (IsAllOperandsConst()) {
+    *new_node = SymCalc();
+    return true;
+  }
   if (op_info_->op != Op::Minus && op_info_->op != Op::Plus &&
       op_info_->op != Op::Mult && op_info_->op != Op::Div)
     return false;
@@ -437,6 +458,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   if (op_info_->op == Op::Mult && accumulator == -1.0) {
     operands_[0] = std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
                                                std::move(operands_[0]));
+    const_count = 0;
     is_optimized = true;
   }
 
@@ -452,13 +474,56 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   return is_optimized;
 }
 
+bool Operation::NeedConvertToChain() const {
+  if (op_info_->op == Op::Minus)
+    return true;
+
+  if (op_info_->op != Op::Plus)
+    return false;
+
+  for (const auto& operand : operands_) {
+    const Operation* as_operation = operand->AsOperation();
+    if (as_operation && (as_operation->op_info_->op == Op::Minus ||
+                         as_operation->op_info_->op == Op::Plus))
+      return true;
+  }
+  return false;
+}
+
 void Operation::ConvertToPlus() {
-  if (op_info_->op != Op::Minus)
-    return;
+  assert(op_info_->op == Op::Minus || op_info_->op == Op::Plus);
+
+  std::vector<std::unique_ptr<INode>> add_nodes;
+  std::vector<std::unique_ptr<INode>> sub_nodes;
+
+  ConvertToPlus(&add_nodes, &sub_nodes);
+  operands_.swap(add_nodes);
+  operands_.reserve(operands_.size() + sub_nodes.size());
+  for (auto& sub_node : sub_nodes) {
+    operands_.push_back(std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
+                                                    std::move(sub_node)));
+  }
   op_info_ = GetOpInfo(Op::Plus);
-  for (size_t i = 1; i < operands_.size(); ++i) {
-    operands_[i] = std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
-                                               std::move(operands_[i]));
+  CheckIntegrity();
+}
+
+void Operation::ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
+                              std::vector<std::unique_ptr<INode>>* sub_nodes) {
+  assert(op_info_->op == Op::Minus || op_info_->op == Op::Plus);
+
+  size_t i = 0;
+  for (auto& operand : operands_) {
+    bool revert_nodes = (op_info_->op == Op::Minus) && (i++ != 0);
+
+    Operation* as_operation = operand->AsOperation();
+    if (as_operation && (as_operation->op_info_->op == Op::Minus ||
+                         as_operation->op_info_->op == Op::Plus)) {
+      as_operation->ConvertToPlus(revert_nodes ? add_nodes : sub_nodes,
+                                  revert_nodes ? sub_nodes : add_nodes);
+      operand.reset();
+    } else {
+      (revert_nodes ? add_nodes : sub_nodes)->push_back(std::move(operand));
+    }
   }
 }
 
@@ -502,11 +567,21 @@ ConanicMultDiv Operation::GetConanicMult() {
 }
 
 ConanicMultDiv Operation::GetConanicDiv() {
-  return ConanicMultDiv();
+  assert(op_info_->op == Op::Div);
+  ConanicMultDiv result;
+  Constant* rh = operands_[1]->AsConstant();
+  if (rh) {
+    result.b = rh->Value();
+    result.nodes.push_back(&operands_[0]);
+  }
+  return result;
 }
 
 ConanicMultDiv Operation::GetConanicUnMinus() {
-  return ConanicMultDiv();
+  assert(op_info_->op == Op::UnMinus);
+  ConanicMultDiv result = GetConanic(&operands_[0]);
+  result.a *= -1;
+  return result;
 }
 
 void Operation::RemoveEmptyOperands() {
@@ -524,12 +599,12 @@ std::string Operation::PrintMinusPlusMultDiv() const {
   int i = 0;
   std::stringstream ss;
   // if (operands_.size() > 2)
-  //  ss << "[";
+  //ss << "[";
   for (const auto& operand : operands_) {
     ss << PrintOperand(operand.get(), i++ != 0);
   }
   // if (operands_.size() > 2)
-  //  ss << "]";
+  //ss << "]";
   return ss.str();
 }
 
