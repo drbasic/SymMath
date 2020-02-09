@@ -162,6 +162,41 @@ bool TakeTransitiveEqualNodesTheSame(
   }
   return true;
 }
+std::unique_ptr<INode> MakeMult(double dividend,
+                                double divider,
+                                std::vector<std::unique_ptr<INode>*> nodes) {
+  if (dividend == divider && nodes.size() == 1) {
+    return std::move(*nodes[0]);
+  }
+  if (dividend == divider) {
+    std::vector<std::unique_ptr<INode>> operands;
+    for (auto& node : nodes) {
+      operands.push_back(std::move(*node));
+    }
+    return std::make_unique<Operation>(GetOpInfo(Op::Mult),
+                                       std::move(operands));
+  }
+
+  std::unique_ptr<INode> result;
+  if (dividend != 1.0 || nodes.size() > 1) {
+    std::vector<std::unique_ptr<INode>> operands;
+    operands.reserve(nodes.size() + (dividend != 1.0 ? 1 : 0));
+    if (dividend != 1.0)
+      operands.push_back(Const(dividend));
+    for (auto& node : nodes) {
+      operands.push_back(std::move(*node));
+    }
+    result =
+        std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+  } else {
+    result = std::move(*nodes[0]);
+  }
+  if (divider == 1.0)
+    return result;
+  result = std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(result),
+                                       Const(divider));
+  return result;
+}
 
 double TakeTransitiveEqualNodesCount(
     const std::vector<std::unique_ptr<INode>*>& lhs,
@@ -175,7 +210,7 @@ double TakeTransitiveEqualNodesCount(
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      ConanicMultDiv canonic_rh = Operation::GetConanic(rhs[i]);
+      ConanicMultDiv canonic_rh = Operation::GetConanic(rhs[j]);
       bool eq = IsNodesTransitiveEqual(canonic_lh.nodes, canonic_rh.nodes);
       if (!eq)
         continue;
@@ -203,8 +238,10 @@ double TakeTransitiveEqualNodesCount(
     if (used[i] == counter) {
       rhs[i]->reset();
     } else {
-      *rhs[i] = std::make_unique<Operation>(
-          GetOpInfo(Op::Mult), Const(used[i] - counter), std::move(*rhs[i]));
+      ConanicMultDiv canonic_rh = Operation::GetConanic(rhs[i]);
+      double dividend = (canonic_rh.a - counter) * canonic_rh.b;
+      double divider = canonic_rh.a;
+      *rhs[i] = MakeMult(dividend, divider, {rhs[i]});
     }
   }
   return counter;
@@ -494,16 +531,10 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
         continue;
       if (!IsNodesTransitiveEqual(conanic_1.nodes, conanic_2.nodes))
         continue;
-      double k = op_info_->trivial_f(conanic_1.a * conanic_2.b,
-                                     conanic_2.a * conanic_1.b) /
-                 (conanic_1.b * conanic_2.b);
-      std::vector<std::unique_ptr<INode>> operands;
-      operands.push_back(Const(k));
-      for (auto& node : conanic_1.nodes) {
-        operands.push_back(std::move(*node));
-      }
-      operands_[i] =
-          std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+      double dividend = op_info_->trivial_f(conanic_1.a * conanic_2.b,
+                                            conanic_2.a * conanic_1.b);
+      double divider = (conanic_1.b * conanic_2.b);
+      operands_[i] = MakeMult(dividend, divider, conanic_1.nodes);
       operands_[j].reset();
       is_optimized = true;
       is_operand_optimized = true;
