@@ -12,13 +12,13 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable x2 =2 * (2 * a + 3 * b + 1);
+  Variable x2 = (a + 2 * b + 3 *c + 4) / 5;
   // Variable x22 = x / 2;
   // y = (x + 1) - (x + 1) + (1 + x) + x2 + 3 * x2;
   // y = 4 * x2 - 3 * x2 + (3 + x);
   // y =  x2 + (x + 1);
   // y = pi / Const(3);
-  y = x2 + 4*a + 6*b + 5;
+  y = x2 + a + b + c + 5;
 
   std::cout << y.Print() << "\n";
   y.Simplify();

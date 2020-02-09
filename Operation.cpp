@@ -200,10 +200,12 @@ double TakeTransitiveEqualNodesCount(
   for (size_t i = 0; i < used.size(); ++i) {
     if (used[i] == 0.0)
       continue;
-    if (used[i] == counter)
+    if (used[i] == counter) {
       rhs[i]->reset();
-    else
-      assert(false);
+    } else {
+      *rhs[i] = std::make_unique<Operation>(
+          GetOpInfo(Op::Mult), Const(used[i] - counter), std::move(*rhs[i]));
+    }
   }
   return counter;
 }
