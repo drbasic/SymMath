@@ -39,3 +39,8 @@ const Constant* Constant::AsConstant() const {
 std::unique_ptr<INode> Constant::SymCalc() const {
   return std::make_unique<Constant>(value_);
 }
+
+std::unique_ptr<INode> Constant::Clone() const
+{
+  return std::make_unique<Constant>(value_);
+}

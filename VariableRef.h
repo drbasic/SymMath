@@ -6,15 +6,18 @@ class VariableRef : public INode {
  public:
   explicit VariableRef(const Variable* var);
 
-  std::string PrintImpl(bool ommit_front_minus) const override;
+  std::unique_ptr<INode> SymCalc() const override;
+  bool IsEqual(const INode* rh) const override;
+  std::unique_ptr<INode> Clone() const override;
 
  protected:
+  std::string PrintImpl(bool ommit_front_minus) const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
-  std::unique_ptr<INode> SymCalc() const override;
+
   bool IsUnMinus() const override;
-  bool IsEqual(const INode* rh) const override;
+
   Operation* AsUnMinus() override;
   Constant* AsConstant() override;
   const Constant* AsConstant() const override;

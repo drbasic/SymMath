@@ -6,6 +6,11 @@ std::unique_ptr<INode> ErrorNode::SymCalc() const {
   return std::make_unique<ErrorNode>(error_);
 }
 
+std::unique_ptr<INode> ErrorNode::Clone() const
+{
+  return std::make_unique<ErrorNode>(error_);
+}
+
 std::string ErrorNode::PrintImpl(bool ommit_front_minus) const {
   return error_;
 }

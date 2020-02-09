@@ -1,5 +1,6 @@
 #include "Variable.h"
 
+#include <cassert>
 #include <sstream>
 
 #include "ErrorNode.h"
@@ -109,6 +110,11 @@ std::unique_ptr<INode> Variable::SymCalc() const {
   return value_->SymCalc();
 }
 
+std::unique_ptr<INode> Variable::Clone() const {
+  assert(false);
+  return std::unique_ptr<INode>();
+}
+
 bool Variable::IsUnMinus() const {
   if (auto vn = GetVisibleNode())
     return vn != this && vn->IsUnMinus();
@@ -127,15 +133,13 @@ Constant* Variable::AsConstant() {
   return nullptr;
 }
 
-const Constant* Variable::AsConstant() const
-{
+const Constant* Variable::AsConstant() const {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsConstant() : nullptr;
   return nullptr;
 }
 
-const ErrorNode* Variable::AsError() const
-{
+const ErrorNode* Variable::AsError() const {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsError() : nullptr;
   return nullptr;
@@ -145,15 +149,13 @@ const Variable* Variable::AsVariable() const {
   return this;
 }
 
-Operation* Variable::AsOperation()
-{
+Operation* Variable::AsOperation() {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsOperation() : nullptr;
   return nullptr;
 }
 
-const Operation* Variable::AsOperation() const
-{
+const Operation* Variable::AsOperation() const {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsOperation() : nullptr;
   return nullptr;
@@ -179,5 +181,9 @@ INode* Variable::GetVisibleNode() const {
 }
 
 Variable::operator std::unique_ptr<INode>() const {
-  return std::make_unique<VariableRef>(this);
+  if (!name_.empty())
+    return std::make_unique<VariableRef>(this);
+  if (!value_)
+    return std::make_unique<ErrorNode>("bind to empty unnamed var");
+  return value_->Clone();
 }

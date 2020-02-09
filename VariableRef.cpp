@@ -32,6 +32,11 @@ bool VariableRef::IsEqual(const INode* rh) const {
   return var_->IsEqual(rh);
 }
 
+std::unique_ptr<INode> VariableRef::Clone() const
+{
+  return std::make_unique<VariableRef>(var_);
+}
+
 Operation* VariableRef::AsUnMinus() {
   return const_cast<Variable*>(var_)->AsUnMinus();
 }

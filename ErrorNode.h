@@ -6,6 +6,7 @@ class ErrorNode : public INode {
   ErrorNode(std::string error);
 
   std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> Clone() const override;
 
  protected:
   std::string PrintImpl(bool ommit_front_minus) const override;
@@ -19,4 +20,3 @@ class ErrorNode : public INode {
   std::string error_;
   std::unique_ptr<INode> value_;
 };
-

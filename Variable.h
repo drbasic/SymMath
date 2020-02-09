@@ -9,6 +9,7 @@ class Variable : public INode {
   Variable(const Variable& var);
 
   std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> Clone() const override;
 
   bool Simplify();
 

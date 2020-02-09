@@ -16,6 +16,7 @@ class INode {
   virtual std::string Print() const;
   virtual std::unique_ptr<INode> SymCalc() const = 0;
   virtual bool IsEqual(const INode* rh) const = 0;
+  virtual std::unique_ptr<INode> Clone() const = 0;
 
  protected:
   friend class Constant;

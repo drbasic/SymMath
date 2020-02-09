@@ -141,6 +141,14 @@ std::unique_ptr<INode> Operation::SymCalc() const {
   return CalcMinusPlusMultDiv();
 }
 
+std::unique_ptr<INode> Operation::Clone() const {
+  std::vector<std::unique_ptr<INode>> new_nodes;
+  new_nodes.reserve(operands_.size());
+  for (const auto& op : operands_)
+    new_nodes.push_back(op->Clone());
+  return std::make_unique<Operation>(op_info_, std::move(new_nodes));
+}
+
 bool Operation::HasFrontMinus() const {
   if (IsUnMinus()) {
     return !operands_[0]->HasFrontMinus();
@@ -518,11 +526,11 @@ void Operation::ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
     Operation* as_operation = operand->AsOperation();
     if (as_operation && (as_operation->op_info_->op == Op::Minus ||
                          as_operation->op_info_->op == Op::Plus)) {
-      as_operation->ConvertToPlus(revert_nodes ? add_nodes : sub_nodes,
-                                  revert_nodes ? sub_nodes : add_nodes);
+      as_operation->ConvertToPlus(revert_nodes ? sub_nodes : add_nodes,
+                                  revert_nodes ? add_nodes : sub_nodes);
       operand.reset();
     } else {
-      (revert_nodes ? add_nodes : sub_nodes)->push_back(std::move(operand));
+      (revert_nodes ? sub_nodes : add_nodes)->push_back(std::move(operand));
     }
   }
 }
@@ -599,12 +607,12 @@ std::string Operation::PrintMinusPlusMultDiv() const {
   int i = 0;
   std::stringstream ss;
   // if (operands_.size() > 2)
-  //ss << "[";
+  // ss << "[";
   for (const auto& operand : operands_) {
     ss << PrintOperand(operand.get(), i++ != 0);
   }
   // if (operands_.size() > 2)
-  //ss << "]";
+  // ss << "]";
   return ss.str();
 }
 

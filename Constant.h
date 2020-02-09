@@ -10,6 +10,7 @@ class Constant : public INode {
   Constant(double val);
 
   std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> Clone() const override;
 
   double Value() const { return value_; }
 

@@ -21,6 +21,7 @@ class Operation : public INode {
             std::vector<std::unique_ptr<INode>> operands);
 
   std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> Clone() const override;
 
  protected:
   std::string PrintImpl(bool ommit_front_minus) const override;
