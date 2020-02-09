@@ -58,6 +58,9 @@ class Operation : public INode {
   ConanicMultDiv GetConanicMult();
   ConanicMultDiv GetConanicDiv();
   ConanicMultDiv GetConanicUnMinus();
+  static bool TryExctractSum(
+      const ConanicMultDiv& canonic,
+      std::vector<std::unique_ptr<INode>*> free_operands);
   void RemoveEmptyOperands();
 
   std::string PrintUnMinus(bool ommit_front_minus) const;

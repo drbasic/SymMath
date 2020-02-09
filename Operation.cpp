@@ -97,6 +97,47 @@ bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
   return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
 }
 
+std::vector<std::unique_ptr<INode>*> GetNodesPointers(
+    std::vector<std::unique_ptr<INode>>& nodes,
+    size_t skip) {
+  std::vector<std::unique_ptr<INode>*> result;
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    if (i == skip)
+      continue;
+    if (nodes[i].get())
+      result.push_back(&nodes[i]);
+  }
+  return result;
+}
+
+std::vector<std::unique_ptr<INode>*> TakeTransitiveEqualNodes(
+    const std::vector<std::unique_ptr<INode>*>& lhs,
+    const std::vector<std::unique_ptr<INode>*>& rhs) {
+  std::vector<bool> used;
+  used.resize(rhs.size());
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    bool equal_found = false;
+    for (size_t j = 0; j < rhs.size(); ++j) {
+      if (used[j])
+        continue;
+      if (!lhs[i]->get()->IsEqual(rhs[i]->get()))
+        continue;
+      used[j] = true;
+      equal_found = true;
+      break;
+    }
+    if (!equal_found)
+      return {};
+  }
+  std::vector<std::unique_ptr<INode>*> result;
+  for (size_t i = 0; i < used.size(); ++i) {
+    if (used[i])
+      result.push_back(rhs[i]);
+  }
+
+  return result;
+}
+
 }  // namespace
 
 Operation::Operation(const OpInfo* op_info, std::unique_ptr<INode> lh)
@@ -330,12 +371,13 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
   if (op_info_->op != Op::Plus)
     return false;
   bool is_optimized = false;
-  for (size_t i = 0; i < operands_.size() - 1; ++i) {
+  for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
     ConanicMultDiv conanic_1 = GetConanic(&operands_[i]);
     if (conanic_1.nodes.empty())
       continue;
+    bool is_operand_optimized = false;
     for (size_t j = i + 1; j < operands_.size(); ++j) {
       if (!operands_[j])
         continue;
@@ -356,7 +398,21 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
           std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
       operands_[j].reset();
       is_optimized = true;
+      is_operand_optimized = true;
       break;
+    }
+    if (is_operand_optimized)
+      continue;
+    if (TryExctractSum(conanic_1, GetNodesPointers(operands_, i))) {
+      double k = (conanic_1.a + conanic_1.b) / conanic_1.b;
+      std::vector<std::unique_ptr<INode>> operands;
+      operands.push_back(Const(k));
+      for (auto& node : conanic_1.nodes) {
+        operands.push_back(std::move(*node));
+      }
+      operands_[i] =
+          std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+      is_optimized = true;
     }
   }
   if (is_optimized)
@@ -365,6 +421,27 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
     *new_node = std::move(operands_[0]);
   }
   return is_optimized;
+}
+
+bool Operation::TryExctractSum(
+    const ConanicMultDiv& canonic,
+    std::vector<std::unique_ptr<INode>*> free_operands) {
+  if (canonic.nodes.size() != 1)
+    return false;
+  Operation* canonic_op = canonic.nodes[0]->get()->AsOperation();
+  if (!canonic_op)
+    return false;
+
+  auto equal_nodes = TakeTransitiveEqualNodes(
+      GetNodesPointers(canonic_op->operands_,
+                       std::numeric_limits<size_t>::max()),
+      free_operands);
+  if (equal_nodes.empty())
+    return false;
+
+  for (auto jj : equal_nodes)
+    jj->reset();
+  return true;
 }
 
 bool Operation::IsAllOperandsConst() const {
