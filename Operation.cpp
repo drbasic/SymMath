@@ -205,12 +205,12 @@ double TakeTransitiveEqualNodesCount(
   used.resize(rhs.size());
   for (size_t i = 0; i < lhs.size(); ++i) {
     bool equal_found = false;
-    ConanicMultDiv canonic_lh = Operation::GetConanic(lhs[i]);
+    CanonicMultDiv canonic_lh = Operation::GetCanonic(lhs[i]);
 
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      ConanicMultDiv canonic_rh = Operation::GetConanic(rhs[j]);
+      CanonicMultDiv canonic_rh = Operation::GetCanonic(rhs[j]);
       bool eq = IsNodesTransitiveEqual(canonic_lh.nodes, canonic_rh.nodes);
       if (!eq)
         continue;
@@ -238,7 +238,7 @@ double TakeTransitiveEqualNodesCount(
     if (used[i] == counter) {
       rhs[i]->reset();
     } else {
-      ConanicMultDiv canonic_rh = Operation::GetConanic(rhs[i]);
+      CanonicMultDiv canonic_rh = Operation::GetCanonic(rhs[i]);
       double dividend = (canonic_rh.a - counter) * canonic_rh.b;
       double divider = canonic_rh.a;
       *rhs[i] = MakeMult(dividend, divider, {rhs[i]});
@@ -261,7 +261,7 @@ double TakeTransitiveEqualNodes(const std::vector<std::unique_ptr<INode>*>& lhs,
   return count;
 }
 
-double TryExctractSum(const ConanicMultDiv& canonic,
+double TryExctractSum(const CanonicMultDiv& canonic,
                       std::vector<std::unique_ptr<INode>*> free_operands,
                       double* remains) {
   if (canonic.nodes.size() != 1)
@@ -519,14 +519,14 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    ConanicMultDiv conanic_1 = GetConanic(&operands_[i]);
+    CanonicMultDiv conanic_1 = GetCanonic(&operands_[i]);
     if (conanic_1.nodes.empty())
       continue;
     bool is_operand_optimized = false;
     for (size_t j = i + 1; j < operands_.size(); ++j) {
       if (!operands_[j])
         continue;
-      ConanicMultDiv conanic_2 = GetConanic(&operands_[j]);
+      CanonicMultDiv conanic_2 = GetCanonic(&operands_[j]);
       if (conanic_2.nodes.empty())
         continue;
       if (!IsNodesTransitiveEqual(conanic_1.nodes, conanic_2.nodes))
@@ -738,8 +738,8 @@ void Operation::ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
   }
 }
 
-ConanicMultDiv Operation::GetConanic(std::unique_ptr<INode>* node) {
-  ConanicMultDiv result{};
+CanonicMultDiv Operation::GetCanonic(std::unique_ptr<INode>* node) {
+  CanonicMultDiv result{};
   if (!node || !node->get())
     return result;
 
@@ -752,21 +752,21 @@ ConanicMultDiv Operation::GetConanic(std::unique_ptr<INode>* node) {
   }
 
   if (oper->op_info_->op == Op::Mult) {
-    return oper->GetConanicMult();
+    return oper->GetCanonicMult();
   }
   if (oper->op_info_->op == Op::Div) {
-    return oper->GetConanicDiv();
+    return oper->GetCanonicDiv();
   }
   if (oper->op_info_->op == Op::UnMinus) {
-    return oper->GetConanicUnMinus();
+    return oper->GetCanonicUnMinus();
   }
   assert(false);
   return result;
 }
 
-ConanicMultDiv Operation::GetConanicMult() {
+CanonicMultDiv Operation::GetCanonicMult() {
   assert(op_info_->op == Op::Mult);
-  ConanicMultDiv result;
+  CanonicMultDiv result;
   for (auto& op : operands_) {
     Constant* constant = op->AsConstant();
     if (constant)
@@ -777,9 +777,9 @@ ConanicMultDiv Operation::GetConanicMult() {
   return result;
 }
 
-ConanicMultDiv Operation::GetConanicDiv() {
+CanonicMultDiv Operation::GetCanonicDiv() {
   assert(op_info_->op == Op::Div);
-  ConanicMultDiv result;
+  CanonicMultDiv result;
   Constant* rh = operands_[1]->AsConstant();
   if (rh) {
     result.b = rh->Value();
@@ -788,9 +788,9 @@ ConanicMultDiv Operation::GetConanicDiv() {
   return result;
 }
 
-ConanicMultDiv Operation::GetConanicUnMinus() {
+CanonicMultDiv Operation::GetCanonicUnMinus() {
   assert(op_info_->op == Op::UnMinus);
-  ConanicMultDiv result = GetConanic(&operands_[0]);
+  CanonicMultDiv result = GetCanonic(&operands_[0]);
   result.a *= -1;
   return result;
 }
@@ -810,12 +810,12 @@ std::string Operation::PrintMinusPlusMultDiv() const {
   int i = 0;
   std::stringstream ss;
   // if (operands_.size() > 2)
-  ss << "[";
+  //ss << "[";
   for (const auto& operand : operands_) {
     ss << PrintOperand(operand.get(), i++ != 0);
   }
   // if (operands_.size() > 2)
-  ss << "]";
+  //ss << "]";
   return ss.str();
 }
 

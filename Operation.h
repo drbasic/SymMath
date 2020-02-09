@@ -5,7 +5,7 @@
 
 #include "INode.h"
 
-struct ConanicMultDiv {
+struct CanonicMultDiv {
   double a = 1;
   double b = 1;
   std::vector<std::unique_ptr<INode>*> nodes;
@@ -23,7 +23,7 @@ class Operation : public INode {
   std::unique_ptr<INode> SymCalc() const override;
   std::unique_ptr<INode> Clone() const override;
 
-  static ConanicMultDiv GetConanic(std::unique_ptr<INode>* node);
+  static CanonicMultDiv GetCanonic(std::unique_ptr<INode>* node);
 
  protected:
   std::string PrintImpl(bool ommit_front_minus) const override;
@@ -58,9 +58,9 @@ class Operation : public INode {
   void ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
                      std::vector<std::unique_ptr<INode>>* sub_nodes);
 
-  ConanicMultDiv GetConanicMult();
-  ConanicMultDiv GetConanicDiv();
-  ConanicMultDiv GetConanicUnMinus();
+  CanonicMultDiv GetCanonicMult();
+  CanonicMultDiv GetCanonicDiv();
+  CanonicMultDiv GetCanonicUnMinus();
   void RemoveEmptyOperands();
 
   std::string PrintUnMinus(bool ommit_front_minus) const;

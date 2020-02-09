@@ -1,11 +1,14 @@
 #include "Constant.h"
 
+#include <sstream>
+
 Constant::Constant(double val) : value_(val) {}
 
 std::string Constant::PrintImpl(bool ommit_front_minus) const {
-  if (ommit_front_minus && HasFrontMinus())
-    return std::to_string(-value_);
-  return std::to_string(value_);
+  std::stringstream ss;
+  double for_print = (ommit_front_minus && HasFrontMinus()) ? -value_ : value_;
+  ss << for_print;
+  return ss.str();
 }
 
 int Constant::Priority() const {
@@ -40,7 +43,6 @@ std::unique_ptr<INode> Constant::SymCalc() const {
   return std::make_unique<Constant>(value_);
 }
 
-std::unique_ptr<INode> Constant::Clone() const
-{
+std::unique_ptr<INode> Constant::Clone() const {
   return std::make_unique<Constant>(value_);
 }
