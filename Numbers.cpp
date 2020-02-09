@@ -18,7 +18,7 @@ int main() {
   // y = 4 * x2 - 3 * x2 + (3 + x);
   // y =  x2 + (x + 1);
   // y = pi / Const(3);
-  y = x2 * 2 + 3 * x2 + 10 * a + 4 * b + 6 * c + 6;
+  y = x2 * 2 + 3 * x2 + 10 * a + 4 * b + 6 * c + 6 * pi;
 
   std::cout << y.Print() << "\n";
   y.Simplify();

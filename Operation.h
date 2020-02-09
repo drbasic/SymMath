@@ -61,6 +61,8 @@ class Operation : public INode {
   CanonicMultDiv GetCanonicMult();
   CanonicMultDiv GetCanonicDiv();
   CanonicMultDiv GetCanonicUnMinus();
+  bool ReduceFor(double val);
+
   void RemoveEmptyOperands();
 
   std::string PrintUnMinus(bool ommit_front_minus) const;

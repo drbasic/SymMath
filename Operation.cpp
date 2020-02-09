@@ -28,6 +28,14 @@ class INodeAcessor {
   }
   static Operation* AsOperation(INode* lh) { return lh->AsOperation(); }
 
+  static Operation* AsMult(INode* lh) {
+    auto result = lh->AsOperation();
+    if (result && result->op_info_->op == Op::Mult) {
+      return result;
+    }
+    return nullptr;
+  }
+
   static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op) {
     return op->operands_;
   }
@@ -633,6 +641,15 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
       *new_node = std::move(operands_[0]);
       return true;
     }
+    // x * 34 / 17
+    if (i == 1 && op_info_->op == Op::Div) {
+      if (auto* mult = INodeAcessor::AsMult(operands_[0].get())) {
+        if (mult->ReduceFor(constant->Value())) {
+          *new_node = std::move(operands_[0]);
+          return true;
+        }
+      }
+    }
     // x / 0
     if (constant->Value() == 1.0 && i == 1 && op_info_->op == Op::Div) {
       *new_node = Const(std::numeric_limits<double>::infinity());
@@ -795,6 +812,24 @@ CanonicMultDiv Operation::GetCanonicUnMinus() {
   return result;
 }
 
+bool Operation::ReduceFor(double val) {
+  assert(op_info_->op == Op::Mult);
+  assert(val != 0.0);
+
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    Constant* constant = operands_[i]->AsConstant();
+    if (!constant)
+      continue;
+    double d = constant->Value() / val;
+    double intpart;
+    if (modf(d, &intpart) != 0.0)
+      continue;
+    operands_[i] = Const(d);
+    return true;
+  }
+  return false;
+}
+
 void Operation::RemoveEmptyOperands() {
   operands_.erase(
       std::remove_if(std::begin(operands_), std::end(operands_),
@@ -810,12 +845,12 @@ std::string Operation::PrintMinusPlusMultDiv() const {
   int i = 0;
   std::stringstream ss;
   // if (operands_.size() > 2)
-  //ss << "[";
+  // ss << "[";
   for (const auto& operand : operands_) {
     ss << PrintOperand(operand.get(), i++ != 0);
   }
   // if (operands_.size() > 2)
-  //ss << "]";
+  // ss << "]";
   return ss.str();
 }
 
