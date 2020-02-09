@@ -18,8 +18,10 @@ class Constant : public INode {
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
+  bool IsEqual(const INode* rh) const override;
   bool IsUnMinus() const override;
   Constant* AsConstant() override;
+  const Constant* AsConstant() const override;
 
  private:
   double value_ = 0;

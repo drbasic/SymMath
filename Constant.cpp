@@ -20,11 +20,19 @@ bool Constant::CheckCircular(const INode* other) const {
   return false;
 }
 
+bool Constant::IsEqual(const INode* rh) const {
+  const Constant* rh_const = rh->AsConstant();
+  return rh_const && (Value() == rh_const->Value());
+}
+
 bool Constant::IsUnMinus() const {
   return false;
 }
 
 Constant* Constant::AsConstant() {
+  return this;
+}
+const Constant* Constant::AsConstant() const {
   return this;
 }
 

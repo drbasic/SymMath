@@ -5,6 +5,12 @@
 
 #include "INode.h"
 
+struct ConanicMultDiv {
+  double a = 1;
+  double b = 1;
+  std::vector<std::unique_ptr<INode>*> nodes;
+};
+
 class Operation : public INode {
  public:
   Operation(const OpInfo* op_info, std::unique_ptr<INode> lh);
@@ -21,17 +27,33 @@ class Operation : public INode {
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
-  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+  bool IsEqual(const INode* rh) const override;
   bool IsUnMinus() const override;
   Operation* AsUnMinus() override;
+  Operation* AsOperation() override;
+  const Operation* AsOperation() const override;
   std::vector<std::unique_ptr<INode>> TakeOperands(Op op) override;
+
+  bool Combine(Op op,
+               const INode* node1,
+               const INode* node2,
+               std::unique_ptr<INode>* new_node1,
+               std::unique_ptr<INode>* new_node2) const override;
+
+  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyChain();
+  bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool SimplifyConsts(std::unique_ptr<INode>* new_node);
   void ConvertToPlus();
+  ConanicMultDiv GetConanic(std::unique_ptr<INode>* node);
+  ConanicMultDiv GetConanicMult();
+  ConanicMultDiv GetConanicDiv();
+  ConanicMultDiv GetConanicUnMinus();
+  void RemoveEmptyOperands();
 
   std::string PrintUnMinus(bool ommit_front_minus) const;
   std::string PrintMinusPlusMultDiv() const;

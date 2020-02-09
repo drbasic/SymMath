@@ -42,6 +42,16 @@ bool Variable::CheckCircular(const INode* other) const {
   return this == other || (value_ && value_->CheckCircular(other));
 }
 
+bool Variable::IsEqual(const INode* rh) const {
+  if (!name_.empty()) {
+    const Variable* rh_var = rh->AsVariable();
+    return rh_var && (name_ == rh_var->name_ || value_ == rh_var->value_);
+  }
+  if (value_)
+    return value_->IsEqual(rh);
+  return false;
+}
+
 std::string Variable::GetName() const {
   return name_;
 }
@@ -117,13 +127,42 @@ Constant* Variable::AsConstant() {
   return nullptr;
 }
 
+const Constant* Variable::AsConstant() const
+{
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->AsConstant() : nullptr;
+  return nullptr;
+}
+
+const ErrorNode* Variable::AsError() const
+{
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->AsError() : nullptr;
+  return nullptr;
+}
+
 const Variable* Variable::AsVariable() const {
   return this;
 }
 
+Operation* Variable::AsOperation()
+{
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->AsOperation() : nullptr;
+  return nullptr;
+}
+
+const Operation* Variable::AsOperation() const
+{
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->AsOperation() : nullptr;
+  return nullptr;
+}
+
 std::vector<std::unique_ptr<INode>> Variable::TakeOperands(Op op) {
   if (auto vn = GetVisibleNode())
-    return (vn != this) ? vn->TakeOperands(op) : std::vector<std::unique_ptr<INode>>{};
+    return (vn != this) ? vn->TakeOperands(op)
+                        : std::vector<std::unique_ptr<INode>>{};
   return {};
 }
 

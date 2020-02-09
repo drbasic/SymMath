@@ -12,6 +12,7 @@ class ErrorNode : public INode {
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
+  bool IsEqual(const INode* rh) const override;
   bool IsUnMinus() const override;
 
  private:

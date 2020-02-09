@@ -63,6 +63,14 @@ std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh,
   return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
                                      std::move(rh));
 }
+std::unique_ptr<INode> operator/(double lh, std::unique_ptr<INode> rh) {
+  return std::make_unique<Operation>(
+      GetOpInfo(Op::Div), std::make_unique<Constant>(lh), std::move(rh));
+}
+std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
+  return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
+                                     std::make_unique<Constant>(rh));
+}
 //=============================================================================
 std::ostream& operator<<(std::ostream& out, const Variable& v) {
   out << v.Print();

@@ -8,8 +8,7 @@ std::string VariableRef::PrintImpl(bool ommit_front_minus) const {
   return var_->PrintRef(ommit_front_minus);
 }
 
-int VariableRef::Priority() const
-{
+int VariableRef::Priority() const {
   return var_->Priority();
 }
 
@@ -25,28 +24,43 @@ std::unique_ptr<INode> VariableRef::SymCalc() const {
   return var_->SymCalc();
 }
 
-bool VariableRef::IsUnMinus() const
-{
+bool VariableRef::IsUnMinus() const {
   return var_->IsUnMinus();
 }
 
-Operation* VariableRef::AsUnMinus()
-{
+bool VariableRef::IsEqual(const INode* rh) const {
+  return var_->IsEqual(rh);
+}
+
+Operation* VariableRef::AsUnMinus() {
   return const_cast<Variable*>(var_)->AsUnMinus();
 }
 
-Constant* VariableRef::AsConstant()
-{
+Constant* VariableRef::AsConstant() {
   return const_cast<Variable*>(var_)->AsConstant();
 }
 
-const Variable* VariableRef::AsVariable() const
-{
+const Constant* VariableRef::AsConstant() const {
+  return const_cast<Variable*>(var_)->AsConstant();
+}
+
+const ErrorNode* VariableRef::AsError() const {
+  return var_->AsError();
+}
+
+const Variable* VariableRef::AsVariable() const {
   return var_->AsVariable();
 }
 
-std::vector<std::unique_ptr<INode>> VariableRef::TakeOperands(Op op)
-{
+Operation* VariableRef::AsOperation() {
+  return const_cast<Variable*>(var_)->AsOperation();
+}
+
+const Operation* VariableRef::AsOperation() const {
+  return var_->AsOperation();
+}
+
+std::vector<std::unique_ptr<INode>> VariableRef::TakeOperands(Op op) {
   return const_cast<Variable*>(var_)->TakeOperands(op);
 }
 

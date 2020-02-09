@@ -14,14 +14,17 @@ int ErrorNode::Priority() const {
   return 0;
 }
 
-bool ErrorNode::HasFrontMinus() const
-{
+bool ErrorNode::HasFrontMinus() const {
   return false;
 }
 
-bool ErrorNode::CheckCircular(const INode* other) const
-{
+bool ErrorNode::CheckCircular(const INode* other) const {
   return false;
+}
+
+bool ErrorNode::IsEqual(const INode* rh) const {
+  const ErrorNode* rh_error = rh->AsError();
+  return rh_error && (error_ == rh_error->error_);
 }
 
 bool ErrorNode::IsUnMinus() const {

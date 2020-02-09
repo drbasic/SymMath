@@ -14,6 +14,13 @@
 
 namespace {
 
+class INodeAcessor {
+ public:
+  static bool IsNodesEqual(const INode* lh, const INode* rh) {
+    return lh->IsEqual(rh);
+  }
+};
+
 std::vector<std::unique_ptr<INode>> CalcOperands(
     const std::vector<std::unique_ptr<INode>>& operands) {
   std::vector<std::unique_ptr<INode>> result;
@@ -36,6 +43,58 @@ std::optional<std::vector<double>> AsTrivial(
     }
   }
   return result;
+}
+
+bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
+                            const std::vector<const INode*>& rhs) {
+  if (lhs.size() != rhs.size())
+    return false;
+
+  std::vector<bool> used;
+  used.resize(rhs.size());
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    bool equal_found = false;
+    for (size_t j = 0; j < rhs.size(); ++j) {
+      if (used[j])
+        continue;
+      if (!lhs[i]->IsEqual(rhs[i]))
+        continue;
+      used[j] = true;
+      equal_found = true;
+      break;
+    }
+    if (!equal_found)
+      return false;
+  }
+  return true;
+}
+
+bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>*>& lhs,
+                            const std::vector<std::unique_ptr<INode>*>& rhs) {
+  auto transform = [](const std::vector<std::unique_ptr<INode>*>& nodes)
+      -> std::vector<const INode*> {
+    std::vector<const INode*> result;
+    result.resize(nodes.size());
+    for (size_t i = 0; i < nodes.size(); ++i) {
+      result[i] = nodes[i]->get();
+    }
+    return result;
+  };
+  return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
+}
+
+bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
+                            const std::vector<std::unique_ptr<INode>>& rhs) {
+  auto transform = [](const std::vector<std::unique_ptr<INode>>& nodes)
+      -> std::vector<const INode*> {
+    std::vector<const INode*> result;
+    result.resize(nodes.size());
+    for (size_t i = 0; i < nodes.size(); ++i) {
+      result[i] = nodes[i].get();
+    }
+    return result;
+  };
+  return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
 }
 
 }  // namespace
@@ -97,8 +156,35 @@ bool Operation::CheckCircular(const INode* other) const {
   return false;
 }
 
+bool Operation::IsEqual(const INode* rh) const {
+  const Operation* rh_op = rh->AsOperation();
+  if (!rh_op)
+    return false;
+  if (op_info_ != rh_op->op_info_)
+    return false;
+  if (operands_.size() != rh_op->operands_.size())
+    return false;
+  if (!op_info_->is_transitive) {
+    for (size_t i = 0; i < operands_.size(); ++i) {
+      if (!operands_[i]->IsEqual(rh_op->operands_[i].get()))
+        return false;
+    }
+    return true;
+  }
+
+  return IsNodesTransitiveEqual(operands_, rh_op->operands_);
+}
+
 Operation* Operation::AsUnMinus() {
   return op_info_->op == Op::UnMinus ? this : nullptr;
+}
+
+Operation* Operation::AsOperation() {
+  return this;
+}
+
+const Operation* Operation::AsOperation() const {
+  return this;
 }
 
 std::vector<std::unique_ptr<INode>> Operation::TakeOperands(Op op) {
@@ -106,6 +192,14 @@ std::vector<std::unique_ptr<INode>> Operation::TakeOperands(Op op) {
     return {};
 
   return std::move(operands_);
+}
+
+bool Operation::Combine(Op op,
+                        const INode* node1,
+                        const INode* node2,
+                        std::unique_ptr<INode>* new_node1,
+                        std::unique_ptr<INode>* new_node2) const {
+  return false;
 }
 
 bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
@@ -121,22 +215,31 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
     }
   }
   if (SimplifyConsts(new_node)) {
-    CheckIntegrity();
+    // if (new_node->get())
     return true;
+    CheckIntegrity();
+    simplified = true;
   }
   if (SimplifyUnMinus(new_node)) {
-    CheckIntegrity();
+    // if (new_node->get())
     return true;
+    simplified = true;
   }
   while (SimplifyChain()) {
     CheckIntegrity();
     simplified = true;
   }
-
+  while (SimplifySame(new_node)) {
+    if (new_node->get())
+      return true;
+    CheckIntegrity();
+    simplified = true;
+  }
   return simplified;
 }
 
 void Operation::CheckIntegrity() const {
+  assert(op_info_);
   switch (op_info_->op) {
     case Op::UnMinus:
       assert(operands_.size() == 1);
@@ -209,6 +312,42 @@ bool Operation::SimplifyChain() {
 
   operands_.swap(new_nodes);
 
+  return is_optimized;
+}
+
+bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
+  if (op_info_->op != Op::Plus)
+    return false;
+  bool is_optimized = false;
+  for (size_t i = 0; i < operands_.size() - 1; ++i) {
+    ConanicMultDiv conanic_1 = GetConanic(&operands_[i]);
+    if (conanic_1.nodes.empty())
+      continue;
+    for (size_t j = i + 1; j < operands_.size(); ++j) {
+      ConanicMultDiv conanic_2 = GetConanic(&operands_[j]);
+      if (conanic_2.nodes.empty())
+        continue;
+      if (!IsNodesTransitiveEqual(conanic_1.nodes, conanic_2.nodes))
+        continue;
+      double k = (conanic_1.a * conanic_2.b + conanic_2.a * conanic_1.b) /
+                 (conanic_1.b * conanic_2.b);
+
+      std::vector<std::unique_ptr<INode>> operands;
+      operands.push_back(Const(k));
+      for (auto& node : conanic_1.nodes) {
+        operands.push_back(std::move(*node));
+      }
+      operands_[i] =
+          std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+      operands_[j].reset();
+      is_optimized = true;
+    }
+  }
+  if (is_optimized)
+    RemoveEmptyOperands();
+  if (operands_.size() == 1) {
+    *new_node = std::move(operands_[0]);
+  }
   return is_optimized;
 }
 
@@ -290,10 +429,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
       operands_[i].reset();
     }
   }
-  operands_.erase(
-      std::remove_if(std::begin(operands_), std::end(operands_),
-                     [](const std::unique_ptr<INode>& node) { return !node; }),
-      std::end(operands_));
+  RemoveEmptyOperands();
   if (operands_.empty()) {
     *new_node = Const(accumulator);
     return true;
@@ -324,6 +460,60 @@ void Operation::ConvertToPlus() {
     operands_[i] = std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
                                                std::move(operands_[i]));
   }
+}
+
+ConanicMultDiv Operation::GetConanic(std::unique_ptr<INode>* node) {
+  ConanicMultDiv result{};
+  if (!node || !node->get())
+    return result;
+
+  Operation* oper = node->get()->AsOperation();
+  if (!oper ||
+      (oper->op_info_->op != Op::Mult && oper->op_info_->op != Op::Div &&
+       oper->op_info_->op != Op::UnMinus)) {
+    result.nodes.push_back(node);
+    return result;
+  }
+
+  if (oper->op_info_->op == Op::Mult) {
+    return oper->GetConanicMult();
+  }
+  if (oper->op_info_->op == Op::Div) {
+    return oper->GetConanicDiv();
+  }
+  if (oper->op_info_->op == Op::UnMinus) {
+    return oper->GetConanicUnMinus();
+  }
+  assert(false);
+  return result;
+}
+
+ConanicMultDiv Operation::GetConanicMult() {
+  assert(op_info_->op == Op::Mult);
+  ConanicMultDiv result;
+  for (auto& op : operands_) {
+    Constant* constant = op->AsConstant();
+    if (constant)
+      result.a = op_info_->trivial_f(result.a, constant->Value());
+    else
+      result.nodes.push_back(&op);
+  }
+  return result;
+}
+
+ConanicMultDiv Operation::GetConanicDiv() {
+  return ConanicMultDiv();
+}
+
+ConanicMultDiv Operation::GetConanicUnMinus() {
+  return ConanicMultDiv();
+}
+
+void Operation::RemoveEmptyOperands() {
+  operands_.erase(
+      std::remove_if(std::begin(operands_), std::end(operands_),
+                     [](const std::unique_ptr<INode>& node) { return !node; }),
+      std::end(operands_));
 }
 
 std::string Operation::PrintUnMinus(bool ommit_front_minus) const {

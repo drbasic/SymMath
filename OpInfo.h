@@ -26,6 +26,7 @@ struct OpInfo {
   using TrivialF = double (*)(double lh, double rh);
 
   TrivialF trivial_f;
+  bool is_transitive = true;
   CalcF calc_f;
   PrintF print_f;
 };
