@@ -328,7 +328,8 @@ bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
 }
 
 bool Operation::SimplifyChain() {
-  if (op_info_->op != Op::Plus && op_info_->op != Op::Mult)
+  if (op_info_->op != Op::Plus && op_info_->op != Op::Mult &&
+      op_info_->op != Op::Minus)
     return false;
 
   if (NeedConvertToChain()) {
@@ -368,7 +369,7 @@ bool Operation::SimplifyChain() {
 }
 
 bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
-  if (op_info_->op != Op::Plus)
+  if (op_info_->op != Op::Plus && op_info_->op != Op::Minus)
     return false;
   bool is_optimized = false;
   for (size_t i = 0; i < operands_.size(); ++i) {
@@ -386,9 +387,9 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
         continue;
       if (!IsNodesTransitiveEqual(conanic_1.nodes, conanic_2.nodes))
         continue;
-      double k = (conanic_1.a * conanic_2.b + conanic_2.a * conanic_1.b) /
+      double k = op_info_->trivial_f(conanic_1.a * conanic_2.b,
+                                     conanic_2.a * conanic_1.b) /
                  (conanic_1.b * conanic_2.b);
-
       std::vector<std::unique_ptr<INode>> operands;
       operands.push_back(Const(k));
       for (auto& node : conanic_1.nodes) {
@@ -404,7 +405,7 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
     if (is_operand_optimized)
       continue;
     if (TryExctractSum(conanic_1, GetNodesPointers(operands_, i))) {
-      double k = (conanic_1.a + conanic_1.b) / conanic_1.b;
+      double k = op_info_->trivial_f(conanic_1.a, conanic_1.b) / conanic_1.b;
       std::vector<std::unique_ptr<INode>> operands;
       operands.push_back(Const(k));
       for (auto& node : conanic_1.nodes) {
@@ -567,6 +568,8 @@ bool Operation::NeedConvertToChain() const {
     return false;
 
   for (const auto& operand : operands_) {
+    if (operand->AsConstant())
+      return true;
     const Operation* as_operation = operand->AsOperation();
     if (as_operation && (as_operation->op_info_->op == Op::Minus ||
                          as_operation->op_info_->op == Op::Plus))
@@ -684,12 +687,12 @@ std::string Operation::PrintMinusPlusMultDiv() const {
   int i = 0;
   std::stringstream ss;
   // if (operands_.size() > 2)
-  // ss << "[";
+  ss << "[";
   for (const auto& operand : operands_) {
     ss << PrintOperand(operand.get(), i++ != 0);
   }
   // if (operands_.size() > 2)
-  // ss << "]";
+  ss << "]";
   return ss.str();
 }
 
