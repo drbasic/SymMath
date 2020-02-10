@@ -52,6 +52,12 @@ class INodeAcessor {
       return op->IsUnMinus() ? op : nullptr;
     return nullptr;
   }
+
+  static const Operation* AsDiv(const INode* lh) {
+    if (auto op = AsOperation(lh))
+      return op->op_info_->op == Op::Div ? op : nullptr;
+    return nullptr;
+  }
 };
 
 namespace {
@@ -874,6 +880,12 @@ PrintSize Operation::RenderUnMinus(Canvas* canvas,
                                    const Position& pos,
                                    bool dry_run,
                                    bool ommit_front_minus) const {
+  if (operands_[0]->HasFrontMinus()) {
+    return operands_[0]->Render(canvas, pos, dry_run, true);
+  }
+  if (const Operation* as_div = INodeAcessor::AsDiv(operands_[0].get())) {
+    return as_div->RenderDiv(canvas, pos, dry_run, !ommit_front_minus);
+  }
   return RenderOperand(operands_[0].get(), canvas, pos, dry_run,
                        !ommit_front_minus);
 }
@@ -918,7 +930,7 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
   if (HasFrontMinus()) {
     left_offset = 2;
     if (!dry_run) {
-      canvas->PrintAt({pos.x, divider_pos.y }, "!");
+      canvas->PrintAt({pos.x, divider_pos.y}, "!");
     }
   }
 
@@ -943,10 +955,6 @@ PrintSize Operation::RenderOperand(const INode* node,
                                    const Position& pos,
                                    bool dry_run,
                                    bool with_op) const {
-  if (IsUnMinus() && node->HasFrontMinus()) {
-    return node->Render(canvas, pos, dry_run, true);
-  }
-
   bool need_br = (node->Priority() < Priority());
   if (!with_op && INodeAcessor::IsUnMinus(node) && op_info_->op == Op::Mult)
     need_br = false;
@@ -955,9 +963,9 @@ PrintSize Operation::RenderOperand(const INode* node,
     if (with_op) {
       // + - *
       if (!dry_run) {
-        canvas->PrintAt({pos.x + 1, pos.y}, std::string(op_info_->name));
+        canvas->PrintAt(pos, std::string(op_info_->name));
       }
-      result.width += op_info_->name.size() + 2;
+      result.width += op_info_->name.size();
     }
 
     // xyz
@@ -982,27 +990,30 @@ PrintSize Operation::RenderOperand(const INode* node,
     return result;
   }
 
-  // +-1 -> -1 // minus (-) print inner node
-  if (op_info_->op == Op::Plus && node->HasFrontMinus()) {
-    return node->Render(canvas, {pos.x + 1, pos.y}, dry_run, false);
+  PrintSize operand_size;
+  auto op_to_print = op_info_;
+  if (with_op && op_info_->op == Op::Plus && node->HasFrontMinus()) {
+    // +-1 -> -1 // minus (-) print here, so ommit (-) in operand
+    op_to_print = GetOpInfo(Op::Minus);
+    operand_size = node->Render(
+        canvas, {pos.x + op_to_print->name.size(), pos.y}, dry_run, true);
+  } else if (with_op && op_info_->op == Op::Minus && node->HasFrontMinus()) {
+    // --1 -> +1 // minus operation and front minus(--) -> print plus(+) here,
+    // so
+    // ommit (-) in operand
+    op_to_print = GetOpInfo(Op::Plus);
+    operand_size = node->Render(
+        canvas, {pos.x + op_to_print->name.size(), pos.y}, dry_run, true);
+  } else {
+    // operand print minus if necessary by self
+    operand_size = node->Render(
+        canvas, {pos.x + op_to_print->name.size(), pos.y}, dry_run, false);
   }
-
-  // --1 -> +1 // minus operation and front minus(--) -> print plus(+)
-  if (op_info_->op == Op::Minus && node->HasFrontMinus()) {
-    auto operand_size = node->Render(canvas, {pos.x + 1, pos.y}, dry_run, true);
-    if (!dry_run) {
-      canvas->PrintAt({pos.x + 1, pos.y + operand_size.height / 2}, "+");
-    }
-    return {operand_size.width + 3, operand_size.height};
-  }
-
-  auto operand_size = node->Render(
-      canvas, {pos.x + op_info_->name.size() + 2, pos.y}, dry_run, false);
   if (!dry_run) {
-    canvas->PrintAt({pos.x + 1, pos.y + operand_size.height / 2},
-                    std::string(op_info_->name));
+    canvas->PrintAt({pos.x, pos.y + operand_size.height / 2},
+                    std::string(op_to_print->name));
   }
-  return {op_info_->name.size() + operand_size.width + 2, operand_size.height};
+  return {op_info_->name.size() + operand_size.width, operand_size.height};
 }
 
 std::unique_ptr<INode> Operation::CalcUnMinus() const {
