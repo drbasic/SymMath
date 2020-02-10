@@ -32,11 +32,19 @@ PrintSize VariableRef::Render(Canvas* canvas,
                               const Position& pos,
                               bool dry_run,
                               bool ommit_front_minus) const {
-  return var_->Render(canvas, pos, dry_run, ommit_front_minus);
+  if (var_->name_.empty())
+    return var_->Render(canvas, pos, dry_run, ommit_front_minus);
+  PrintSize result{var_->name_.size(), 1};
+  if (!dry_run) {
+    canvas->PrintAt(pos, var_->name_);
+  }
+  return print_size_ = result;
 }
 
 PrintSize VariableRef::LastPrintSize() const {
-  return var_->LastPrintSize();
+  if (var_->name_.empty())
+    return var_->LastPrintSize();
+  return print_size_;
 }
 
 Constant* VariableRef::AsConstant() {

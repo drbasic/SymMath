@@ -3,30 +3,13 @@
 #include <string>
 #include <vector>
 
+#include "Canvas.h"
+
 struct OpInfo;
 class ErrorNode;
 class Operation;
 class Constant;
 enum class Op;
-
-struct PrintSize {
-  size_t width = 0;
-  size_t height = 0;
-};
-
-struct Position {
-  size_t x = 0;
-  size_t y = 0;
-};
-
-class Canvas {
- public:
-  void PrintAt(const Position& pos, const std::string& str);
-  enum class Bracket {
-    Left, Right
-  };
-  void RenderBracket(const Position& pos, Bracket br, size_t height);
-};
 
 class INode {
  public:

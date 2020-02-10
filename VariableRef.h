@@ -29,5 +29,6 @@ class VariableRef : public INode {
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
+  mutable PrintSize print_size_;
   const Variable* var_ = nullptr;
 };

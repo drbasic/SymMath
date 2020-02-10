@@ -12,6 +12,10 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
+
+  //Variable x2 = (a + 2) * b;
+  //std::cout << x2.Print() << "\n";
+  
   Variable x2 = (a + 2 * b + 3 * c + 4);
   // Variable x22 = x / 2;
   // y = (x + 1) - (x + 1) + (1 + x) + x2 + 3 * x2;
@@ -23,6 +27,5 @@ int main() {
   std::cout << y.Print() << "\n";
   y.Simplify();
   std::cout << y.Print() << "\n";
-  y.Simplify();
-  std::cout << y.Print() << "\n";
+  
 }

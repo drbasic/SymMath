@@ -880,25 +880,24 @@ PrintSize Operation::RenderMinusPlus(Canvas* canvas,
                                      const Position& pos,
                                      bool dry_run,
                                      bool ommit_front_minus) const {
-  if (dry_run) {
-    print_size_ = {};
-    for (size_t i = 0; i < operands_.size(); ++i) {
-      auto op_size =
-          RenderOperand(operands_[i].get(), canvas, pos, dry_run, i == 0);
-      print_size_.width += op_size.width;
-      print_size_.height = std::max(print_size_.height, op_size.height);
-    }
-    return print_size_;
-  }
-  Position op_pos{pos};
+  PrintSize new_print_size = {};
+  Position operand_pos{pos};
   for (size_t i = 0; i < operands_.size(); ++i) {
-    op_pos.y =
-        pos.y + (print_size_.height - operands_[i]->LastPrintSize().height) / 2;
+    operand_pos.y =
+        dry_run
+            ? (pos.y)
+            : (pos.y +
+               (print_size_.height - operands_[i]->LastPrintSize().height) / 2);
     auto op_size =
-        RenderOperand(operands_[0].get(), canvas, op_pos, dry_run, i == 0);
-    op_pos.x += op_size.width;
+        RenderOperand(operands_[i].get(), canvas, operand_pos, dry_run, i != 0);
+    operand_pos.x += op_size.width;
+    new_print_size.width += op_size.width;
+    new_print_size.height = std::max(new_print_size.height, op_size.height);
   }
-  return print_size_;
+  if (!dry_run) {
+    assert(print_size_ == new_print_size);
+  }
+  return print_size_ = new_print_size;
 }
 
 PrintSize Operation::RenderOperand(const INode* node,
@@ -914,8 +913,6 @@ PrintSize Operation::RenderOperand(const INode* node,
   if (!with_op && INodeAcessor::IsUnMinus(node) && op_info_->op == Op::Mult)
     need_br = false;
   if (need_br || !with_op) {
-    PrintSize inner_size = dry_run ? node->Render(canvas, pos, dry_run, false)
-                                   : node->LastPrintSize();
     PrintSize result;
     if (with_op) {
       // + - *
@@ -924,60 +921,50 @@ PrintSize Operation::RenderOperand(const INode* node,
       }
       result.width += op_info_->name.size();
     }
+
+    // xyz
+    Position operand_position{pos};
+    operand_position.x += result.width;
+    size_t left_br_x = operand_position.x;
+    operand_position.x += need_br ? 1 : 0;
+    auto operand_size = node->Render(canvas, operand_position, dry_run, false);
+    result.width += operand_size.width;
+    result.height = std::max(result.height, operand_size.height);
+
     if (need_br) {
-      // { [ (
+      // { [ ( ) ] }
       if (!dry_run) {
-        canvas->RenderBracket({pos.x + result.width, pos.y},
-                              Canvas::Bracket::Left, inner_size.height);
+        canvas->RenderBracket({left_br_x, pos.y}, Canvas::Bracket::Left,
+                              operand_size.height);
+        canvas->RenderBracket({left_br_x + operand_size.width + 1, pos.y},
+                              Canvas::Bracket::Right, operand_size.height);
       }
-      result.width += 1;
-    }
-    {
-      // xyz
-      if (!dry_run) {
-        auto size = node->Render(canvas, pos, dry_run, false);
-        assert(inner_size.width = size.width);
-        assert(inner_size.height = size.height);
-      }
-      result.width += inner_size.width;
-    }
-    if (need_br) {
-      // } ] )
-      if (!dry_run) {
-        canvas->RenderBracket({pos.x + result.width, pos.y},
-                              Canvas::Bracket::Right, inner_size.height);
-      }
-      result.width += 1;
+      result.width += 2;
     }
     return result;
   }
 
-  if ((op_info_->op == Op::Minus || op_info_->op == Op::Plus) &&
-      node->HasFrontMinus()) {
-    if (op_info_->op == Op::Minus) {
-      PrintSize inner_size = dry_run ? node->Render(canvas, pos, dry_run, true)
-                                     : node->LastPrintSize();
-      if (!dry_run) {
-        canvas->PrintAt({pos.x, pos.y + inner_size.height / 2}, "+");
-        auto size = node->Render(canvas, {pos.x + 1, pos.y}, dry_run, true);
-        assert(inner_size.width = size.width);
-        assert(inner_size.height = size.height);
-      }
-      return {inner_size.width + 1, inner_size.height};
-    } else {
-      return node->Render(canvas, {pos.x + 1, pos.y}, dry_run, false);
-    }
+  // +-1 -> -1
+  if (op_info_->op == Op::Plus && node->HasFrontMinus()) {
+    return node->Render(canvas, pos, dry_run, false);
   }
 
-  PrintSize inner_size = dry_run ? node->Render(canvas, pos, dry_run, false)
-                                 : node->LastPrintSize();
-  if (!dry_run) {
-    canvas->PrintAt({pos.x, pos.y + inner_size.height / 2},
-                    std::string(op_info_->name));
-    node->Render(canvas, {pos.x + op_info_->name.size(), pos.y}, dry_run,
-                 false);
+  // --1 -> +1
+  if (op_info_->op == Op::Minus && node->HasFrontMinus()) {
+    auto operand_size = node->Render(canvas, {pos.x + 1, pos.y}, dry_run, true);
+    if (!dry_run) {
+      canvas->PrintAt({pos.x, pos.y + operand_size.height / 2}, "+");
+    }
+    return {operand_size.width + 1, operand_size.height};
   }
-  return {op_info_->name.size() + inner_size.width, inner_size.height};
+
+  auto operand_size = node->Render(
+      canvas, {pos.x + op_info_->name.size(), pos.y}, dry_run, false);
+  if (!dry_run) {
+    canvas->PrintAt({pos.x, pos.y + operand_size.height / 2},
+                    std::string(op_info_->name));
+  }
+  return {op_info_->name.size() + operand_size.width, operand_size.height};
 }
 
 std::unique_ptr<INode> Operation::CalcUnMinus() const {
