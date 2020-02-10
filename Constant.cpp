@@ -28,10 +28,6 @@ bool Constant::IsEqual(const INode* rh) const {
   return rh_const && (Value() == rh_const->Value());
 }
 
-bool Constant::IsUnMinus() const {
-  return false;
-}
-
 Constant* Constant::AsConstant() {
   return this;
 }

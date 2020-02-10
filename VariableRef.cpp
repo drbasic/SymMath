@@ -24,10 +24,6 @@ std::unique_ptr<INode> VariableRef::SymCalc() const {
   return var_->SymCalc();
 }
 
-bool VariableRef::IsUnMinus() const {
-  return var_->IsUnMinus();
-}
-
 bool VariableRef::IsEqual(const INode* rh) const {
   return var_->IsEqual(rh);
 }
@@ -35,10 +31,6 @@ bool VariableRef::IsEqual(const INode* rh) const {
 std::unique_ptr<INode> VariableRef::Clone() const
 {
   return std::make_unique<VariableRef>(var_);
-}
-
-Operation* VariableRef::AsUnMinus() {
-  return const_cast<Variable*>(var_)->AsUnMinus();
 }
 
 Constant* VariableRef::AsConstant() {
@@ -63,10 +55,6 @@ Operation* VariableRef::AsOperation() {
 
 const Operation* VariableRef::AsOperation() const {
   return var_->AsOperation();
-}
-
-std::vector<std::unique_ptr<INode>> VariableRef::TakeOperands(Op op) {
-  return const_cast<Variable*>(var_)->TakeOperands(op);
 }
 
 bool VariableRef::SimplifyImpl(std::unique_ptr<INode>* new_node) {

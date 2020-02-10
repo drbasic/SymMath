@@ -31,22 +31,15 @@ class Operation : public INode {
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
   bool IsEqual(const INode* rh) const override;
-  bool IsUnMinus() const override;
-  Operation* AsUnMinus() override;
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
-  std::vector<std::unique_ptr<INode>> TakeOperands(Op op) override;
-
-  bool Combine(Op op,
-               const INode* node1,
-               const INode* node2,
-               std::unique_ptr<INode>* new_node1,
-               std::unique_ptr<INode>* new_node2) const override;
 
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
   friend class INodeAcessor;
+  bool IsUnMinus() const;
+
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyChain();
@@ -62,6 +55,8 @@ class Operation : public INode {
   CanonicMultDiv GetCanonicDiv();
   CanonicMultDiv GetCanonicUnMinus();
   bool ReduceFor(double val);
+
+  std::vector<std::unique_ptr<INode>> TakeOperands(Op op);
 
   void RemoveEmptyOperands();
 

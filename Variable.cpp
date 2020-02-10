@@ -15,6 +15,10 @@ Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 Variable::Variable(const Variable& var)
     : value_(std::make_unique<VariableRef>(&var)) {}
 
+std::string Variable::Print() const {
+  return PrintImpl(false);
+}
+
 std::string Variable::PrintImpl(bool ommit_front_minus) const {
   if (name_.empty())
     return value_->PrintImpl(ommit_front_minus);
@@ -115,18 +119,6 @@ std::unique_ptr<INode> Variable::Clone() const {
   return std::unique_ptr<INode>();
 }
 
-bool Variable::IsUnMinus() const {
-  if (auto vn = GetVisibleNode())
-    return vn != this && vn->IsUnMinus();
-  return false;
-}
-
-Operation* Variable::AsUnMinus() {
-  if (auto vn = GetVisibleNode())
-    return (vn != this) ? vn->AsUnMinus() : nullptr;
-  return nullptr;
-}
-
 Constant* Variable::AsConstant() {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsConstant() : nullptr;
@@ -159,13 +151,6 @@ const Operation* Variable::AsOperation() const {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsOperation() : nullptr;
   return nullptr;
-}
-
-std::vector<std::unique_ptr<INode>> Variable::TakeOperands(Op op) {
-  if (auto vn = GetVisibleNode())
-    return (vn != this) ? vn->TakeOperands(op)
-                        : std::vector<std::unique_ptr<INode>>{};
-  return {};
 }
 
 INode* Variable::GetVisibleNode() const {

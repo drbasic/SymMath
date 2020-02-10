@@ -9,12 +9,11 @@ class ErrorNode : public INode {
   std::unique_ptr<INode> Clone() const override;
 
  protected:
+  bool IsEqual(const INode* rh) const override;
   std::string PrintImpl(bool ommit_front_minus) const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
-  bool IsEqual(const INode* rh) const override;
-  bool IsUnMinus() const override;
 
  private:
   std::string error_;

@@ -26,6 +26,7 @@ class INodeAcessor {
   static const Operation* AsOperation(const INode* lh) {
     return lh->AsOperation();
   }
+
   static Operation* AsOperation(INode* lh) { return lh->AsOperation(); }
 
   static Operation* AsMult(INode* lh) {
@@ -38,6 +39,18 @@ class INodeAcessor {
 
   static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op) {
     return op->operands_;
+  }
+
+  static bool IsUnMinus(const INode* lh) {
+    if (auto op = AsOperation(lh))
+      return op->IsUnMinus();
+    return false;
+  }
+
+  static Operation* AsUnMinus(INode* lh) {
+    if (auto op = AsOperation(lh))
+      return op->IsUnMinus() ? op : nullptr;
+    return nullptr;
   }
 };
 
@@ -79,7 +92,7 @@ bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      if (!lhs[i]->IsEqual(rhs[i]))
+      if (!INodeAcessor::IsNodesEqual(lhs[i], rhs[i]))
         continue;
       used[j] = true;
       equal_found = true;
@@ -155,7 +168,7 @@ bool TakeTransitiveEqualNodesTheSame(
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      if (!lhs[i]->get()->IsEqual(rhs[i]->get()))
+      if (!INodeAcessor::IsNodesEqual(lhs[i]->get(), rhs[i]->get()))
         continue;
       used[j] = true;
       equal_found = true;
@@ -374,10 +387,6 @@ bool Operation::IsEqual(const INode* rh) const {
   return IsNodesTransitiveEqual(operands_, rh_op->operands_);
 }
 
-Operation* Operation::AsUnMinus() {
-  return op_info_->op == Op::UnMinus ? this : nullptr;
-}
-
 Operation* Operation::AsOperation() {
   return this;
 }
@@ -391,14 +400,6 @@ std::vector<std::unique_ptr<INode>> Operation::TakeOperands(Op op) {
     return {};
 
   return std::move(operands_);
-}
-
-bool Operation::Combine(Op op,
-                        const INode* node1,
-                        const INode* node2,
-                        std::unique_ptr<INode>* new_node1,
-                        std::unique_ptr<INode>* new_node2) const {
-  return false;
 }
 
 bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
@@ -469,9 +470,9 @@ bool Operation::IsUnMinus() const {
 }
 
 bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
-  if (!AsUnMinus())
+  if (!IsUnMinus())
     return false;
-  Operation* sub_un_minus = operands_[0]->AsUnMinus();
+  Operation* sub_un_minus = INodeAcessor::AsUnMinus(operands_[0].get());
   if (!sub_un_minus)
     return false;
 
@@ -492,11 +493,17 @@ bool Operation::SimplifyChain() {
   std::vector<std::unique_ptr<INode>> new_nodes;
 
   for (auto& node : operands_) {
-    auto sub_nodes = node->TakeOperands(op_info_->op);
+    auto* operation = node->AsOperation();
+    if (!operation) {
+      new_nodes.push_back(std::move(node));
+      continue;
+    }
+    auto sub_nodes = operation->TakeOperands(op_info_->op);
     if (sub_nodes.empty()) {
       new_nodes.push_back(std::move(node));
     } else {
       is_optimized = true;
+      new_nodes.reserve(new_nodes.size() + sub_nodes.size());
       for (auto& sub_node : sub_nodes)
         new_nodes.push_back(std::move(sub_node));
     }
@@ -505,7 +512,10 @@ bool Operation::SimplifyChain() {
 
   if (op_info_->op == Op::Mult) {
     for (size_t i = 1; i < new_nodes.size(); ++i) {
-      auto un_minus_sub_node = new_nodes[i]->TakeOperands(Op::UnMinus);
+      auto* un_minus = INodeAcessor::AsUnMinus(new_nodes[i].get());
+      if (!un_minus)
+        continue;
+      auto un_minus_sub_node = un_minus->TakeOperands(Op::UnMinus);
       assert(un_minus_sub_node.empty() || un_minus_sub_node.size() == 1);
       if (!un_minus_sub_node.empty()) {
         is_optimized = true;
@@ -689,8 +699,10 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   }
 
   if (const_count) {
-    operands_.reserve(operands_.size() + 1);
-    operands_.push_back(Const(accumulator));
+    if (op_info_->op == Op::Mult)
+      operands_.insert(operands_.begin(), Const(accumulator));
+    else
+      operands_.push_back(Const(accumulator));
     is_optimized = const_count > 1;
   }
   if (operands_.size() == 1) {
@@ -860,7 +872,7 @@ std::string Operation::PrintOperand(const INode* node, bool with_op) const {
   }
 
   bool need_br = (node->Priority() < Priority());
-  if (!with_op && node->IsUnMinus() && op_info_->op == Op::Mult)
+  if (!with_op && INodeAcessor::IsUnMinus(node) && op_info_->op == Op::Mult)
     need_br = false;
   if (need_br || !with_op) {
     std::stringstream ss;

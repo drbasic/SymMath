@@ -32,6 +32,3 @@ bool ErrorNode::IsEqual(const INode* rh) const {
   return rh_error && (error_ == rh_error->error_);
 }
 
-bool ErrorNode::IsUnMinus() const {
-  return false;
-}

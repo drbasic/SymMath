@@ -76,12 +76,4 @@ std::ostream& operator<<(std::ostream& out, const Variable& v) {
   out << v.Print();
   return out;
 }
-
-std::ostream& operator<<(std::ostream& out, const std::unique_ptr<INode>& v) {
-  if (!v)
-    out << "<null>";
-  else
-    out << v->Print();
-  return out;
-}
 //=============================================================================
