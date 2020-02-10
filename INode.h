@@ -9,6 +9,11 @@ class Operation;
 class Constant;
 enum class Op;
 
+struct PrintSize {
+  size_t width = 0;
+  size_t height = 0;
+};
+
 class INode {
  public:
   virtual ~INode() {}
@@ -25,6 +30,7 @@ class INode {
   virtual bool IsEqual(const INode* rh) const = 0;
   virtual std::unique_ptr<INode> Clone() const = 0;
 
+  virtual PrintSize GetPrintSize(bool ommit_front_minus) const = 0;
   virtual std::string PrintImpl(bool ommit_front_minus) const = 0;
 
   virtual int Priority() const = 0;

@@ -8,6 +8,10 @@
 #include "ValueHelpers.h"
 #include "VariableRef.h"
 
+namespace {
+const std::string_view kNull("<null>");
+}
+
 Variable::Variable(std::string name) : name_(std::move(name)) {}
 
 Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
@@ -27,7 +31,7 @@ std::string Variable::PrintImpl(bool ommit_front_minus) const {
   if (value_)
     ss << value_->PrintImpl(ommit_front_minus);
   else
-    ss << std::string("<null>");
+    ss << std::string(kNull);
   return ss.str();
 }
 
@@ -117,6 +121,16 @@ std::unique_ptr<INode> Variable::SymCalc() const {
 std::unique_ptr<INode> Variable::Clone() const {
   assert(false);
   return std::unique_ptr<INode>();
+}
+
+PrintSize Variable::GetPrintSize(bool ommit_front_minus) const {
+  if (auto vn = GetVisibleNode()) {
+    if (vn != this)
+      return vn->GetPrintSize(ommit_front_minus);
+  }
+  if (!name_.empty())
+    return {name_.size(), 1};
+  return {kNull.size(), 1};
 }
 
 Constant* Variable::AsConstant() {

@@ -7,10 +7,11 @@ class VariableRef : public INode {
   explicit VariableRef(const Variable* var);
 
   std::unique_ptr<INode> SymCalc() const override;
-  bool IsEqual(const INode* rh) const override;
-  std::unique_ptr<INode> Clone() const override;
 
  protected:
+  bool IsEqual(const INode* rh) const override;
+  std::unique_ptr<INode> Clone() const override;
+  PrintSize GetPrintSize(bool ommit_front_minus) const override;
   std::string PrintImpl(bool ommit_front_minus) const override;
   int Priority() const override;
   bool HasFrontMinus() const override;

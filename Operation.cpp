@@ -325,6 +325,25 @@ Operation::Operation(const OpInfo* op_info,
   CheckIntegrity();
 }
 
+PrintSize Operation::GetPrintSize(bool ommit_front_minus) const {
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    auto op_size = operands_[i]->GetPrintSize(ommit_front_minus);
+    switch (op_info_->op) {
+      case Op::UnMinus:
+        return MeasureUnMinus(ommit_front_minus);
+        break;
+      case Op::Minus:
+      case Op::Plus:
+      case Op::Mult:
+      case Op::Div:
+        return MeasurMinusPlusMultDiv();
+        break;
+    }
+  }
+  assert(false);
+  return {};
+}
+
 std::string Operation::PrintImpl(bool ommit_front_minus) const {
   if (op_info_->print_f)
     return op_info_->print_f(op_info_, operands_);
@@ -849,8 +868,22 @@ void Operation::RemoveEmptyOperands() {
       std::end(operands_));
 }
 
+PrintSize Operation::MeasureUnMinus(bool ommit_front_minus) const {
+  return MeasureOperand(operands_[0].get(), !ommit_front_minus);
+}
+
 std::string Operation::PrintUnMinus(bool ommit_front_minus) const {
   return PrintOperand(operands_[0].get(), !ommit_front_minus);
+}
+
+PrintSize Operation::MeasurMinusPlusMultDiv() const {
+  PrintSize result{};
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    auto op_size = MeasureOperand(operands_[i].get(), i++ != 0);
+    result.width += op_size.width;
+    result.height = std::max(result.height, op_size.height);
+  }
+  return result;
 }
 
 std::string Operation::PrintMinusPlusMultDiv() const {
@@ -864,6 +897,43 @@ std::string Operation::PrintMinusPlusMultDiv() const {
   // if (operands_.size() > 2)
   // ss << "]";
   return ss.str();
+}
+
+PrintSize Operation::MeasureOperand(const INode* node, bool with_op) const {
+  if (IsUnMinus() && node->HasFrontMinus()) {
+    return node->GetPrintSize(true);
+  }
+  bool need_br = (node->Priority() < Priority());
+  if (!with_op && INodeAcessor::IsUnMinus(node) && op_info_->op == Op::Mult)
+    need_br = false;
+  if (need_br || !with_op) {
+    PrintSize result;
+    if (with_op)
+      result.width += op_info_->name.size();
+    if (need_br)
+      result.width += 1;
+    auto op_size = node->GetPrintSize(false);
+    result.width += op_size.width;
+    result.height = std::max(result.height, op_size.height);
+    if (need_br)
+      result.width += 1;
+    return result;
+  }
+
+  if ((op_info_->op == Op::Minus || op_info_->op == Op::Plus) &&
+      node->HasFrontMinus()) {
+    if (op_info_->op == Op::Minus) {
+      auto op_size = node->GetPrintSize(true);
+      op_size.width += 1;
+      return op_size;
+    } else {
+      return node->GetPrintSize(false);
+    }
+  }
+
+  PrintSize result = node->GetPrintSize(false);
+  result.width += op_info_->name.size();
+  return result;
 }
 
 std::string Operation::PrintOperand(const INode* node, bool with_op) const {

@@ -28,9 +28,12 @@ bool VariableRef::IsEqual(const INode* rh) const {
   return var_->IsEqual(rh);
 }
 
-std::unique_ptr<INode> VariableRef::Clone() const
-{
+std::unique_ptr<INode> VariableRef::Clone() const {
   return std::make_unique<VariableRef>(var_);
+}
+
+PrintSize VariableRef::GetPrintSize(bool ommit_front_minus) const {
+  return var_->GetPrintSize(ommit_front_minus);
 }
 
 Constant* VariableRef::AsConstant() {

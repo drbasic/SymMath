@@ -28,6 +28,10 @@ bool Constant::IsEqual(const INode* rh) const {
   return rh_const && (Value() == rh_const->Value());
 }
 
+PrintSize Constant::GetPrintSize(bool ommit_front_minus) const {
+  return { PrintImpl(ommit_front_minus).size(), 1 };
+}
+
 Constant* Constant::AsConstant() {
   return this;
 }

@@ -10,13 +10,14 @@ class Constant : public INode {
   Constant(double val);
 
   std::unique_ptr<INode> SymCalc() const override;
-  std::unique_ptr<INode> Clone() const override;
 
   double Value() const { return value_; }
 
  protected:
   bool IsEqual(const INode* rh) const override;
+  std::unique_ptr<INode> Clone() const override;
 
+  PrintSize GetPrintSize(bool ommit_front_minus) const override;
   std::string PrintImpl(bool ommit_front_minus) const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
