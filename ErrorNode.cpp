@@ -17,7 +17,11 @@ PrintSize ErrorNode::Render(Canvas* canvas,
   if (!dry_run) {
     canvas->PrintAt(pos, error_);
   }
-  return {error_.size(), 1};
+  return print_size_ = { error_.size(), 1 };
+}
+
+PrintSize ErrorNode::LastPrintSize() const {
+  return print_size_;
 }
 
 int ErrorNode::Priority() const {

@@ -26,6 +26,7 @@ class Variable : public INode {
                    const Position& pos,
                    bool dry_run,
                    bool ommit_front_minus) const override;
+  PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
@@ -43,6 +44,7 @@ class Variable : public INode {
   INode* GetVisibleNode() const;
   std::string PrintRef(bool ommit_front_minus) const;
 
+  mutable PrintSize print_size_;
   std::string name_;
   std::unique_ptr<INode> value_;
 };

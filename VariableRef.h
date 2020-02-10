@@ -15,6 +15,7 @@ class VariableRef : public INode {
                    const Position& pos,
                    bool dry_run,
                    bool ommit_front_minus) const override;
+  PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;

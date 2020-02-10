@@ -21,6 +21,7 @@ class Constant : public INode {
                    const Position& pos,
                    bool dry_run,
                    bool ommit_front_minus) const override;
+  PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
@@ -29,5 +30,6 @@ class Constant : public INode {
   const Constant* AsConstant() const override;
 
  private:
+  mutable PrintSize print_size_;
   double value_ = 0;
 };

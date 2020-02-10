@@ -1,5 +1,6 @@
 #include "Variable.h"
 
+#include <algorithm>
 #include <cassert>
 #include <sstream>
 
@@ -11,7 +12,7 @@
 namespace {
 const std::string_view kAnonimous("<anonimous>");
 const std::string_view kNull("<null>");
-}
+}  // namespace
 
 Variable::Variable(std::string name) : name_(std::move(name)) {}
 
@@ -111,27 +112,30 @@ PrintSize Variable::Render(Canvas* canvas,
                            bool dry_run,
                            bool ommit_front_minus) const {
   if (name_.empty()) {
-    if (value_)
-      return value_->Render(canvas, pos, dry_run, ommit_front_minus);
+    if (value_) {
+      return print_size_ =
+                 value_->Render(canvas, pos, dry_run, ommit_front_minus);
+    }
   }
 
-  std::stringstream ss;
-  ss << (name_.empty() ? name_ : kAnonimous);
-  ss << "=";
-  auto str = ss.str();
+  std::string str = (name_.empty() ? name_ : std::string(kAnonimous)) + "=";
   PrintSize lh_size{str.size(), 1};
   PrintSize rh_size;
   if (value_) {
-    rh_size = value_->PrintImpl(canvas, {pos.x + lh_size.width}, dry_run,
-                                ommit_front_minus);
+    rh_size = value_->Render(canvas, {pos.x + lh_size.width}, dry_run,
+                             ommit_front_minus);
   } else {
     rh_size = {std::string(kNull).size(), 1};
   }
   if (!dry_run) {
     canvas->PrintAt({pos.x, pos.y + rh_size.height / 2}, str);
   }
-  return {lh_size.width + rh_size.width,
-          std::max(lh_size.width, rh_size.width)};
+  return print_size_ = {lh_size.width + rh_size.width,
+                        std::max(lh_size.width, rh_size.width)};
+}
+
+PrintSize Variable::LastPrintSize() const {
+  return print_size_;
 }
 
 Constant* Variable::AsConstant() {

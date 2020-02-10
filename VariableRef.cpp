@@ -35,6 +35,10 @@ PrintSize VariableRef::Render(Canvas* canvas,
   return var_->Render(canvas, pos, dry_run, ommit_front_minus);
 }
 
+PrintSize VariableRef::LastPrintSize() const {
+  return var_->LastPrintSize();
+}
+
 Constant* VariableRef::AsConstant() {
   return const_cast<Variable*>(var_)->AsConstant();
 }

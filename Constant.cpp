@@ -15,7 +15,11 @@ PrintSize Constant::Render(Canvas* canvas,
   if (!dry_run) {
     canvas->PrintAt(pos, str);
   }
-  return {str.size(), 1};
+  return print_size_ = { str.size(), 1 };
+}
+
+PrintSize Constant::LastPrintSize() const {
+  return print_size_;
 }
 
 int Constant::Priority() const {

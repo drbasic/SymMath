@@ -22,6 +22,10 @@ struct Position {
 class Canvas {
  public:
   void PrintAt(const Position& pos, const std::string& str);
+  enum class Bracket {
+    Left, Right
+  };
+  void RenderBracket(const Position& pos, Bracket br, size_t height);
 };
 
 class INode {
@@ -44,6 +48,7 @@ class INode {
                            const Position& pos,
                            bool dry_run,
                            bool ommit_front_minus) const = 0;
+  virtual PrintSize LastPrintSize() const = 0;
 
   virtual int Priority() const = 0;
   virtual bool HasFrontMinus() const = 0;
