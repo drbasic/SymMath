@@ -9,6 +9,7 @@
 #include "VariableRef.h"
 
 namespace {
+const std::string_view kAnonimous("<anonimous>");
 const std::string_view kNull("<null>");
 }
 
@@ -20,19 +21,7 @@ Variable::Variable(const Variable& var)
     : value_(std::make_unique<VariableRef>(&var)) {}
 
 std::string Variable::Print() const {
-  return PrintImpl(false);
-}
-
-std::string Variable::PrintImpl(bool ommit_front_minus) const {
-  if (name_.empty())
-    return value_->PrintImpl(ommit_front_minus);
-  std::stringstream ss;
-  ss << name_ << "=";
-  if (value_)
-    ss << value_->PrintImpl(ommit_front_minus);
-  else
-    ss << std::string(kNull);
-  return ss.str();
+  return "!!!";
 }
 
 int Variable::Priority() const {
@@ -82,12 +71,6 @@ bool Variable::Simplify() {
   return simplified;
 }
 
-std::string Variable::PrintRef(bool ommit_front_minus) const {
-  if (name_.empty())
-    return value_->PrintImpl(ommit_front_minus);
-  return name_;
-}
-
 void Variable::operator=(std::unique_ptr<INode> value) {
   if (value->CheckCircular(this)) {
     value_ = std::make_unique<ErrorNode>(
@@ -123,14 +106,32 @@ std::unique_ptr<INode> Variable::Clone() const {
   return std::unique_ptr<INode>();
 }
 
-PrintSize Variable::GetPrintSize(bool ommit_front_minus) const {
-  if (auto vn = GetVisibleNode()) {
-    if (vn != this)
-      return vn->GetPrintSize(ommit_front_minus);
+PrintSize Variable::Render(Canvas* canvas,
+                           const Position& pos,
+                           bool dry_run,
+                           bool ommit_front_minus) const {
+  if (name_.empty()) {
+    if (value_)
+      return value_->Render(canvas, pos, dry_run, ommit_front_minus);
   }
-  if (!name_.empty())
-    return {name_.size(), 1};
-  return {kNull.size(), 1};
+
+  std::stringstream ss;
+  ss << (name_.empty() ? name_ : kAnonimous);
+  ss << "=";
+  auto str = ss.str();
+  PrintSize lh_size{str.size(), 1};
+  PrintSize rh_size;
+  if (value_) {
+    rh_size = value_->PrintImpl(canvas, {pos.x + lh_size.width}, dry_run,
+                                ommit_front_minus);
+  } else {
+    rh_size = {std::string(kNull).size(), 1};
+  }
+  if (!dry_run) {
+    canvas->PrintAt({pos.x, pos.y + rh_size.height / 2}, str);
+  }
+  return {lh_size.width + rh_size.width,
+          std::max(lh_size.width, rh_size.width)};
 }
 
 Constant* Variable::AsConstant() {

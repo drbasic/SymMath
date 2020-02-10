@@ -325,33 +325,6 @@ Operation::Operation(const OpInfo* op_info,
   CheckIntegrity();
 }
 
-PrintSize Operation::GetPrintSize(bool ommit_front_minus) const {
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    auto op_size = operands_[i]->GetPrintSize(ommit_front_minus);
-    switch (op_info_->op) {
-      case Op::UnMinus:
-        return MeasureUnMinus(ommit_front_minus);
-        break;
-      case Op::Minus:
-      case Op::Plus:
-      case Op::Mult:
-      case Op::Div:
-        return MeasurMinusPlusMultDiv();
-        break;
-    }
-  }
-  assert(false);
-  return {};
-}
-
-std::string Operation::PrintImpl(bool ommit_front_minus) const {
-  if (op_info_->print_f)
-    return op_info_->print_f(op_info_, operands_);
-  if (IsUnMinus())
-    return PrintUnMinus(ommit_front_minus);
-  return PrintMinusPlusMultDiv();
-}
-
 int Operation::Priority() const {
   return op_info_->priority;
 }
@@ -370,6 +343,45 @@ std::unique_ptr<INode> Operation::Clone() const {
   for (const auto& op : operands_)
     new_nodes.push_back(op->Clone());
   return std::make_unique<Operation>(op_info_, std::move(new_nodes));
+}
+
+PrintSize Operation::Render(Canvas* canvas,
+                            const Position& pos,
+                            bool dry_run,
+                            bool ommit_front_minus) const {
+  // if (op_info_->print_f)
+  //  return op_info_->print_f(op_info_, operands_);
+  switch (op_info_->op) {
+    case Op::UnMinus:
+      return RenderUnMinus(canvas, pos, dry_run, ommit_front_minus);
+      break;
+    case Op::Minus:
+    case Op::Plus:
+    case Op::Mult:
+    case Op::Div:
+      return RenderMinusPlus(canvas, pos, dry_run, ommit_front_minus);
+      break;
+  }
+  assert(false);
+  return {};
+
+  /*
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    switch (op_info_->op) {
+      case Op::UnMinus:
+        return MeasureUnMinus(ommit_front_minus);
+        break;
+      case Op::Minus:
+      case Op::Plus:
+      case Op::Mult:
+      case Op::Div:
+        return MeasurMinusPlusMultDiv();
+        break;
+    }
+  }
+  assert(false);
+  return {};
+  */
 }
 
 bool Operation::HasFrontMinus() const {
@@ -868,77 +880,46 @@ void Operation::RemoveEmptyOperands() {
       std::end(operands_));
 }
 
-PrintSize Operation::MeasureUnMinus(bool ommit_front_minus) const {
-  return MeasureOperand(operands_[0].get(), !ommit_front_minus);
+PrintSize Operation::RenderUnMinus(Canvas* canvas,
+                                   const Position& pos,
+                                   bool dry_run,
+                                   bool ommit_front_minus) const {
+  return RenderOperand(operands_[0].get(), canvas, pos, dry_run,
+                       !ommit_front_minus);
 }
 
-std::string Operation::PrintUnMinus(bool ommit_front_minus) const {
-  return PrintOperand(operands_[0].get(), !ommit_front_minus);
-}
-
-PrintSize Operation::MeasurMinusPlusMultDiv() const {
-  PrintSize result{};
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    auto op_size = MeasureOperand(operands_[i].get(), i++ != 0);
-    result.width += op_size.width;
-    result.height = std::max(result.height, op_size.height);
-  }
-  return result;
-}
-
-std::string Operation::PrintMinusPlusMultDiv() const {
-  int i = 0;
-  std::stringstream ss;
-  // if (operands_.size() > 2)
-  // ss << "[";
-  for (const auto& operand : operands_) {
-    ss << PrintOperand(operand.get(), i++ != 0);
-  }
-  // if (operands_.size() > 2)
-  // ss << "]";
-  return ss.str();
-}
-
-PrintSize Operation::MeasureOperand(const INode* node, bool with_op) const {
-  if (IsUnMinus() && node->HasFrontMinus()) {
-    return node->GetPrintSize(true);
-  }
-  bool need_br = (node->Priority() < Priority());
-  if (!with_op && INodeAcessor::IsUnMinus(node) && op_info_->op == Op::Mult)
-    need_br = false;
-  if (need_br || !with_op) {
-    PrintSize result;
-    if (with_op)
-      result.width += op_info_->name.size();
-    if (need_br)
-      result.width += 1;
-    auto op_size = node->GetPrintSize(false);
-    result.width += op_size.width;
-    result.height = std::max(result.height, op_size.height);
-    if (need_br)
-      result.width += 1;
-    return result;
-  }
-
-  if ((op_info_->op == Op::Minus || op_info_->op == Op::Plus) &&
-      node->HasFrontMinus()) {
-    if (op_info_->op == Op::Minus) {
-      auto op_size = node->GetPrintSize(true);
-      op_size.width += 1;
-      return op_size;
-    } else {
-      return node->GetPrintSize(false);
+PrintSize Operation::RenderMinusPlus(Canvas* canvas,
+                                     const Position& pos,
+                                     bool dry_run,
+                                     bool ommit_front_minus) const {
+  if (dry_run) {
+    print_size_ = {};
+    for (size_t i = 0; i < operands_.size(); ++i) {
+      auto op_size =
+          RenderOperand(operands_[i].get(), canvas, pos, dry_run, i == 0);
+      print_size_.width += op_size.width;
+      print_size_.height = std::max(print_size_.height, op_size.height);
     }
+    return print_size_;
   }
-
-  PrintSize result = node->GetPrintSize(false);
-  result.width += op_info_->name.size();
-  return result;
+  Position op_pos{pos};
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    op_pos.y =
+        pos.y + (print_size_.height - operands_[i]->LastPrintSize().height) / 2;
+    auto op_size =
+        RenderOperand(operands_[0].get(), canvas, op_pos, dry_run, i == 0);
+    op_pos.x += op_size.width;
+  }
+  return print_size_;
 }
 
-std::string Operation::PrintOperand(const INode* node, bool with_op) const {
+PrintSize Operation::RenderOperand(const INode* node,
+                                   Canvas* canvas,
+                                   const Position& pos,
+                                   bool dry_run,
+                                   bool with_op) const {
   if (IsUnMinus() && node->HasFrontMinus()) {
-    return node->PrintImpl(true);
+    return node->Render(canvas, pos, dry_run, true);
   }
 
   bool need_br = (node->Priority() < Priority());
@@ -946,14 +927,28 @@ std::string Operation::PrintOperand(const INode* node, bool with_op) const {
     need_br = false;
   if (need_br || !with_op) {
     std::stringstream ss;
-    if (with_op)
+    PrintSize result;
+    if (with_op) {
+      result.width += op_info_->name.size();
+      if (!dry_run){
+        canvas->PrintAt();
       ss << op_info_->name;
+      }
+    }
     if (need_br)
+      if (!dry_run) {
+        RenderBracket();
+      }
+    
+    if (with_op && !dry_run)
+      ss << op_info_->name;
+    if (need_br && !dry_run)
       ss << "(";
     ss << node->PrintImpl(false);
-    if (need_br)
+    if (need_br && !dry_run)
       ss << ")";
-    return ss.str();
+
+    return;
   }
 
   if ((op_info_->op == Op::Minus || op_info_->op == Op::Plus) &&

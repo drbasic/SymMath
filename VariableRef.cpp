@@ -4,10 +4,6 @@
 
 VariableRef::VariableRef(const Variable* var) : var_(var) {}
 
-std::string VariableRef::PrintImpl(bool ommit_front_minus) const {
-  return var_->PrintRef(ommit_front_minus);
-}
-
 int VariableRef::Priority() const {
   return var_->Priority();
 }
@@ -32,8 +28,11 @@ std::unique_ptr<INode> VariableRef::Clone() const {
   return std::make_unique<VariableRef>(var_);
 }
 
-PrintSize VariableRef::GetPrintSize(bool ommit_front_minus) const {
-  return var_->GetPrintSize(ommit_front_minus);
+PrintSize VariableRef::Render(Canvas* canvas,
+                              const Position& pos,
+                              bool dry_run,
+                              bool ommit_front_minus) const {
+  return var_->Render(canvas, pos, dry_run, ommit_front_minus);
 }
 
 Constant* VariableRef::AsConstant() {

@@ -27,8 +27,10 @@ class Operation : public INode {
  protected:
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  PrintSize GetPrintSize(bool ommit_front_minus) const override;
-  std::string PrintImpl(bool ommit_front_minus) const override;
+  PrintSize Render(Canvas* canvas,
+                   const Position& pos,
+                   bool dry_run,
+                   bool ommit_front_minus) const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
@@ -62,15 +64,24 @@ class Operation : public INode {
 
   void RemoveEmptyOperands();
 
-  PrintSize MeasureUnMinus(bool ommit_front_minus) const;
-  std::string PrintUnMinus(bool ommit_front_minus) const;
-  PrintSize MeasurMinusPlusMultDiv() const;
-  std::string PrintMinusPlusMultDiv() const;
-  PrintSize MeasureOperand(const INode* node, bool with_op) const;
-  std::string PrintOperand(const INode* node, bool with_op) const;
+  PrintSize RenderUnMinus(Canvas* canvas,
+                          const Position& pos,
+                          bool dry_run,
+                          bool ommit_front_minus) const;
+  PrintSize RenderMinusPlus(Canvas* canvas,
+                            const Position& pos,
+                            bool dry_run,
+                            bool ommit_front_minus) const;
+  PrintSize RenderOperand(const INode* node,
+                          Canvas* canvas,
+                          const Position& pos,
+                          bool dry_run,
+                          bool with_op) const;
+
   std::unique_ptr<INode> CalcUnMinus() const;
   std::unique_ptr<INode> CalcMinusPlusMultDiv() const;
 
   const OpInfo* op_info_;
+  mutable PrintSize print_size_;
   std::vector<std::unique_ptr<INode>> operands_;
 };

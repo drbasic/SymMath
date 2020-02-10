@@ -22,8 +22,10 @@ class Variable : public INode {
  protected:
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  PrintSize GetPrintSize(bool ommit_front_minus) const override;
-  std::string PrintImpl(bool ommit_front_minus) const override;
+  PrintSize Render(Canvas* canvas,
+                   const Position& pos,
+                   bool dry_run,
+                   bool ommit_front_minus) const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
   bool CheckCircular(const INode* other) const override;
@@ -40,6 +42,7 @@ class Variable : public INode {
   friend class VariableRef;
   INode* GetVisibleNode() const;
   std::string PrintRef(bool ommit_front_minus) const;
+
   std::string name_;
   std::unique_ptr<INode> value_;
 };

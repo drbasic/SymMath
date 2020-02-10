@@ -4,11 +4,18 @@
 
 Constant::Constant(double val) : value_(val) {}
 
-std::string Constant::PrintImpl(bool ommit_front_minus) const {
-  std::stringstream ss;
+PrintSize Constant::Render(Canvas* canvas,
+                           const Position& pos,
+                           bool dry_run,
+                           bool ommit_front_minus) const {
   double for_print = (ommit_front_minus && HasFrontMinus()) ? -value_ : value_;
+  std::stringstream ss;
   ss << for_print;
-  return ss.str();
+  auto str = ss.str();
+  if (!dry_run) {
+    canvas->PrintAt(pos, str);
+  }
+  return {str.size(), 1};
 }
 
 int Constant::Priority() const {
@@ -26,10 +33,6 @@ bool Constant::CheckCircular(const INode* other) const {
 bool Constant::IsEqual(const INode* rh) const {
   const Constant* rh_const = rh->AsConstant();
   return rh_const && (Value() == rh_const->Value());
-}
-
-PrintSize Constant::GetPrintSize(bool ommit_front_minus) const {
-  return { PrintImpl(ommit_front_minus).size(), 1 };
 }
 
 Constant* Constant::AsConstant() {

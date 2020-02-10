@@ -10,12 +10,14 @@ std::unique_ptr<INode> ErrorNode::Clone() const {
   return std::make_unique<ErrorNode>(error_);
 }
 
-PrintSize ErrorNode::GetPrintSize(bool ommit_front_minus) const {
+PrintSize ErrorNode::Render(Canvas* canvas,
+                            const Position& pos,
+                            bool dry_run,
+                            bool ommit_front_minus) const {
+  if (!dry_run) {
+    canvas->PrintAt(pos, error_);
+  }
   return {error_.size(), 1};
-}
-
-std::string ErrorNode::PrintImpl(bool ommit_front_minus) const {
-  return error_;
 }
 
 int ErrorNode::Priority() const {
