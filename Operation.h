@@ -73,6 +73,10 @@ class Operation : public INode {
                             const Position& pos,
                             bool dry_run,
                             bool ommit_front_minus) const;
+  PrintSize RenderDiv(Canvas* canvas,
+                      const Position& pos,
+                      bool dry_run,
+                      bool ommit_front_minus) const;
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
                           const Position& pos,
