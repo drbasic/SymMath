@@ -47,7 +47,9 @@ class Operation : public INode {
 
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
-  bool SimplifyDivDiv(std::unique_ptr<INode>* new_node);
+  bool SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node);
+  bool SimplifyDivDiv();
+  bool SimplifyDivMul();
   bool SimplifyChain();
   bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool IsAllOperandsConst() const;

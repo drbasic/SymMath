@@ -37,6 +37,14 @@ class INodeAcessor {
     return nullptr;
   }
 
+  static const Operation* AsMult(const INode* lh) {
+    auto result = lh->AsOperation();
+    if (result && result->op_info_->op == Op::Mult) {
+      return result;
+    }
+    return nullptr;
+  }
+
   static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op) {
     return op->operands_;
   }
@@ -73,6 +81,17 @@ class INodeAcessor {
     }
     return std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(rh),
                                        Const(1.0));
+  }
+
+  static std::unique_ptr<Operation> MakeUnMinus(std::unique_ptr<INode> inner) {
+    return std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
+                                       std::move(inner));
+  }
+
+  static std::unique_ptr<Operation> MakeDiv(std::unique_ptr<INode> lh,
+                                            std::unique_ptr<INode> rh) {
+    return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
+                                       std::move(rh));
   }
 };
 
@@ -453,6 +472,11 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   CheckIntegrity();
 
   bool simplified = false;
+  if (SimplifyUnMinus(new_node)) {
+    if (new_node->get())
+      return true;
+    assert(false);
+  }
   for (auto& node : operands_) {
     std::unique_ptr<INode> new_sub_node;
     while (node->SimplifyImpl(&new_sub_node)) {
@@ -462,14 +486,15 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
       CheckIntegrity();
     }
   }
-  if (SimplifyUnMinus(new_node)) {
+  if (SimplifyDivExtractUnMinus(new_node)) {
     if (new_node->get())
       return true;
     simplified = true;
   }
-  if (SimplifyDivDiv(new_node)) {
-    if (new_node->get())
-      return true;
+  while (SimplifyDivDiv()) {
+    simplified = true;
+  }
+  while (SimplifyDivMul()) {
     simplified = true;
   }
 
@@ -533,7 +558,44 @@ bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   return true;
 }
 
-bool Operation::SimplifyDivDiv(std::unique_ptr<INode>* new_node) {
+bool Operation::SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node) {
+  if (!INodeAcessor::AsDiv(this))
+    return false;
+
+  bool need_convert_this = false;
+  bool is_simlified = false;
+  auto um_minus_exctractor =
+      [&need_convert_this,
+       &is_simlified](std::vector<std::unique_ptr<INode>>* operands) {
+        for (bool need_more = true; need_more;) {
+          need_more = false;
+          for (auto& node : *operands) {
+            if (auto* un_minus = INodeAcessor::AsUnMinus(node.get())) {
+              need_convert_this = !need_convert_this;
+              need_more = true;
+              is_simlified = true;
+              node = std::move(un_minus->operands_[0]);
+            }
+          }
+        }
+      };
+
+  // extract (-(a*b)) / (-(b*c) )
+  um_minus_exctractor(&operands_);
+  for (auto& node : operands_) {
+    if (auto* mult = INodeAcessor::AsMult(node.get())) {
+      um_minus_exctractor(&mult->operands_);
+    }
+  }
+
+  if (need_convert_this) {
+    *new_node = INodeAcessor::MakeUnMinus(INodeAcessor::MakeDiv(
+        std::move(operands_[0]), std::move(operands_[1])));
+  }
+  return is_simlified;
+}
+
+bool Operation::SimplifyDivDiv() {
   if (!INodeAcessor::AsDiv(this))
     return false;
   auto* top = INodeAcessor::AsDiv(operands_[0].get());
@@ -556,7 +618,7 @@ bool Operation::SimplifyDivDiv(std::unique_ptr<INode>* new_node) {
       new_bottom->operands_.push_back(std::move(bottom->operands_[0]));
     else
       new_bottom = INodeAcessor::ConvertToMul(std::move(bottom->operands_[0]));
-  } else { 
+  } else {
     if (new_bottom)
       new_bottom->operands_.push_back(std::move(operands_[1]));
     else
@@ -564,6 +626,66 @@ bool Operation::SimplifyDivDiv(std::unique_ptr<INode>* new_node) {
   }
   operands_[0] = std::move(new_top);
   operands_[1] = std::move(new_bottom);
+
+  for (auto& operand : operands_) {
+    std::unique_ptr<INode> new_node;
+    if (operand->SimplifyImpl(&new_node)) {
+      if (new_node)
+        operand = std::move(new_node);
+    }
+  }
+  return true;
+}
+
+bool Operation::SimplifyDivMul() {
+  if (!INodeAcessor::AsDiv(this))
+    return false;
+  if (!INodeAcessor::AsMult(operands_[0].get()) &&
+      !INodeAcessor::AsMult(operands_[1].get()))
+    return false;
+
+  auto is_contains_div = [](const INode* node) {
+    if (auto* mult = INodeAcessor::AsMult(node)) {
+      for (const auto& node : mult->operands_) {
+        if (INodeAcessor::AsDiv(node.get()))
+          return true;
+      }
+    }
+    return false;
+  };
+  bool can_optimize = is_contains_div(operands_[0].get()) ||
+                      is_contains_div(operands_[1].get());
+  if (!can_optimize)
+    return false;
+
+  std::unique_ptr<Operation> new_top =
+      INodeAcessor::ConvertToMul(std::move(operands_[0]));
+  std::unique_ptr<Operation> new_bottom =
+      INodeAcessor::ConvertToMul(std::move(operands_[1]));
+
+  for (auto& node : new_top->operands_) {
+    if (auto* div = INodeAcessor::AsDiv(node.get())) {
+      new_bottom->operands_.push_back(std::move(div->operands_[1]));
+      node = std::move(div->operands_[0]);
+    }
+  }
+  for (auto& node : new_bottom->operands_) {
+    if (auto* div = INodeAcessor::AsDiv(node.get())) {
+      new_top->operands_.push_back(std::move(div->operands_[1]));
+      node = std::move(div->operands_[0]);
+    }
+  }
+
+  operands_[0] = std::move(new_top);
+  operands_[1] = std::move(new_bottom);
+
+  for (auto& operand : operands_) {
+    std::unique_ptr<INode> new_node;
+    if (operand->SimplifyImpl(&new_node)) {
+      if (new_node)
+        operand = std::move(new_node);
+    }
+  }
   return true;
 }
 
@@ -1061,14 +1183,14 @@ PrintSize Operation::RenderOperand(const INode* node,
   bool need_br = !ommit_brackets && (node->Priority() < Priority());
   if (need_br && !with_op && INodeAcessor::IsUnMinus(node) &&
       op_info_->op == Op::Mult) {
-    // when un minus first in multyple, remove brackets. Remove brackets -a * b
-    // ;  Keep brackets b * (-a);
+    // when un minus first in multyple, remove brackets. Remove brackets -a *
+    // b ;  Keep brackets b * (-a);
     need_br = false;
   }
 
   // if (need_br && op_info_->op == Op::Div) {
-  //  // when un minus first in multyple, remove brackets. Remove brackets -a *
-  //  b ;  Keep brackets b * (-a); need_br = false;
+  //  // when un minus first in multyple, remove brackets. Remove brackets -a
+  //  * b ;  Keep brackets b * (-a); need_br = false;
   // }
 
   if (need_br || !with_op) {
