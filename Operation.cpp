@@ -900,13 +900,14 @@ PrintSize Operation::RenderUnMinus(Canvas* canvas,
       minus_behavior == MinusBehavior::OmmitMinusAndBrackets) {
     assert(HasFrontMinus());
     assert(!operands_[0]->HasFrontMinus());
-    return RenderOperand(operands_[0].get(), canvas, pos, dry_run,
-                         minus_behavior == MinusBehavior::OmmitMinusAndBrackets,
-                         false);
+    return RenderOperand(
+        operands_[0].get(), canvas, pos, pos.y + print_size_.base_line, dry_run,
+        minus_behavior == MinusBehavior::OmmitMinusAndBrackets, false);
   }
 
   if (minus_behavior == MinusBehavior::Relax) {
-    return RenderOperand(operands_[0].get(), canvas, pos, dry_run, false, true);
+    return RenderOperand(operands_[0].get(), canvas, pos,
+                         pos.y + print_size_.base_line, dry_run, false, true);
   }
 
   assert(false);
@@ -917,19 +918,25 @@ PrintSize Operation::RenderMinusPlus(Canvas* canvas,
                                      const Position& pos,
                                      bool dry_run,
                                      MinusBehavior minus_behavior) const {
+  //  1
+  //  ~ + 1
+  //  2       1
+  //  ~~~~~ + ~
+  //    b     3
+
   PrintSize new_print_size = {};
   Position operand_pos{pos};
   for (size_t i = 0; i < operands_.size(); ++i) {
-    operand_pos.y =
-        dry_run
-            ? (pos.y)
-            : (pos.y +
-               (print_size_.height - operands_[i]->LastPrintSize().height) / 2);
-    auto op_size = RenderOperand(operands_[i].get(), canvas, operand_pos,
-                                 dry_run, false, i != 0);
+    size_t operand_base_line =
+        !dry_run ? operands_[i]->LastPrintSize().base_line : 0;
+    operand_pos.y = pos.y + print_size_.base_line - operand_base_line;
+    auto op_size =
+        RenderOperand(operands_[i].get(), canvas, operand_pos,
+                      pos.y + print_size_.base_line, dry_run, false, i != 0);
     operand_pos.x += op_size.width;
+
     new_print_size.width += op_size.width;
-    new_print_size.height = std::max(new_print_size.height, op_size.height);
+    new_print_size.Grow(op_size.base_line, op_size.height);
   }
   if (!dry_run) {
     assert(print_size_ == new_print_size);
@@ -945,6 +952,8 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
   bool has_front_minus =
       (minus_behavior == MinusBehavior::Force) ||
       (minus_behavior == MinusBehavior::Relax && HasFrontMinus());
+  auto* un_minus_op_info = has_front_minus ? GetOpInfo(Op::UnMinus) : nullptr;
+  size_t left_offset = has_front_minus ? 1 + un_minus_op_info->name.size() : 0;
 
   auto lh_size =
       dry_run ? operands_[0]->Render(canvas, pos, dry_run,
@@ -954,12 +963,11 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       dry_run ? operands_[1]->Render(canvas, pos, dry_run,
                                      MinusBehavior::OmmitMinusAndBrackets)
               : operands_[1]->LastPrintSize();
-  PrintSize operands_size{std::max(lh_size.width, rh_size.width),
-                          1 + lh_size.height + rh_size.height};
 
-  auto* un_minus_op_info = GetOpInfo(Op::UnMinus);
-  size_t left_offset = has_front_minus ? 1 + un_minus_op_info->name.size() : 0;
-  Position divider_pos = {pos.x + left_offset, pos.y + lh_size.height};
+  PrintSize operands_size{std::max(lh_size.width, rh_size.width),
+                          1 + lh_size.height + rh_size.height, lh_size.height};
+
+  Position divider_pos = {pos.x + left_offset, pos.y + operands_size.base_line};
   if (has_front_minus) {
     if (!dry_run) {
       canvas->PrintAt({pos.x, divider_pos.y},
@@ -978,18 +986,20 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
 
     Position rh_pos = {
         divider_pos.x + (operands_size.width - rh_size.width) / 2,
-        pos.y + lh_size.height + 1};
+        pos.y + operands_size.base_line + 1};
     auto rh_size2 = operands_[1]->Render(canvas, rh_pos, dry_run,
                                          MinusBehavior::OmmitMinusAndBrackets);
     assert(rh_size2 == rh_size);
   }
 
-  return {operands_size.width + left_offset, operands_size.height};
+  operands_size.width += left_offset;
+  return operands_size;
 }
 
 PrintSize Operation::RenderOperand(const INode* node,
                                    Canvas* canvas,
                                    const Position& pos,
+                                   size_t base_line,
                                    bool dry_run,
                                    bool ommit_brackets,
                                    bool with_op) const {
@@ -1025,6 +1035,7 @@ PrintSize Operation::RenderOperand(const INode* node,
         node->Render(canvas, operand_position, dry_run, MinusBehavior::Relax);
     result.width += operand_size.width;
     result.height = std::max(result.height, operand_size.height);
+    result.base_line = std::max(result.base_line, operand_size.base_line);
 
     if (need_br) {
       // { [ ( ) ] }
@@ -1035,6 +1046,7 @@ PrintSize Operation::RenderOperand(const INode* node,
                               Canvas::Bracket::Right, operand_size.height);
       }
       result.width += 2;
+      result.base_line = result.height / 2;
     }
     return result;
   }
@@ -1055,7 +1067,8 @@ PrintSize Operation::RenderOperand(const INode* node,
     operand_size =
         node->Render(canvas, {pos.x + op_to_print->name.size(), pos.y}, dry_run,
                      MinusBehavior::Ommit);
-  } else if (with_op && op_info_->op == Op::UnMinus && INodeAcessor::AsDiv(node)) {
+  } else if (with_op && op_info_->op == Op::UnMinus &&
+             INodeAcessor::AsDiv(node)) {
     assert(!node->HasFrontMinus());
     assert(HasFrontMinus());
     // div operand print un minus
@@ -1068,11 +1081,10 @@ PrintSize Operation::RenderOperand(const INode* node,
                      MinusBehavior::Relax);
   }
   if (!dry_run && op_to_print) {
-    canvas->PrintAt({pos.x, pos.y + operand_size.height / 2},
-                    std::string(op_to_print->name));
+    canvas->PrintAt({pos.x, base_line}, std::string(op_to_print->name));
   }
-  return {(op_to_print ? op_info_->name.size() : 0) + operand_size.width,
-          operand_size.height};
+  operand_size.width += op_to_print ? op_info_->name.size() : 0;
+  return operand_size;
 }
 
 std::unique_ptr<INode> Operation::CalcUnMinus() const {

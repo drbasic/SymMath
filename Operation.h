@@ -80,6 +80,7 @@ class Operation : public INode {
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
                           const Position& pos,
+                          size_t base_line,
                           bool dry_run,
                           bool ommit_brackets,
                           bool with_op) const;

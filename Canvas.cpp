@@ -1,13 +1,23 @@
 #include "Canvas.h"
 
+#include <algorithm>
 #include <cassert>
 
 bool PrintSize::operator==(const PrintSize& rh) const {
-  return width == rh.width && height == rh.height;
+  return width == rh.width && height == rh.height && base_line == rh.base_line;
 }
 
 bool PrintSize::operator!=(const PrintSize& rh) const {
   return !((*this) == rh);
+}
+
+void PrintSize::Grow(size_t new_base_line, size_t new_height) {
+  assert(new_height > new_base_line);
+  if (new_base_line > base_line) {
+    height += new_base_line - base_line;
+    base_line = new_base_line;
+  }
+  height = std::max(height, base_line - new_base_line + new_height);
 }
 //=============================================================================
 
@@ -33,6 +43,8 @@ void Canvas::PrintAt(const Position& pos, const std::string& str) {
   assert(!dry_run_);
   assert(pos.x + str.size() <= print_size_.width);
   size_t indx = GetIndex(pos);
+  for (size_t i = 0; i < str.size(); ++i)
+    assert(data_[indx + i] == ' ');
   std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
 }
 

@@ -7,8 +7,11 @@
 struct PrintSize {
   size_t width = 0;
   size_t height = 0;
+  size_t base_line = 0;
   bool operator==(const PrintSize& rh) const;
   bool operator!=(const PrintSize& rh) const;
+
+  void Grow(size_t new_base_line, size_t new_height);
 };
 
 struct Position {
