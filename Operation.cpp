@@ -58,6 +58,22 @@ class INodeAcessor {
       return op->op_info_->op == Op::Div ? op : nullptr;
     return nullptr;
   }
+
+  static Operation* AsDiv(INode* lh) {
+    if (auto op = AsOperation(lh))
+      return op->op_info_->op == Op::Div ? op : nullptr;
+    return nullptr;
+  }
+
+  static std::unique_ptr<Operation> ConvertToMul(std::unique_ptr<INode> rh) {
+    assert(rh);
+    if (auto* mult = AsMult(rh.get())) {
+      rh.release();
+      return std::unique_ptr<Operation>(mult);
+    }
+    return std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(rh),
+                                       Const(1.0));
+  }
 };
 
 namespace {
@@ -451,6 +467,12 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
       return true;
     simplified = true;
   }
+  if (SimplifyDivDiv(new_node)) {
+    if (new_node->get())
+      return true;
+    simplified = true;
+  }
+
   while (SimplifyChain()) {
     CheckIntegrity();
     simplified = true;
@@ -508,6 +530,40 @@ bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
     return false;
 
   *new_node = std::move(sub_un_minus->operands_[0]);
+  return true;
+}
+
+bool Operation::SimplifyDivDiv(std::unique_ptr<INode>* new_node) {
+  if (!INodeAcessor::AsDiv(this))
+    return false;
+  auto* top = INodeAcessor::AsDiv(operands_[0].get());
+  auto* bottom = INodeAcessor::AsDiv(operands_[1].get());
+  if (!top && !bottom)
+    return false;
+
+  std::unique_ptr<Operation> new_top;
+  std::unique_ptr<Operation> new_bottom;
+  if (top) {
+    new_top = INodeAcessor::ConvertToMul(std::move(top->operands_[0]));
+    new_bottom = INodeAcessor::ConvertToMul(std::move(top->operands_[1]));
+  } else {
+    new_top = INodeAcessor::ConvertToMul(std::move(operands_[0]));
+  }
+
+  if (bottom) {
+    new_top->operands_.push_back(std::move(bottom->operands_[1]));
+    if (new_bottom)
+      new_bottom->operands_.push_back(std::move(bottom->operands_[0]));
+    else
+      new_bottom = INodeAcessor::ConvertToMul(std::move(bottom->operands_[0]));
+  } else { 
+    if (new_bottom)
+      new_bottom->operands_.push_back(std::move(operands_[1]));
+    else
+      new_bottom = INodeAcessor::ConvertToMul(std::move(operands_[1]));
+  }
+  operands_[0] = std::move(new_top);
+  operands_[1] = std::move(new_bottom);
   return true;
 }
 
