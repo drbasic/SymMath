@@ -30,7 +30,7 @@ class INode {
   virtual PrintSize Render(Canvas* canvas,
                            const Position& pos,
                            bool dry_run,
-                           bool ommit_front_minus) const = 0;
+                           MinusBehavior minus_behavior) const = 0;
   virtual PrintSize LastPrintSize() const = 0;
 
   virtual int Priority() const = 0;

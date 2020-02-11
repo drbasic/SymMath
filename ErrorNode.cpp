@@ -13,11 +13,11 @@ std::unique_ptr<INode> ErrorNode::Clone() const {
 PrintSize ErrorNode::Render(Canvas* canvas,
                             const Position& pos,
                             bool dry_run,
-                            bool ommit_front_minus) const {
+                            MinusBehavior minus_behavior) const {
   if (!dry_run) {
     canvas->PrintAt(pos, error_);
   }
-  return print_size_ = { error_.size(), 1 };
+  return print_size_ = {error_.size(), 1};
 }
 
 PrintSize ErrorNode::LastPrintSize() const {

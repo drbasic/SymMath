@@ -25,7 +25,7 @@ class Variable : public INode {
   PrintSize Render(Canvas* canvas,
                    const Position& pos,
                    bool dry_run,
-                   bool ommit_front_minus) const override;
+                   MinusBehavior minus_behavior) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;

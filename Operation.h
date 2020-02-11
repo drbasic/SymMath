@@ -30,7 +30,7 @@ class Operation : public INode {
   PrintSize Render(Canvas* canvas,
                    const Position& pos,
                    bool dry_run,
-                   bool ommit_front_minus) const override;
+                   MinusBehavior minus_behavior) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
@@ -68,15 +68,15 @@ class Operation : public INode {
   PrintSize RenderUnMinus(Canvas* canvas,
                           const Position& pos,
                           bool dry_run,
-                          bool ommit_front_minus) const;
+                          MinusBehavior minus_behavior) const;
   PrintSize RenderMinusPlus(Canvas* canvas,
                             const Position& pos,
                             bool dry_run,
-                            bool ommit_front_minus) const;
+                            MinusBehavior minus_behavior) const;
   PrintSize RenderDiv(Canvas* canvas,
                       const Position& pos,
                       bool dry_run,
-                      bool ommit_front_minus) const;
+                      MinusBehavior minus_behavior) const;
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
                           const Position& pos,

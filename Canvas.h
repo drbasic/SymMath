@@ -16,6 +16,12 @@ struct Position {
   size_t y = 0;
 };
 
+enum MinusBehavior {
+  Relax,
+  Ommit,
+  Force,
+};
+
 class Canvas {
  public:
   void Resize(const PrintSize& print_size);

@@ -23,9 +23,9 @@ Variable::Variable(const Variable& var)
 
 std::string Variable::Print() const {
   Canvas canvas;
-  auto size = Render(&canvas, {}, true, false);
+  auto size = Render(&canvas, {}, true, MinusBehavior::Relax);
   canvas.Resize(size);
-  auto size2 = Render(&canvas, {}, false, false);
+  auto size2 = Render(&canvas, {}, false, MinusBehavior::Relax);
   assert(size == size2);
   return canvas.ToString();
 }
@@ -115,11 +115,10 @@ std::unique_ptr<INode> Variable::Clone() const {
 PrintSize Variable::Render(Canvas* canvas,
                            const Position& pos,
                            bool dry_run,
-                           bool ommit_front_minus) const {
+                           MinusBehavior minus_behavior) const {
   if (name_.empty()) {
     if (value_) {
-      return print_size_ =
-                 value_->Render(canvas, pos, dry_run, ommit_front_minus);
+      return print_size_ = value_->Render(canvas, pos, dry_run, minus_behavior);
     }
   }
 
@@ -128,7 +127,7 @@ PrintSize Variable::Render(Canvas* canvas,
   PrintSize rh_size;
   if (value_) {
     rh_size = value_->Render(canvas, {pos.x + lh_size.width}, dry_run,
-                             ommit_front_minus);
+                             minus_behavior);
   } else {
     if (!dry_run) {
       canvas->PrintAt({pos.x + lh_size.width}, std::string(kNull));
