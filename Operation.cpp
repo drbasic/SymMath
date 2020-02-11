@@ -970,8 +970,7 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
   Position divider_pos = {pos.x + left_offset, pos.y + operands_size.base_line};
   if (has_front_minus) {
     if (!dry_run) {
-      canvas->PrintAt({pos.x, divider_pos.y},
-                      std::string(un_minus_op_info->name));
+      canvas->PrintAt({pos.x, divider_pos.y}, un_minus_op_info->name);
     }
   }
 
@@ -1021,7 +1020,7 @@ PrintSize Operation::RenderOperand(const INode* node,
     if (with_op) {
       // + - *
       if (!dry_run) {
-        canvas->PrintAt(pos, std::string(op_info_->name));
+        canvas->PrintAt(pos, op_info_->name);
       }
       result.width += op_info_->name.size();
     }
@@ -1081,7 +1080,7 @@ PrintSize Operation::RenderOperand(const INode* node,
                      MinusBehavior::Relax);
   }
   if (!dry_run && op_to_print) {
-    canvas->PrintAt({pos.x, base_line}, std::string(op_to_print->name));
+    canvas->PrintAt({pos.x, base_line}, op_to_print->name);
   }
   operand_size.width += op_to_print ? op_info_->name.size() : 0;
   return operand_size;

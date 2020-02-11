@@ -130,9 +130,9 @@ PrintSize Variable::Render(Canvas* canvas,
                              minus_behavior);
   } else {
     if (!dry_run) {
-      canvas->PrintAt({pos.x + lh_size.width}, std::string(kNull));
+      canvas->PrintAt({pos.x + lh_size.width}, kNull);
     }
-    rh_size = {std::string(kNull).size(), 1};
+    rh_size = {kNull.size(), 1};
   }
   if (!dry_run) {
     canvas->PrintAt({pos.x, pos.y + rh_size.height / 2}, str);

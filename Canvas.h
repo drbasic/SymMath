@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct PrintSize {
@@ -31,14 +32,13 @@ class Canvas {
   void Resize(const PrintSize& print_size);
   std::string ToString() const;
 
-  void PrintAt(const Position& pos, const std::string& str);
-  enum class Bracket {
-    Left, Right
-  };
+  void PrintAt(const Position& pos, std::string_view str);
+  enum class Bracket { Left, Right };
   void RenderBracket(const Position& pos, Bracket br, size_t height);
 
   void SetDryRun(bool dry_run);
-private:
+
+ private:
   size_t GetIndex(const Position& pos) const;
 
   bool dry_run_ = false;

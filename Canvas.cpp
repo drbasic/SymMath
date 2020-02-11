@@ -38,7 +38,7 @@ std::string Canvas::ToString() const {
   return std::string(std::begin(data_), std::end(data_));
 }
 
-void Canvas::PrintAt(const Position& pos, const std::string& str) {
+void Canvas::PrintAt(const Position& pos, std::string_view str) {
   assert(print_size_ != PrintSize{});
   assert(!dry_run_);
   assert(pos.x + str.size() <= print_size_.width);
