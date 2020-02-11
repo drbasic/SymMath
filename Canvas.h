@@ -20,6 +20,7 @@ enum MinusBehavior {
   Relax,
   Ommit,
   Force,
+  OmmitMinusAndBrackets,
 };
 
 class Canvas {

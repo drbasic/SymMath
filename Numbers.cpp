@@ -13,8 +13,11 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  Variable x2 = -(a /2 + 1)/3 - 1;
+  Variable x2 = (b/2 + 1)*-a;
   std::cout << x2.Print() << "\n";
+  x2.Simplify();
+  std::cout << x2.Print() << "\n";
+
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);
   // Variable x22 = x / 2;

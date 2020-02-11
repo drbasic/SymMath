@@ -81,6 +81,7 @@ class Operation : public INode {
                           Canvas* canvas,
                           const Position& pos,
                           bool dry_run,
+                          bool ommit_brackets,
                           bool with_op) const;
 
   std::unique_ptr<INode> CalcUnMinus() const;

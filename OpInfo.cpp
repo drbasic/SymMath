@@ -5,7 +5,7 @@
 
 namespace {
 constexpr OpInfo kOps[] = {
-    {Op::UnMinus, 11, "-", [](double lh, double rh) { return -lh; }, false},
+    {Op::UnMinus, 11, "un(-)", [](double lh, double rh) { return -lh; }, false},
     {Op::Minus, 10, " - ", [](double lh, double rh) { return lh - rh; }, false},
     {Op::Plus, 10, " + ", [](double lh, double rh) { return lh + rh; }, true},
     {Op::Mult, 20, " * ", [](double lh, double rh) { return lh * rh; }, true},

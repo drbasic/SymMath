@@ -39,7 +39,8 @@ void Canvas::PrintAt(const Position& pos, const std::string& str) {
 void Canvas::RenderBracket(const Position& pos, Bracket br, size_t height) {
   assert(print_size_ != PrintSize{});
   assert(!dry_run_);
-  data_[GetIndex(pos)] = br == Bracket::Left ? '(' : ')';
+  for (size_t i = 0; i < height; ++i)
+    data_[GetIndex({pos.x, pos.y + i})] = br == Bracket::Left ? '(' : ')';
 }
 
 void Canvas::SetDryRun(bool dry_run) {
