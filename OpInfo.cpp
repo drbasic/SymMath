@@ -9,7 +9,7 @@ constexpr OpInfo kOps[] = {
     {Op::Minus, 10, " - ", [](double lh, double rh) { return lh - rh; }, false},
     {Op::Plus, 10, " + ", [](double lh, double rh) { return lh + rh; }, true},
     {Op::Mult, 20, " * ", [](double lh, double rh) { return lh * rh; }, true},
-    {Op::Div, 21, "/", [](double lh, double rh) { return lh / rh; }, false},
+    {Op::Div, 20, "/", [](double lh, double rh) { return lh / rh; }, false},
 };
 }
 
