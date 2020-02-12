@@ -72,7 +72,7 @@ std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
                                      std::make_unique<Constant>(rh));
 }
 //=============================================================================
-std::ostream& operator<<(std::ostream& out, const Variable& v) {
+std::wostream& operator<<(std::wostream& out, const Variable& v) {
   out << v.Print();
   return out;
 }

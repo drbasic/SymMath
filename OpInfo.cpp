@@ -1,4 +1,4 @@
-#include "OpInfo.h"
+﻿#include "OpInfo.h"
 
 #include "Exception.h"
 #include "Operations.h"

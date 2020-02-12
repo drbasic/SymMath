@@ -1,7 +1,21 @@
-#include "Canvas.h"
+﻿#include "Canvas.h"
 
 #include <algorithm>
 #include <cassert>
+
+namespace {
+enum BracketsParts {
+  Left,
+  Right,
+  TopLeft,
+  Middle,
+  TopRight,
+  BottomLeft,
+  BottomRight,
+  Last,
+};
+const wchar_t kSquareBrackets[BracketsParts::Last + 1] = L"[]┌│┐└┘";
+}  // namespace
 
 bool PrintSize::operator==(const PrintSize& rh) const {
   return width == rh.width && height == rh.height && base_line == rh.base_line;
@@ -31,11 +45,11 @@ void Canvas::Resize(const PrintSize& print_size) {
   }
 }
 
-std::string Canvas::ToString() const {
+std::wstring Canvas::ToString() const {
   assert(print_size_ != PrintSize{});
   if (data_.empty())
-    return std::string();
-  return std::string(std::begin(data_), std::end(data_));
+    return std::wstring();
+  return std::wstring(std::begin(data_), std::end(data_));
 }
 
 void Canvas::PrintAt(const Position& pos, std::string_view str) {
@@ -51,8 +65,25 @@ void Canvas::PrintAt(const Position& pos, std::string_view str) {
 void Canvas::RenderBracket(const Position& pos, Bracket br, size_t height) {
   assert(print_size_ != PrintSize{});
   assert(!dry_run_);
-  for (size_t i = 0; i < height; ++i)
-    data_[GetIndex({pos.x, pos.y + i})] = br == Bracket::Left ? '(' : ')';
+  if (height == 1) {
+    data_[GetIndex(pos)] = br == Bracket::Left
+                               ? kSquareBrackets[BracketsParts::Left]
+                               : kSquareBrackets[BracketsParts::Right];
+    return;
+  }
+  for (size_t i = 0; i < height; ++i) {
+    wchar_t s = '?';
+    if (i == 0) {
+      s = br == Bracket::Left ? kSquareBrackets[BracketsParts::TopLeft]
+                              : kSquareBrackets[BracketsParts::TopRight];
+    } else if (i == height - 1) {
+      s = br == Bracket::Left ? kSquareBrackets[BracketsParts::BottomLeft]
+                              : kSquareBrackets[BracketsParts::BottomRight];
+    } else {
+      s = kSquareBrackets[BracketsParts::Middle];
+    }
+    data_[GetIndex({pos.x, pos.y + i})] = s;
+  }
 }
 
 void Canvas::SetDryRun(bool dry_run) {

@@ -10,7 +10,7 @@ class Variable : public INode {
 
   std::unique_ptr<INode> SymCalc() const override;
 
-  std::string Print() const;
+  std::wstring Print() const;
   bool Simplify();
   std::string GetName() const;
 

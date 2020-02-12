@@ -21,7 +21,7 @@ Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 Variable::Variable(const Variable& var)
     : value_(std::make_unique<VariableRef>(&var)) {}
 
-std::string Variable::Print() const {
+std::wstring Variable::Print() const {
   Canvas canvas;
   auto size = Render(&canvas, {}, true, MinusBehavior::Relax);
   canvas.Resize(size);

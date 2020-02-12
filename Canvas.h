@@ -30,7 +30,7 @@ enum MinusBehavior {
 class Canvas {
  public:
   void Resize(const PrintSize& print_size);
-  std::string ToString() const;
+  std::wstring ToString() const;
 
   void PrintAt(const Position& pos, std::string_view str);
   enum class Bracket { Left, Right };
@@ -43,5 +43,5 @@ class Canvas {
 
   bool dry_run_ = false;
   PrintSize print_size_;
-  std::vector<char> data_;
+  std::vector<wchar_t> data_;
 };
