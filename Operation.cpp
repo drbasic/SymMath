@@ -1105,16 +1105,12 @@ PrintSize Operation::RenderMinusPlus(Canvas* canvas,
   PrintSize new_print_size = {};
   Position operand_pos{pos};
   for (size_t i = 0; i < operands_.size(); ++i) {
-    size_t operand_base_line =
-        !dry_run ? operands_[i]->LastPrintSize().base_line : 0;
-    operand_pos.y = pos.y + print_size_.base_line - operand_base_line;
     auto op_size =
         RenderOperand(operands_[i].get(), canvas, operand_pos,
                       pos.y + print_size_.base_line, dry_run, false, i != 0);
     operand_pos.x += op_size.width;
-
     new_print_size.width += op_size.width;
-    new_print_size.Grow(op_size.base_line, op_size.height);
+    new_print_size.GrowHeight(op_size);
   }
   if (!dry_run) {
     assert(print_size_ == new_print_size);
@@ -1218,30 +1214,58 @@ PrintSize Operation::RenderOperand(const INode* node,
     }
     x_offset += op_to_print->name.size();
   }
+
+  PrintSize total_operand_size;
+  PrintSize inner_size = !dry_run ? node->LastPrintSize() : PrintSize();
   if (need_br) {
     if (!dry_run) {
-      auto operand_size = node->LastPrintSize();
-      canvas->RenderBracket({pos.x + x_offset, pos.y}, Canvas::Bracket::Left,
-                            operand_size.height);
+      auto expected_br_size = canvas->RenderBracket({}, Canvas::Bracket::Right,
+                                                    inner_size.height, true);
+      auto br_size = canvas->RenderBracket(
+          {pos.x + x_offset, pos.y + base_line - expected_br_size.base_line},
+          Canvas::Bracket::Left, inner_size.height, false);
+      total_operand_size.GrowHeight(br_size);
+      x_offset += br_size.width;
     }
-    x_offset += 1;
   }
 
   // Render operand
-  auto operand_size =
-      node->Render(canvas, {pos.x + x_offset, pos.y}, dry_run, minus_behavior);
-  x_offset += operand_size.width;
+  {
+    auto new_inner_size = node->Render(
+        canvas, {pos.x + x_offset, base_line - inner_size.base_line}, dry_run,
+        minus_behavior);
+    if (!dry_run) {
+      assert(inner_size == new_inner_size);
+    }
+    inner_size = new_inner_size;
+    total_operand_size.GrowHeight(inner_size);
+    x_offset += inner_size.width;
+  }
 
   if (need_br) {
     if (!dry_run) {
-      canvas->RenderBracket({pos.x + x_offset, pos.y}, Canvas::Bracket::Right,
-                            operand_size.height);
+      auto expected_br_size = canvas->RenderBracket({}, Canvas::Bracket::Right,
+                                                    inner_size.height, true);
+      // do render
+      auto br_size = canvas->RenderBracket(
+          {pos.x + x_offset, pos.y + base_line - expected_br_size.base_line},
+          Canvas::Bracket::Right, inner_size.height, false);
+      total_operand_size.GrowHeight(br_size);
+      x_offset += br_size.width;
+    } else {
+      auto left_br_size = canvas->RenderBracket({}, Canvas::Bracket::Left,
+                                                inner_size.height, true);
+      total_operand_size.GrowHeight(left_br_size);
+      x_offset += left_br_size.width;
+      auto right_br_size = canvas->RenderBracket({}, Canvas::Bracket::Right,
+                                                 inner_size.height, true);
+      total_operand_size.GrowHeight(right_br_size);
+      x_offset += right_br_size.width;
     }
-    x_offset += 1;
   }
 
-  operand_size.width = x_offset;
-  return operand_size;
+  total_operand_size.width = x_offset;
+  return total_operand_size;
 }
 
 std::unique_ptr<INode> Operation::CalcUnMinus() const {

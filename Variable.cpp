@@ -23,8 +23,10 @@ Variable::Variable(const Variable& var)
 
 std::wstring Variable::Print() const {
   Canvas canvas;
+  canvas.SetDryRun(true);
   auto size = Render(&canvas, {}, true, MinusBehavior::Relax);
   canvas.Resize(size);
+  canvas.SetDryRun(false);
   auto size2 = Render(&canvas, {}, false, MinusBehavior::Relax);
   assert(size == size2);
   return canvas.ToString();

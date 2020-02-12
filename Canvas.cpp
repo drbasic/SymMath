@@ -25,13 +25,13 @@ bool PrintSize::operator!=(const PrintSize& rh) const {
   return !((*this) == rh);
 }
 
-void PrintSize::Grow(size_t new_base_line, size_t new_height) {
-  assert(new_height > new_base_line);
-  if (new_base_line > base_line) {
-    height += new_base_line - base_line;
-    base_line = new_base_line;
+void PrintSize::GrowHeight(const PrintSize& other) {
+  assert(other.height > other.base_line);
+  if (other.base_line > base_line) {
+    height += other.base_line - base_line;
+    base_line = other.base_line;
   }
-  height = std::max(height, base_line - new_base_line + new_height);
+  height = std::max(height, base_line - other.base_line + other.height);
 }
 //=============================================================================
 
@@ -62,28 +62,35 @@ void Canvas::PrintAt(const Position& pos, std::string_view str) {
   std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
 }
 
-void Canvas::RenderBracket(const Position& pos, Bracket br, size_t height) {
-  assert(print_size_ != PrintSize{});
-  assert(!dry_run_);
+PrintSize Canvas::RenderBracket(const Position& pos,
+                                Bracket br,
+                                size_t height,
+                                bool dry_run) {
   if (height == 1) {
-    data_[GetIndex(pos)] = br == Bracket::Left
-                               ? kSquareBrackets[BracketsParts::Left]
-                               : kSquareBrackets[BracketsParts::Right];
-    return;
-  }
-  for (size_t i = 0; i < height; ++i) {
-    wchar_t s = '?';
-    if (i == 0) {
-      s = br == Bracket::Left ? kSquareBrackets[BracketsParts::TopLeft]
-                              : kSquareBrackets[BracketsParts::TopRight];
-    } else if (i == height - 1) {
-      s = br == Bracket::Left ? kSquareBrackets[BracketsParts::BottomLeft]
-                              : kSquareBrackets[BracketsParts::BottomRight];
-    } else {
-      s = kSquareBrackets[BracketsParts::Middle];
+    if (!dry_run) {
+      data_[GetIndex(pos)] = br == Bracket::Left
+                                 ? kSquareBrackets[BracketsParts::Left]
+                                 : kSquareBrackets[BracketsParts::Right];
     }
-    data_[GetIndex({pos.x, pos.y + i})] = s;
+    return {1, 1, 0};
   }
+  height += 2;
+  if (!dry_run) {
+    for (size_t i = 0; i < height; ++i) {
+      wchar_t s = '?';
+      if (i == 0) {
+        s = br == Bracket::Left ? kSquareBrackets[BracketsParts::TopLeft]
+                                : kSquareBrackets[BracketsParts::TopRight];
+      } else if (i == height - 1) {
+        s = br == Bracket::Left ? kSquareBrackets[BracketsParts::BottomLeft]
+                                : kSquareBrackets[BracketsParts::BottomRight];
+      } else {
+        s = kSquareBrackets[BracketsParts::Middle];
+      }
+      data_[GetIndex({pos.x + (br == Bracket::Left ? 0 : 1), pos.y + i})] = s;
+    }
+  }
+  return {2, height, height / 2};
 }
 
 void Canvas::SetDryRun(bool dry_run) {
