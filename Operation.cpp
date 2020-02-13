@@ -1079,12 +1079,12 @@ PrintSize Operation::RenderUnMinus(Canvas* canvas,
     assert(HasFrontMinus());
     assert(!operands_[0]->HasFrontMinus());
     return RenderOperand(
-        operands_[0].get(), canvas, pos, pos.y + print_size_.base_line, dry_run,
-        minus_behavior == MinusBehavior::OmmitMinusAndBrackets, false);
+        operands_[0].get(), canvas, pos.x, pos.y + print_size_.base_line,
+        dry_run, minus_behavior == MinusBehavior::OmmitMinusAndBrackets, false);
   }
 
   if (minus_behavior == MinusBehavior::Relax) {
-    return RenderOperand(operands_[0].get(), canvas, pos,
+    return RenderOperand(operands_[0].get(), canvas, pos.x,
                          pos.y + print_size_.base_line, dry_run, false, true);
   }
 
@@ -1106,11 +1106,10 @@ PrintSize Operation::RenderMinusPlus(Canvas* canvas,
   Position operand_pos{pos};
   for (size_t i = 0; i < operands_.size(); ++i) {
     auto op_size =
-        RenderOperand(operands_[i].get(), canvas, operand_pos,
+        RenderOperand(operands_[i].get(), canvas, operand_pos.x,
                       pos.y + print_size_.base_line, dry_run, false, i != 0);
     operand_pos.x += op_size.width;
-    new_print_size.width += op_size.width;
-    new_print_size.GrowHeight(op_size);
+    new_print_size.GrowRight(op_size);
   }
   if (!dry_run) {
     assert(print_size_ == new_print_size);
@@ -1126,8 +1125,6 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
   bool has_front_minus =
       (minus_behavior == MinusBehavior::Force) ||
       (minus_behavior == MinusBehavior::Relax && HasFrontMinus());
-  auto* un_minus_op_info = has_front_minus ? GetOpInfo(Op::UnMinus) : nullptr;
-  size_t left_offset = has_front_minus ? 1 + un_minus_op_info->name.size() : 0;
 
   auto lh_size =
       dry_run ? operands_[0]->Render(canvas, pos, dry_run,
@@ -1141,11 +1138,13 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
   PrintSize operands_size{std::max(lh_size.width, rh_size.width),
                           1 + lh_size.height + rh_size.height, lh_size.height};
 
-  Position divider_pos = {pos.x + left_offset, pos.y + operands_size.base_line};
+  Position divider_pos = {pos.x, pos.y + operands_size.base_line};
+  PrintSize un_minus_with_space_size;
   if (has_front_minus) {
-    if (!dry_run) {
-      canvas->PrintAt({pos.x, divider_pos.y}, un_minus_op_info->name);
-    }
+    un_minus_with_space_size = canvas->PrintAt(
+        {pos.x, divider_pos.y}, GetOpInfo(Op::UnMinus)->name, dry_run);
+    un_minus_with_space_size.width += 1;
+    divider_pos.x += un_minus_with_space_size.width;
   }
 
   if (!dry_run) {
@@ -1155,7 +1154,8 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
                                          MinusBehavior::OmmitMinusAndBrackets);
     assert(lh_size2 == lh_size);
 
-    canvas->PrintAt(divider_pos, std::string(operands_size.width, '~'));
+    canvas->PrintAt(divider_pos, std::string(operands_size.width, '~'),
+                    dry_run);
 
     Position rh_pos = {
         divider_pos.x + (operands_size.width - rh_size.width) / 2,
@@ -1165,13 +1165,13 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
     assert(rh_size2 == rh_size);
   }
 
-  operands_size.width += left_offset;
+  operands_size.GrowRight(un_minus_with_space_size);
   return operands_size;
 }
 
 PrintSize Operation::RenderOperand(const INode* node,
                                    Canvas* canvas,
-                                   const Position& pos,
+                                   size_t start_x,
                                    size_t base_line,
                                    bool dry_run,
                                    bool ommit_brackets,
@@ -1207,39 +1207,38 @@ PrintSize Operation::RenderOperand(const INode* node,
     minus_behavior = MinusBehavior::Force;
   }
 
-  size_t x_offset = 0;
+  PrintSize total_operand_size;
   if (with_op) {
-    if (!dry_run) {
-      canvas->PrintAt({pos.x + x_offset, base_line}, op_to_print->name);
-    }
-    x_offset += op_to_print->name.size();
+    auto op_size =
+        canvas->PrintAt({start_x + total_operand_size.width, base_line},
+                        op_to_print->name, dry_run);
+    total_operand_size.GrowRight(op_size);
   }
 
-  PrintSize total_operand_size;
   PrintSize inner_size = !dry_run ? node->LastPrintSize() : PrintSize();
   if (need_br) {
     if (!dry_run) {
       auto expected_br_size = canvas->RenderBracket({}, Canvas::Bracket::Right,
                                                     inner_size.height, true);
       auto br_size = canvas->RenderBracket(
-          {pos.x + x_offset, pos.y + base_line - expected_br_size.base_line},
+          {start_x + total_operand_size.width,
+           base_line - expected_br_size.base_line},
           Canvas::Bracket::Left, inner_size.height, false);
-      total_operand_size.GrowHeight(br_size);
-      x_offset += br_size.width;
+      total_operand_size.GrowRight(br_size);
     }
   }
 
   // Render operand
   {
     auto new_inner_size = node->Render(
-        canvas, {pos.x + x_offset, base_line - inner_size.base_line}, dry_run,
-        minus_behavior);
+        canvas,
+        {start_x + total_operand_size.width, base_line - inner_size.base_line},
+        dry_run, minus_behavior);
     if (!dry_run) {
       assert(inner_size == new_inner_size);
     }
     inner_size = new_inner_size;
-    total_operand_size.GrowHeight(inner_size);
-    x_offset += inner_size.width;
+    total_operand_size.GrowRight(inner_size);
   }
 
   if (need_br) {
@@ -1248,23 +1247,19 @@ PrintSize Operation::RenderOperand(const INode* node,
                                                     inner_size.height, true);
       // do render
       auto br_size = canvas->RenderBracket(
-          {pos.x + x_offset, pos.y + base_line - expected_br_size.base_line},
+          {start_x + total_operand_size.width,
+           base_line - expected_br_size.base_line},
           Canvas::Bracket::Right, inner_size.height, false);
-      total_operand_size.GrowHeight(br_size);
-      x_offset += br_size.width;
+      total_operand_size.GrowRight(br_size);
     } else {
       auto left_br_size = canvas->RenderBracket({}, Canvas::Bracket::Left,
                                                 inner_size.height, true);
-      total_operand_size.GrowHeight(left_br_size);
-      x_offset += left_br_size.width;
+      total_operand_size.GrowRight(left_br_size);
       auto right_br_size = canvas->RenderBracket({}, Canvas::Bracket::Right,
                                                  inner_size.height, true);
-      total_operand_size.GrowHeight(right_br_size);
-      x_offset += right_br_size.width;
+      total_operand_size.GrowRight(right_br_size);
     }
   }
-
-  total_operand_size.width = x_offset;
   return total_operand_size;
 }
 

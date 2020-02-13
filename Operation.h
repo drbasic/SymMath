@@ -82,7 +82,7 @@ class Operation : public INode {
                       MinusBehavior minus_behavior) const;
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
-                          const Position& pos,
+                          size_t start_x,
                           size_t base_line,
                           bool dry_run,
                           bool ommit_brackets,

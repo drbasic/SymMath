@@ -12,7 +12,7 @@ struct PrintSize {
   bool operator==(const PrintSize& rh) const;
   bool operator!=(const PrintSize& rh) const;
 
-  void GrowHeight(const PrintSize& other);
+  void GrowRight(const PrintSize& other);
 };
 
 struct Position {
@@ -32,7 +32,7 @@ class Canvas {
   void Resize(const PrintSize& print_size);
   std::wstring ToString() const;
 
-  void PrintAt(const Position& pos, std::string_view str);
+  PrintSize PrintAt(const Position& pos, std::string_view str, bool dry_run);
   enum class Bracket { Left, Right };
   PrintSize RenderBracket(const Position& pos,
                           Bracket br,

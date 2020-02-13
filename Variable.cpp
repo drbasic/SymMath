@@ -25,9 +25,9 @@ std::wstring Variable::Print() const {
   Canvas canvas;
   canvas.SetDryRun(true);
   auto size = Render(&canvas, {}, true, MinusBehavior::Relax);
-  canvas.Resize(size);
+  canvas.Resize({size.width + 3, size.height + 2});
   canvas.SetDryRun(false);
-  auto size2 = Render(&canvas, {}, false, MinusBehavior::Relax);
+  auto size2 = Render(&canvas, {3, 2}, false, MinusBehavior::Relax);
   assert(size == size2);
   return canvas.ToString();
 }
@@ -125,22 +125,22 @@ PrintSize Variable::Render(Canvas* canvas,
   }
 
   std::string str = (!name_.empty() ? name_ : std::string(kAnonimous)) + "=";
-  PrintSize lh_size{str.size(), 1};
+
+  PrintSize lh_size = !dry_run ? LastPrintSize() : PrintSize();
   PrintSize rh_size;
   if (value_) {
     rh_size = value_->Render(canvas, {pos.x + lh_size.width}, dry_run,
                              minus_behavior);
   } else {
-    if (!dry_run) {
-      canvas->PrintAt({pos.x + lh_size.width}, kNull);
-    }
-    rh_size = {kNull.size(), 1};
+    rh_size = canvas->PrintAt({pos.x + lh_size.width}, kNull, dry_run);
   }
+  auto new_lh_size =
+      canvas->PrintAt({pos.x, pos.y + rh_size.height / 2}, str, dry_run);
   if (!dry_run) {
-    canvas->PrintAt({pos.x, pos.y + rh_size.height / 2}, str);
+    assert(new_lh_size == lh_size);
   }
-  return print_size_ = {lh_size.width + rh_size.width,
-                        std::max(lh_size.height, rh_size.height)};
+  new_lh_size.GrowRight(rh_size);
+  return print_size_ = new_lh_size;
 }
 
 PrintSize Variable::LastPrintSize() const {

@@ -34,11 +34,7 @@ PrintSize VariableRef::Render(Canvas* canvas,
                               MinusBehavior minus_behavior) const {
   if (var_->name_.empty())
     return var_->Render(canvas, pos, dry_run, minus_behavior);
-  PrintSize result{var_->name_.size(), 1};
-  if (!dry_run) {
-    canvas->PrintAt(pos, var_->name_);
-  }
-  return print_size_ = result;
+  return print_size_ = canvas->PrintAt(pos, var_->name_, dry_run);
 }
 
 PrintSize VariableRef::LastPrintSize() const {

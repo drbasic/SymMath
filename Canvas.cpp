@@ -25,13 +25,16 @@ bool PrintSize::operator!=(const PrintSize& rh) const {
   return !((*this) == rh);
 }
 
-void PrintSize::GrowHeight(const PrintSize& other) {
+void PrintSize::GrowRight(const PrintSize& other) {
+  if (other == PrintSize())
+    return;
   assert(other.height > other.base_line);
   if (other.base_line > base_line) {
     height += other.base_line - base_line;
     base_line = other.base_line;
   }
   height = std::max(height, base_line - other.base_line + other.height);
+  width += other.width;
 }
 //=============================================================================
 
@@ -52,14 +55,18 @@ std::wstring Canvas::ToString() const {
   return std::wstring(std::begin(data_), std::end(data_));
 }
 
-void Canvas::PrintAt(const Position& pos, std::string_view str) {
-  assert(print_size_ != PrintSize{});
-  assert(!dry_run_);
-  assert(pos.x + str.size() <= print_size_.width);
-  size_t indx = GetIndex(pos);
-  for (size_t i = 0; i < str.size(); ++i)
-    assert(data_[indx + i] == ' ');
-  std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
+PrintSize Canvas::PrintAt(const Position& pos,
+                          std::string_view str,
+                          bool dry_run) {
+  if (!dry_run) {
+    assert(print_size_ != PrintSize{});
+    assert(pos.x + str.size() <= print_size_.width);
+    size_t indx = GetIndex(pos);
+    for (size_t i = 0; i < str.size(); ++i)
+      assert(data_[indx + i] == ' ');
+    std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
+  }
+  return {str.size(), 1, 0};
 }
 
 PrintSize Canvas::RenderBracket(const Position& pos,
