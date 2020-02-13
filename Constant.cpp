@@ -15,8 +15,7 @@ PrintSize Constant::Render(Canvas* canvas,
           : value_;
   std::stringstream ss;
   ss << for_print;
-  auto str = ss.str();
-  return canvas->PrintAt(pos, str, dry_run);
+  return print_size_ = canvas->PrintAt(pos, ss.str(), dry_run);
 }
 
 PrintSize Constant::LastPrintSize() const {

@@ -3,6 +3,7 @@
 #include <io.h>
 #include <locale.h>
 #include <wincon.h>
+
 #include <iostream>
 
 #include "INode.h"
@@ -19,13 +20,13 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  // Variable x2 = (c/-a) / (-b / -x);
-  Variable x2 = a * (y / -x);
+
+  Variable x2 =( a * (y / -x) + 1) /( (-a * (1/pi)*b) /(-( -c* -(y /-x))));
   // Variable x2 =   (-(-(-(a))))* ((-a * (1/pi)*b) )/(-( -c* -(y /-x))) +y;
   std::wcout << x2.Print() << "\n";
-  //x2.Simplify();
-  //std::wcout << x2.Print() << "\n";
-
+  // x2.Simplify();
+  // std::wcout << x2.Print() << "\n";
+   
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);
   // Variable x22 = x / 2;
