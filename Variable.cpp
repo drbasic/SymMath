@@ -136,7 +136,7 @@ PrintSize Variable::Render(Canvas* canvas,
       value_ ? value_->Render(canvas, print_box, dry_run, minus_behavior)
              : canvas->PrintAt(print_box, kNull, dry_run);
 
-  return print_size_ = lh_size.GrowWidth(rh_size);
+  return print_size_ = lh_size.GrowWidth(rh_size, true);
 }
 
 PrintSize Variable::LastPrintSize() const {

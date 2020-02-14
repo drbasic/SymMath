@@ -1118,7 +1118,7 @@ PrintSize Operation::RenderMinusPlusMult(Canvas* canvas,
     auto operand_size = RenderOperand(operands_[i].get(), canvas, operand_box,
                                       dry_run, BracketsBehavior::Relax, i != 0);
     operand_box = operand_box.ShrinkLeft(operand_size.width);
-    total_print_size = total_print_size.GrowWidth(operand_size);
+    total_print_size = total_print_size.GrowWidth(operand_size, true);
   }
   if (!dry_run) {
     assert(print_size_ == total_print_size);
@@ -1140,7 +1140,7 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
     auto un_minus_size =
         canvas->PrintAt(print_box, GetOpInfo(Op::UnMinus)->name, dry_run);
     print_box = print_box.ShrinkLeft(un_minus_size.width + 1);
-    prefix_size = un_minus_size.GrowWidth({1, 1, 0});
+    prefix_size = un_minus_size.GrowWidth({1, 1, 0}, true);
   }
 
   auto lh_size =
@@ -1180,7 +1180,7 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
   }
 
   return prefix_size.GrowWidth(
-      lh_size.GrowDown(div_size, true).GrowDown(rh_size, false));
+      lh_size.GrowDown(div_size, true).GrowDown(rh_size, false), true);
 }
 
 PrintSize Operation::RenderTrigonometric(Canvas* canvas,
@@ -1234,7 +1234,7 @@ PrintSize Operation::RenderOperand(const INode* node,
   PrintSize total_operand_size;
   if (with_op) {
     auto op_size = canvas->PrintAt(print_box, op_to_print->name, dry_run);
-    total_operand_size = total_operand_size.GrowWidth(op_size);
+    total_operand_size = total_operand_size.GrowWidth(op_size, true);
     print_box = print_box.ShrinkLeft(op_size.width);
   }
 
@@ -1243,7 +1243,7 @@ PrintSize Operation::RenderOperand(const INode* node,
       need_br ? Brackets::RenderBrackets(node, BracketType::Round, canvas,
                                          print_box, dry_run, minus_behavior)
               : node->Render(canvas, print_box, dry_run, minus_behavior);
-  total_operand_size = total_operand_size.GrowWidth(node_size);
+  total_operand_size = total_operand_size.GrowWidth(node_size, true);
 
   return total_operand_size;
 }

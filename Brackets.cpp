@@ -15,30 +15,36 @@ PrintSize Brackets::RenderBrackets(const INode* node,
       !dry_run ? node->LastPrintSize()
                : node->Render(canvas, print_box, dry_run, minus_behavior);
 
+  PrintBox inner_print_box;
   PrintSize total_size;
   {
     // Left bracket
     auto lh_size = canvas->RenderBracket(print_box, Bracket::Left, bracket_type,
                                          inner_size.height, dry_run);
-    total_size = total_size.GrowWidth(lh_size);
+    total_size = total_size.GrowWidth(lh_size, false);
     print_box = print_box.ShrinkLeft(lh_size.width);
+    // Center inner by height
+    inner_print_box = print_box;
+    inner_print_box.y += (lh_size.height - inner_size.height) / 2;
+    inner_print_box.base_line = inner_print_box.y + inner_size.base_line;
   }
   {
     // Inner value
     if (!dry_run) {
       auto value_size =
-          node->Render(canvas, print_box, dry_run, minus_behavior);
+          node->Render(canvas, inner_print_box, dry_run, minus_behavior);
       assert(inner_size == value_size);
     }
-    total_size = total_size.GrowWidth(inner_size);
+    total_size = total_size.GrowWidth(inner_size, false);
     print_box = print_box.ShrinkLeft(inner_size.width);
   }
   {
     // Right bracket
     auto rh_size = canvas->RenderBracket(
         print_box, Bracket::Right, bracket_type, inner_size.height, dry_run);
-    total_size = total_size.GrowWidth(rh_size);
-    print_box = print_box.ShrinkLeft(rh_size.width);
+    total_size.base_line = 0;
+    total_size = total_size.GrowWidth(rh_size, false);
+    total_size.base_line = rh_size.base_line;
   }
   return total_size;
 }
@@ -101,5 +107,5 @@ Operation* Brackets::AsOperation() {
 }
 
 const Operation* Brackets::AsOperation() const {
-  return transparent_ ? value_->AsOperation() : nullptr; 
+  return transparent_ ? value_->AsOperation() : nullptr;
 }

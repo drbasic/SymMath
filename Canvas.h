@@ -29,7 +29,7 @@ struct PrintSize {
   bool operator==(const PrintSize& rh) const;
   bool operator!=(const PrintSize& rh) const;
 
-  PrintSize GrowWidth(const PrintSize& other) const;
+  PrintSize GrowWidth(const PrintSize& other, bool allign_base_line) const;
   PrintSize GrowDown(const PrintSize& other, bool move_base_line) const;
 
   size_t width = 0;

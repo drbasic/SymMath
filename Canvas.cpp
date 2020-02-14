@@ -70,11 +70,16 @@ bool PrintSize::operator!=(const PrintSize& rh) const {
   return !((*this) == rh);
 }
 
-PrintSize PrintSize::GrowWidth(const PrintSize& other) const {
+PrintSize PrintSize::GrowWidth(const PrintSize& other,
+                               bool allign_base_line) const {
   PrintSize result(*this);
   if (other == PrintSize())
     return result;
-
+  if (!allign_base_line) {
+    result.height = std::max(result.height, other.height);
+    result.width += other.width;
+    return result;
+  }
   assert(other.height > other.base_line);
   if (other.base_line > result.base_line) {
     result.height += other.base_line - result.base_line;
@@ -162,7 +167,7 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
   height += 2;
 
   if (!dry_run) {
-    size_t y = print_box.base_line - height / 2;
+    size_t y = print_box.y;  // base_line - height / 2;
     for (size_t i = 0; i < height; ++i) {
       wchar_t s = '?';
       if (i == 0) {
