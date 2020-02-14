@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Brackets.cpp" />
     <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="Constant.cpp" />
     <ClCompile Include="ErrorNode.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="VariableRef.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Brackets.h" />
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="ErrorNode.h" />

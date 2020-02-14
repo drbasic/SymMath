@@ -117,7 +117,7 @@ std::unique_ptr<INode> Variable::Clone() const {
 }
 
 PrintSize Variable::Render(Canvas* canvas,
-                           const PrintBox& print_box,
+                           PrintBox print_box,
                            bool dry_run,
                            MinusBehavior minus_behavior) const {
   if (name_.empty()) {
@@ -131,11 +131,10 @@ PrintSize Variable::Render(Canvas* canvas,
       (!name_.empty() ? name_ : std::string(kAnonimous)) + " = ";
 
   auto lh_size = canvas->PrintAt(print_box, var_printable_name, dry_run);
+  print_box = print_box.ShrinkLeft(lh_size.width);
   auto rh_size =
-      value_ ? value_->Render(canvas, print_box.ShrinkLeft(lh_size.width),
-                              dry_run, minus_behavior)
-             : canvas->PrintAt(print_box.ShrinkLeft(lh_size.width), kNull,
-                               dry_run);
+      value_ ? value_->Render(canvas, print_box, dry_run, minus_behavior)
+             : canvas->PrintAt(print_box, kNull, dry_run);
 
   return print_size_ = lh_size.GrowWidth(rh_size);
 }

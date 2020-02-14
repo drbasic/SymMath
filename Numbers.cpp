@@ -6,6 +6,7 @@
 
 #include <iostream>
 
+#include "Brackets.h"
 #include "INode.h"
 #include "ValueHelpers.h"
 
@@ -17,16 +18,16 @@ int main() {
   auto c = Var("c");
   auto y = Var("y");
   auto x = Var("x");
-  auto pi = Var("PI"); 
+  auto pi = Var("PI");
   pi = 3.1415926;
 
-
-  y = a*( -3.1415926/ b );
-  // Variable x2 =   (-(-(-(a))))* ((-a * (1/pi)*b) )/(-( -c* -(y /-x))) +y;
+  y = AddBrackets(BracketType::Fugure,
+                  AddBrackets(BracketType::Square, AddBrackets(a * 2/ 2))) / 2;
+  // y = (-(-(-(a)))) * ((-a * (1 / pi) * b)) / (-(-c * -(c / -x))) + c;
   std::wcout << y.Print() << "\n";
-  // x2.Simplify();
-  // std::wcout << x2.Print() << "\n";
-   
+  y.Simplify();
+  std::wcout << y.Print() << "\n";
+
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);
   // Variable x22 = x / 2;
@@ -40,4 +41,4 @@ int main() {
   y.Simplify();
   std::cout << y.Print() << "\n";
   */
-   }
+}

@@ -5,7 +5,7 @@
 Constant::Constant(double val) : value_(val) {}
 
 PrintSize Constant::Render(Canvas* canvas,
-                           const PrintBox& print_box,
+                           PrintBox print_box,
                            bool dry_run,
                            MinusBehavior minus_behavior) const {
   bool has_front_minus = HasFrontMinus();

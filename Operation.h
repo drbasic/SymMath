@@ -28,7 +28,7 @@ class Operation : public INode {
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   PrintSize Render(Canvas* canvas,
-                   const PrintBox& print_box,
+                   PrintBox print_box,
                    bool dry_run,
                    MinusBehavior minus_behavior) const override;
   PrintSize LastPrintSize() const override;

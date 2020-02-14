@@ -29,7 +29,7 @@ std::unique_ptr<INode> VariableRef::Clone() const {
 }
 
 PrintSize VariableRef::Render(Canvas* canvas,
-                              const PrintBox& print_box,
+                              PrintBox print_box,
                               bool dry_run,
                               MinusBehavior minus_behavior) const {
   if (var_->name_.empty())

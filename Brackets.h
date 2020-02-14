@@ -1,15 +1,33 @@
 #pragma once
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "INode.h"
 
-class ErrorNode : public INode {
+enum class BracketType {
+  Round,
+  Square,
+  Fugure,
+};
+
+class Brackets : public INode {
  public:
-  ErrorNode(std::string error);
+  Brackets(BracketType bracket_type, std::unique_ptr<INode> value);
+
+  static PrintSize RenderBrackets(const INode* node,
+                                  BracketType bracket_type,
+                                  Canvas* canvas,
+                                  PrintBox print_box,
+                                  bool dry_run,
+                                  MinusBehavior minus_behavior);
 
   std::unique_ptr<INode> SymCalc() const override;
 
  protected:
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
+
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
@@ -21,6 +39,6 @@ class ErrorNode : public INode {
 
  private:
   mutable PrintSize print_size_;
-  std::string error_;
+  BracketType bracket_type_ = BracketType::Round;
   std::unique_ptr<INode> value_;
 };

@@ -7,6 +7,7 @@
 #include <optional>
 #include <sstream>
 
+#include "Brackets.h"
 #include "Constant.h"
 #include "Exception.h"
 #include "OpInfo.h"
@@ -387,7 +388,7 @@ std::unique_ptr<INode> Operation::Clone() const {
 }
 
 PrintSize Operation::Render(Canvas* canvas,
-                            const PrintBox& print_box,
+                            PrintBox print_box,
                             bool dry_run,
                             MinusBehavior minus_behavior) const {
   // if (op_info_->print_f)
@@ -1221,47 +1222,13 @@ PrintSize Operation::RenderOperand(const INode* node,
     print_box = print_box.ShrinkLeft(op_size.width);
   }
 
-  PrintSize inner_size = !dry_run ? node->LastPrintSize() : PrintSize();
-  // Render Left bracket
-  if (need_br) {
-    if (!dry_run) {
-      auto br_size = canvas->RenderBracket(print_box, Bracket::Left,
-                                           inner_size.height, dry_run);
-      total_operand_size = total_operand_size.GrowWidth(br_size);
-      print_box = print_box.ShrinkLeft(br_size.width);
-    }
-  }
-
   // Render operand
-  {
-    auto new_inner_size =
-        node->Render(canvas, print_box, dry_run, minus_behavior);
-    if (!dry_run) {
-      assert(inner_size == new_inner_size);
-    }
-    inner_size = new_inner_size;
-    total_operand_size = total_operand_size.GrowWidth(inner_size);
-    print_box = print_box.ShrinkLeft(inner_size.width);
-  }
+  auto node_size =
+      need_br ? Brackets::RenderBrackets(node, BracketType::Round, canvas,
+                                         print_box, dry_run, minus_behavior)
+              : node->Render(canvas, print_box, dry_run, minus_behavior);
+  total_operand_size = total_operand_size.GrowWidth(node_size);
 
-  // Render Right bracket or calculate size of both brackets
-  if (need_br) {
-    if (!dry_run) {
-      auto br_size = canvas->RenderBracket(print_box, Bracket::Right,
-                                           inner_size.height, dry_run);
-      total_operand_size = total_operand_size.GrowWidth(br_size);
-      print_box = print_box.ShrinkLeft(br_size.width);
-    } else {
-      auto left_br_size = canvas->RenderBracket(print_box, Bracket::Left,
-                                                inner_size.height, true);
-      total_operand_size = total_operand_size.GrowWidth(left_br_size);
-      print_box = print_box.ShrinkLeft(left_br_size.width);
-      auto right_br_size = canvas->RenderBracket(print_box, Bracket::Right,
-                                                 inner_size.height, true);
-      total_operand_size = total_operand_size.GrowWidth(right_br_size);
-      print_box = print_box.ShrinkLeft(right_br_size.width);
-    }
-  }
   return total_operand_size;
 }
 

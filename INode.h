@@ -18,6 +18,7 @@ class INode {
   virtual std::unique_ptr<INode> SymCalc() const = 0;
 
  protected:
+  friend class Brackets;
   friend class Constant;
   friend class ErrorNode;
   friend class Operation;
@@ -28,7 +29,7 @@ class INode {
   virtual std::unique_ptr<INode> Clone() const = 0;
 
   virtual PrintSize Render(Canvas* canvas,
-                           const PrintBox& print_box,
+                           PrintBox print_box,
                            bool dry_run,
                            MinusBehavior minus_behavior) const = 0;
   virtual PrintSize LastPrintSize() const = 0;

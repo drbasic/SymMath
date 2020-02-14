@@ -10,6 +10,8 @@ enum class Bracket {
   Right,
 };
 
+enum class BracketType;
+
 enum MinusBehavior {
   Relax,
   Ommit,
@@ -38,11 +40,10 @@ struct PrintBox {
 
   PrintBox& operator=(const PrintBox& rh);
   PrintBox& operator=(PrintBox&& rh);
-  
+
   static PrintBox Infinite();
 
   PrintBox ShrinkLeft(size_t delta_width) const;
-
 
   size_t x = 0;
   size_t y = 0;
@@ -65,6 +66,7 @@ class Canvas {
 
   PrintSize RenderBracket(const PrintBox& print_box,
                           Bracket br,
+                          BracketType bracket_type,
                           size_t height,
                           bool dry_run);
 
