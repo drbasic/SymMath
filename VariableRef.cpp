@@ -29,12 +29,12 @@ std::unique_ptr<INode> VariableRef::Clone() const {
 }
 
 PrintSize VariableRef::Render(Canvas* canvas,
-                              const Position& pos,
+                              const PrintPosition& print_pos,
                               bool dry_run,
                               MinusBehavior minus_behavior) const {
   if (var_->name_.empty())
-    return var_->Render(canvas, pos, dry_run, minus_behavior);
-  return print_size_ = canvas->PrintAt(pos, var_->name_, dry_run);
+    return var_->Render(canvas, print_pos, dry_run, minus_behavior);
+  return print_size_ = canvas->PrintAt(print_pos, var_->name_, dry_run);
 }
 
 PrintSize VariableRef::LastPrintSize() const {

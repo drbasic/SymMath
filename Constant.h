@@ -18,7 +18,7 @@ class Constant : public INode {
   std::unique_ptr<INode> Clone() const override;
 
   PrintSize Render(Canvas* canvas,
-                   const Position& pos,
+                   const PrintPosition& print_pos,
                    bool dry_run,
                    MinusBehavior minus_behavior) const override;
   PrintSize LastPrintSize() const override;

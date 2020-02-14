@@ -28,7 +28,7 @@ class INode {
   virtual std::unique_ptr<INode> Clone() const = 0;
 
   virtual PrintSize Render(Canvas* canvas,
-                           const Position& pos,
+                           const PrintPosition& print_pos,
                            bool dry_run,
                            MinusBehavior minus_behavior) const = 0;
   virtual PrintSize LastPrintSize() const = 0;

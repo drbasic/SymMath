@@ -17,11 +17,11 @@ int main() {
   auto c = Var("c");
   auto y = Var("y");
   auto x = Var("x");
-  auto pi = Var("PI");
+  auto pi = Var("PI"); 
   pi = 3.1415926;
 
 
-  y =  a / ((-a * (1/pi)*b) );
+  y = c * (a / -x);
   // Variable x2 =   (-(-(-(a))))* ((-a * (1/pi)*b) )/(-( -c* -(y /-x))) +y;
   std::wcout << y.Print() << "\n";
   // x2.Simplify();
@@ -40,4 +40,4 @@ int main() {
   y.Simplify();
   std::cout << y.Print() << "\n";
   */
-}
+   }

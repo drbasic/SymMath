@@ -28,7 +28,7 @@ class Operation : public INode {
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   PrintSize Render(Canvas* canvas,
-                   const Position& pos,
+                   const PrintPosition& print_pos,
                    bool dry_run,
                    MinusBehavior minus_behavior) const override;
   PrintSize LastPrintSize() const override;
@@ -69,15 +69,15 @@ class Operation : public INode {
   void RemoveEmptyOperands();
 
   PrintSize RenderUnMinus(Canvas* canvas,
-                          const Position& pos,
+                          const PrintPosition& print_pos,
                           bool dry_run,
                           MinusBehavior minus_behavior) const;
   PrintSize RenderMinusPlus(Canvas* canvas,
-                            const Position& pos,
+                            const PrintPosition& print_pos,
                             bool dry_run,
                             MinusBehavior minus_behavior) const;
   PrintSize RenderDiv(Canvas* canvas,
-                      const Position& pos,
+                      const PrintPosition& print_pos,
                       bool dry_run,
                       MinusBehavior minus_behavior) const;
   PrintSize RenderOperand(const INode* node,

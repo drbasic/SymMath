@@ -55,13 +55,13 @@ std::wstring Canvas::ToString() const {
   return std::wstring(std::begin(data_), std::end(data_));
 }
 
-PrintSize Canvas::PrintAt(const Position& pos,
+PrintSize Canvas::PrintAt(const PrintPosition& print_pos,
                           std::string_view str,
                           bool dry_run) {
   if (!dry_run) {
     assert(print_size_ != PrintSize{});
-    assert(pos.x + str.size() <= print_size_.width);
-    size_t indx = GetIndex(pos);
+    assert(print_pos.x + str.size() <= print_size_.width);
+    size_t indx = GetIndex(print_pos);
     for (size_t i = 0; i < str.size(); ++i)
       assert(data_[indx + i] == ' ');
     std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
@@ -69,15 +69,15 @@ PrintSize Canvas::PrintAt(const Position& pos,
   return {str.size(), 1, 0};
 }
 
-PrintSize Canvas::RenderBracket(const Position& pos,
+PrintSize Canvas::RenderBracket(const PrintPosition& print_pos,
                                 Bracket br,
                                 size_t height,
                                 bool dry_run) {
   if (height == 1) {
     if (!dry_run) {
-      data_[GetIndex(pos)] = br == Bracket::Left
-                                 ? kSquareBrackets[BracketsParts::Left]
-                                 : kSquareBrackets[BracketsParts::Right];
+      data_[GetIndex(print_pos)] = br == Bracket::Left
+                                       ? kSquareBrackets[BracketsParts::Left]
+                                       : kSquareBrackets[BracketsParts::Right];
     }
     return {1, 1, 0};
   }
@@ -94,7 +94,8 @@ PrintSize Canvas::RenderBracket(const Position& pos,
       } else {
         s = kSquareBrackets[BracketsParts::Middle];
       }
-      data_[GetIndex({pos.x + (br == Bracket::Left ? 0 : 1), pos.y + i})] = s;
+      data_[GetIndex(
+          {print_pos.x + (br == Bracket::Left ? 0 : 1), print_pos.y + i})] = s;
     }
   }
   return {2, height, height / 2};
@@ -104,10 +105,10 @@ void Canvas::SetDryRun(bool dry_run) {
   dry_run_ = dry_run;
 }
 
-size_t Canvas::GetIndex(const Position& pos) const {
+size_t Canvas::GetIndex(const PrintPosition& print_pos) const {
   assert(print_size_ != PrintSize{});
-  assert(pos.x < print_size_.width);
-  assert(pos.y < print_size_.height);
-  size_t indx = pos.y * (print_size_.width + 1) + pos.x;
+  assert(print_pos.x < print_size_.width);
+  assert(print_pos.y < print_size_.height);
+  size_t indx = print_pos.y * (print_size_.width + 1) + print_pos.x;
   return indx;
 }

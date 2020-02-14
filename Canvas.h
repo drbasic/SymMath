@@ -5,6 +5,18 @@
 #include <string_view>
 #include <vector>
 
+enum class Bracket {
+  Left,
+  Right,
+};
+
+enum MinusBehavior {
+  Relax,
+  Ommit,
+  Force,
+  OmmitMinusAndBrackets,
+};
+
 struct PrintSize {
   size_t width = 0;
   size_t height = 0;
@@ -15,16 +27,9 @@ struct PrintSize {
   void GrowRight(const PrintSize& other);
 };
 
-struct Position {
+struct PrintPosition {
   size_t x = 0;
   size_t y = 0;
-};
-
-enum MinusBehavior {
-  Relax,
-  Ommit,
-  Force,
-  OmmitMinusAndBrackets,
 };
 
 class Canvas {
@@ -32,9 +37,11 @@ class Canvas {
   void Resize(const PrintSize& print_size);
   std::wstring ToString() const;
 
-  PrintSize PrintAt(const Position& pos, std::string_view str, bool dry_run);
-  enum class Bracket { Left, Right };
-  PrintSize RenderBracket(const Position& pos,
+  PrintSize PrintAt(const PrintPosition& print_pos,
+                    std::string_view str,
+                    bool dry_run);
+
+  PrintSize RenderBracket(const PrintPosition& print_pos,
                           Bracket br,
                           size_t height,
                           bool dry_run);
@@ -42,7 +49,7 @@ class Canvas {
   void SetDryRun(bool dry_run);
 
  private:
-  size_t GetIndex(const Position& pos) const;
+  size_t GetIndex(const PrintPosition& print_pos) const;
 
   bool dry_run_ = false;
   PrintSize print_size_;

@@ -115,29 +115,31 @@ std::unique_ptr<INode> Variable::Clone() const {
 }
 
 PrintSize Variable::Render(Canvas* canvas,
-                           const Position& pos,
+                           const PrintPosition& print_pos,
                            bool dry_run,
                            MinusBehavior minus_behavior) const {
   if (name_.empty()) {
     if (value_) {
-      return print_size_ = value_->Render(canvas, pos, dry_run, minus_behavior);
+      return print_size_ =
+                 value_->Render(canvas, print_pos, dry_run, minus_behavior);
     }
   }
 
   std::string var_printable_name =
-      (!name_.empty() ? name_ : std::string(kAnonimous)) + "=";
+      (!name_.empty() ? name_ : std::string(kAnonimous)) + " = ";
 
   size_t base_line = 0;
   if (!dry_run && value_)
     base_line = value_->LastPrintSize().base_line;
-  auto lh_size =
-      canvas->PrintAt({pos.x, pos.y + base_line}, var_printable_name, dry_run);
+  auto lh_size = canvas->PrintAt({print_pos.x, print_pos.y + base_line},
+                                 var_printable_name, dry_run);
   PrintSize rh_size;
   if (value_) {
-    rh_size = value_->Render(canvas, {pos.x + lh_size.width, pos.y}, dry_run,
-                             minus_behavior);
+    rh_size = value_->Render(canvas, {print_pos.x + lh_size.width, print_pos.y},
+                             dry_run, minus_behavior);
   } else {
-    rh_size = canvas->PrintAt({pos.x + lh_size.width, pos.y}, kNull, dry_run);
+    rh_size = canvas->PrintAt({print_pos.x + lh_size.width, print_pos.y}, kNull,
+                              dry_run);
   }
   lh_size.GrowRight(rh_size);
   return print_size_ = lh_size;

@@ -5,7 +5,7 @@
 Constant::Constant(double val) : value_(val) {}
 
 PrintSize Constant::Render(Canvas* canvas,
-                           const Position& pos,
+                           const PrintPosition& print_pos,
                            bool dry_run,
                            MinusBehavior minus_behavior) const {
   double for_print =
@@ -15,7 +15,7 @@ PrintSize Constant::Render(Canvas* canvas,
           : value_;
   std::stringstream ss;
   ss << for_print;
-  return print_size_ = canvas->PrintAt(pos, ss.str(), dry_run);
+  return print_size_ = canvas->PrintAt(print_pos, ss.str(), dry_run);
 }
 
 PrintSize Constant::LastPrintSize() const {
