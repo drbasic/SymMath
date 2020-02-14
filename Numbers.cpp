@@ -21,8 +21,7 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  y = AddBrackets(BracketType::Fugure,
-                  AddBrackets(BracketType::Square, AddBrackets(a * 2/ 2))) / 2;
+  y = 1 + AddBrackets(BracketType::Square, a)  + a;
   // y = (-(-(-(a)))) * ((-a * (1 / pi) * b)) / (-(-c * -(c / -x))) + c;
   std::wcout << y.Print() << "\n";
   y.Simplify();

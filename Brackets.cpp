@@ -69,7 +69,7 @@ PrintSize Brackets::LastPrintSize() const {
 }
 
 int Brackets::Priority() const {
-  return 0;
+  return 1000;
 }
 
 bool Brackets::HasFrontMinus() const {
@@ -78,4 +78,28 @@ bool Brackets::HasFrontMinus() const {
 
 bool Brackets::CheckCircular(const INode* other) const {
   return value_->CheckCircular(other);
+}
+
+Constant* Brackets::AsConstant() {
+  return transparent_ ? value_->AsConstant() : nullptr;
+}
+
+const Constant* Brackets::AsConstant() const {
+  return transparent_ ? value_->AsConstant() : nullptr;
+}
+
+const ErrorNode* Brackets::AsError() const {
+  return transparent_ ? value_->AsError() : nullptr;
+}
+
+const Variable* Brackets::AsVariable() const {
+  return transparent_ ? value_->AsVariable() : nullptr;
+}
+
+Operation* Brackets::AsOperation() {
+  return transparent_ ? value_->AsOperation() : nullptr;
+}
+
+const Operation* Brackets::AsOperation() const {
+  return transparent_ ? value_->AsOperation() : nullptr; 
 }
