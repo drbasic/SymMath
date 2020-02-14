@@ -124,23 +124,23 @@ PrintSize Variable::Render(Canvas* canvas,
     }
   }
 
-  std::string str = (!name_.empty() ? name_ : std::string(kAnonimous)) + "=";
+  std::string var_printable_name =
+      (!name_.empty() ? name_ : std::string(kAnonimous)) + "=";
 
-  PrintSize lh_size = !dry_run ? LastPrintSize() : PrintSize();
+  size_t base_line = 0;
+  if (!dry_run && value_)
+    base_line = value_->LastPrintSize().base_line;
+  auto lh_size =
+      canvas->PrintAt({pos.x, pos.y + base_line}, var_printable_name, dry_run);
   PrintSize rh_size;
   if (value_) {
-    rh_size = value_->Render(canvas, {pos.x + lh_size.width}, dry_run,
+    rh_size = value_->Render(canvas, {pos.x + lh_size.width, pos.y}, dry_run,
                              minus_behavior);
   } else {
-    rh_size = canvas->PrintAt({pos.x + lh_size.width}, kNull, dry_run);
+    rh_size = canvas->PrintAt({pos.x + lh_size.width, pos.y}, kNull, dry_run);
   }
-  auto new_lh_size =
-      canvas->PrintAt({pos.x, pos.y + rh_size.height / 2}, str, dry_run);
-  if (!dry_run) {
-    assert(new_lh_size == lh_size);
-  }
-  new_lh_size.GrowRight(rh_size);
-  return print_size_ = new_lh_size;
+  lh_size.GrowRight(rh_size);
+  return print_size_ = lh_size;
 }
 
 PrintSize Variable::LastPrintSize() const {
