@@ -21,7 +21,7 @@ int main() {
   pi = 3.1415926;
 
 
-  y = c * (a / -x);
+  y = a*( -3.1415926/ b );
   // Variable x2 =   (-(-(-(a))))* ((-a * (1/pi)*b) )/(-( -c* -(y /-x))) +y;
   std::wcout << y.Print() << "\n";
   // x2.Simplify();

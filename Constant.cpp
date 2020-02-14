@@ -5,17 +5,20 @@
 Constant::Constant(double val) : value_(val) {}
 
 PrintSize Constant::Render(Canvas* canvas,
-                           const PrintPosition& print_pos,
+                           const PrintBox& print_box,
                            bool dry_run,
                            MinusBehavior minus_behavior) const {
+  bool has_front_minus = HasFrontMinus();
   double for_print =
-      (minus_behavior == MinusBehavior::Ommit && HasFrontMinus()) ||
-              (minus_behavior == MinusBehavior::Force && !HasFrontMinus())
+      (has_front_minus &&
+       (minus_behavior == MinusBehavior::Ommit ||
+        minus_behavior == MinusBehavior::OmmitMinusAndBrackets)) ||
+              (!has_front_minus && minus_behavior == MinusBehavior::Force)
           ? -value_
           : value_;
   std::stringstream ss;
   ss << for_print;
-  return print_size_ = canvas->PrintAt(print_pos, ss.str(), dry_run);
+  return print_size_ = canvas->PrintAt(print_box, ss.str(), dry_run);
 }
 
 PrintSize Constant::LastPrintSize() const {

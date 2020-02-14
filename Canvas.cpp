@@ -15,8 +15,47 @@ enum BracketsParts {
   Last,
 };
 const wchar_t kSquareBrackets[BracketsParts::Last + 1] = L"[]┌│┐└┘";
+const wchar_t kDivider = L'─';
 }  // namespace
 
+//=============================================================================
+PrintBox::PrintBox() = default;
+
+PrintBox::PrintBox(size_t x,
+                   size_t y,
+                   size_t width,
+                   size_t height,
+                   size_t base_line)
+    : x(x), y(y), width(width), height(height), base_line(base_line) {}
+
+PrintBox::PrintBox(size_t x, size_t y, const PrintSize& print_size)
+    : x(x),
+      y(y),
+      width(print_size.width),
+      height(print_size.height),
+      base_line(print_size.base_line) {}
+
+PrintBox::PrintBox(const PrintBox& rh) = default;
+
+PrintBox::PrintBox(PrintBox&& rh) = default;
+
+PrintBox& PrintBox::operator=(const PrintBox& rh) = default;
+
+PrintBox& PrintBox::operator=(PrintBox&& rh) = default;
+
+PrintBox PrintBox ::Infinite() {
+  return PrintBox(0, 0, 1000, 10000, 0);
+}
+
+PrintBox PrintBox::ShrinkLeft(size_t delta_width) const {
+  PrintBox result(*this);
+  assert(result.width >= delta_width);
+  result.x += delta_width;
+  result.width -= delta_width;
+  return result;
+}
+
+//=============================================================================
 bool PrintSize::operator==(const PrintSize& rh) const {
   return width == rh.width && height == rh.height && base_line == rh.base_line;
 }
@@ -25,16 +64,30 @@ bool PrintSize::operator!=(const PrintSize& rh) const {
   return !((*this) == rh);
 }
 
-void PrintSize::GrowRight(const PrintSize& other) {
+PrintSize PrintSize::GrowWidth(const PrintSize& other) const {
+  PrintSize result(*this);
   if (other == PrintSize())
-    return;
+    return result;
+
   assert(other.height > other.base_line);
-  if (other.base_line > base_line) {
-    height += other.base_line - base_line;
-    base_line = other.base_line;
+  if (other.base_line > result.base_line) {
+    result.height += other.base_line - result.base_line;
+    result.base_line = other.base_line;
   }
-  height = std::max(height, base_line - other.base_line + other.height);
-  width += other.width;
+  result.height = std::max(result.height,
+                           result.base_line - other.base_line + other.height);
+  result.width += other.width;
+  return result;
+}
+
+PrintSize PrintSize::GrowDown(const PrintSize& other,
+                              bool move_base_line) const {
+  PrintSize result(*this);
+  if (move_base_line)
+    result.base_line = result.height + other.base_line;
+  result.height += other.height;
+  result.width = std::max(result.width, other.width);
+  return result;
 }
 //=============================================================================
 
@@ -44,24 +97,28 @@ void Canvas::Resize(const PrintSize& print_size) {
   data_.resize(new_size);
   std::fill(std::begin(data_), std::end(data_), ' ');
   for (size_t row = 0; row < print_size.height; ++row) {
-    data_[GetIndex({print_size.width - 1, row}) + 1] = '\n';
+    data_[GetIndex(print_size.width - 1, row) + 1] = '\n';
   }
 }
 
-std::wstring Canvas::ToString() const {
+const std::wstring& Canvas::ToString() const {
   assert(print_size_ != PrintSize{});
-  if (data_.empty())
-    return std::wstring();
-  return std::wstring(std::begin(data_), std::end(data_));
+  return data_;
 }
 
-PrintSize Canvas::PrintAt(const PrintPosition& print_pos,
+PrintSize Canvas::PrintAt(const PrintBox& print_box,
                           std::string_view str,
+                          bool dry_run) {
+  return PrintAt(print_box, std::wstring(str.begin(), str.end()), dry_run);
+}
+
+PrintSize Canvas::PrintAt(const PrintBox& print_box,
+                          std::wstring_view str,
                           bool dry_run) {
   if (!dry_run) {
     assert(print_size_ != PrintSize{});
-    assert(print_pos.x + str.size() <= print_size_.width);
-    size_t indx = GetIndex(print_pos);
+    assert(print_box.x + str.size() <= print_size_.width);
+    size_t indx = GetIndex(print_box.x, print_box.base_line);
     for (size_t i = 0; i < str.size(); ++i)
       assert(data_[indx + i] == ' ');
     std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
@@ -69,15 +126,15 @@ PrintSize Canvas::PrintAt(const PrintPosition& print_pos,
   return {str.size(), 1, 0};
 }
 
-PrintSize Canvas::RenderBracket(const PrintPosition& print_pos,
+PrintSize Canvas::RenderBracket(const PrintBox& print_box,
                                 Bracket br,
                                 size_t height,
                                 bool dry_run) {
   if (height == 1) {
     if (!dry_run) {
-      data_[GetIndex(print_pos)] = br == Bracket::Left
-                                       ? kSquareBrackets[BracketsParts::Left]
-                                       : kSquareBrackets[BracketsParts::Right];
+      data_[GetIndex(print_box.x, print_box.y)] =
+          br == Bracket::Left ? kSquareBrackets[BracketsParts::Left]
+                              : kSquareBrackets[BracketsParts::Right];
     }
     return {1, 1, 0};
   }
@@ -94,21 +151,27 @@ PrintSize Canvas::RenderBracket(const PrintPosition& print_pos,
       } else {
         s = kSquareBrackets[BracketsParts::Middle];
       }
-      data_[GetIndex(
-          {print_pos.x + (br == Bracket::Left ? 0 : 1), print_pos.y + i})] = s;
+      data_[GetIndex(print_box.x + (br == Bracket::Left ? 0 : 1),
+                     print_box.y + i)] = s;
     }
   }
   return {2, height, height / 2};
+}
+
+PrintSize Canvas::RenderDivider(const PrintBox& print_box,
+                                size_t width,
+                                bool dry_run) {
+  return PrintAt(print_box, std::wstring(width, kDivider), dry_run);
 }
 
 void Canvas::SetDryRun(bool dry_run) {
   dry_run_ = dry_run;
 }
 
-size_t Canvas::GetIndex(const PrintPosition& print_pos) const {
+size_t Canvas::GetIndex(size_t x, size_t y) const {
   assert(print_size_ != PrintSize{});
-  assert(print_pos.x < print_size_.width);
-  assert(print_pos.y < print_size_.height);
-  size_t indx = print_pos.y * (print_size_.width + 1) + print_pos.x;
+  assert(x < print_size_.width);
+  assert(y < print_size_.height);
+  size_t indx = y * (print_size_.width + 1) + x;
   return indx;
 }

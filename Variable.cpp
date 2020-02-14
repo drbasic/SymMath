@@ -24,10 +24,12 @@ Variable::Variable(const Variable& var)
 std::wstring Variable::Print() const {
   Canvas canvas;
   canvas.SetDryRun(true);
-  auto size = Render(&canvas, {}, true, MinusBehavior::Relax);
-  canvas.Resize({size.width + 3, size.height + 2});
+  PrintBox initial_print_box(0, 0, 1000, 1000, 0);
+  auto size = Render(&canvas, initial_print_box, true, MinusBehavior::Relax);
+  canvas.Resize(size);
   canvas.SetDryRun(false);
-  auto size2 = Render(&canvas, {3, 2}, false, MinusBehavior::Relax);
+  PrintBox print_box(0, 0, size);
+  auto size2 = Render(&canvas, print_box, false, MinusBehavior::Relax);
   assert(size == size2);
   return canvas.ToString();
 }
@@ -115,34 +117,27 @@ std::unique_ptr<INode> Variable::Clone() const {
 }
 
 PrintSize Variable::Render(Canvas* canvas,
-                           const PrintPosition& print_pos,
+                           const PrintBox& print_box,
                            bool dry_run,
                            MinusBehavior minus_behavior) const {
   if (name_.empty()) {
     if (value_) {
       return print_size_ =
-                 value_->Render(canvas, print_pos, dry_run, minus_behavior);
+                 value_->Render(canvas, print_box, dry_run, minus_behavior);
     }
   }
 
   std::string var_printable_name =
       (!name_.empty() ? name_ : std::string(kAnonimous)) + " = ";
 
-  size_t base_line = 0;
-  if (!dry_run && value_)
-    base_line = value_->LastPrintSize().base_line;
-  auto lh_size = canvas->PrintAt({print_pos.x, print_pos.y + base_line},
-                                 var_printable_name, dry_run);
-  PrintSize rh_size;
-  if (value_) {
-    rh_size = value_->Render(canvas, {print_pos.x + lh_size.width, print_pos.y},
-                             dry_run, minus_behavior);
-  } else {
-    rh_size = canvas->PrintAt({print_pos.x + lh_size.width, print_pos.y}, kNull,
-                              dry_run);
-  }
-  lh_size.GrowRight(rh_size);
-  return print_size_ = lh_size;
+  auto lh_size = canvas->PrintAt(print_box, var_printable_name, dry_run);
+  auto rh_size =
+      value_ ? value_->Render(canvas, print_box.ShrinkLeft(lh_size.width),
+                              dry_run, minus_behavior)
+             : canvas->PrintAt(print_box.ShrinkLeft(lh_size.width), kNull,
+                               dry_run);
+
+  return print_size_ = lh_size.GrowWidth(rh_size);
 }
 
 PrintSize Variable::LastPrintSize() const {

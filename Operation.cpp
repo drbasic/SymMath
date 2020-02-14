@@ -387,7 +387,7 @@ std::unique_ptr<INode> Operation::Clone() const {
 }
 
 PrintSize Operation::Render(Canvas* canvas,
-                            const PrintPosition& print_pos,
+                            const PrintBox& print_box,
                             bool dry_run,
                             MinusBehavior minus_behavior) const {
   // if (op_info_->print_f)
@@ -395,17 +395,17 @@ PrintSize Operation::Render(Canvas* canvas,
   switch (op_info_->op) {
     case Op::UnMinus:
       return print_size_ =
-                 RenderUnMinus(canvas, print_pos, dry_run, minus_behavior);
+                 RenderUnMinus(canvas, print_box, dry_run, minus_behavior);
       break;
     case Op::Minus:
     case Op::Plus:
     case Op::Mult:
       return print_size_ =
-                 RenderMinusPlus(canvas, print_pos, dry_run, minus_behavior);
+                 RenderMinusPlus(canvas, print_box, dry_run, minus_behavior);
       break;
     case Op::Div:
       return print_size_ =
-                 RenderDiv(canvas, print_pos, dry_run, minus_behavior);
+                 RenderDiv(canvas, print_box, dry_run, minus_behavior);
       break;
   }
   assert(false);
@@ -1061,18 +1061,18 @@ void Operation::RemoveEmptyOperands() {
 }
 
 PrintSize Operation::RenderUnMinus(Canvas* canvas,
-                                   const PrintPosition& print_pos,
+                                   const PrintBox& print_box,
                                    bool dry_run,
                                    MinusBehavior minus_behavior) const {
   if (minus_behavior == MinusBehavior::Force) {
     assert(!HasFrontMinus());
-    return operands_[0]->Render(canvas, print_pos, dry_run,
+    return operands_[0]->Render(canvas, print_box, dry_run,
                                 MinusBehavior::Force);
   }
 
   // - -a => a
   if (operands_[0]->HasFrontMinus()) {
-    return operands_[0]->Render(canvas, print_pos, dry_run,
+    return operands_[0]->Render(canvas, print_box, dry_run,
                                 MinusBehavior::Ommit);
   }
 
@@ -1082,15 +1082,13 @@ PrintSize Operation::RenderUnMinus(Canvas* canvas,
       minus_behavior == MinusBehavior::OmmitMinusAndBrackets) {
     assert(HasFrontMinus());
     assert(!operands_[0]->HasFrontMinus());
-    return RenderOperand(operands_[0].get(), canvas, print_pos.x,
-                         print_pos.y + print_size_.base_line, dry_run,
+    return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
                          minus_behavior == MinusBehavior::OmmitMinusAndBrackets,
                          false);
   }
 
   if (minus_behavior == MinusBehavior::Relax) {
-    return RenderOperand(operands_[0].get(), canvas, print_pos.x,
-                         print_pos.y + print_size_.base_line, dry_run, false,
+    return RenderOperand(operands_[0].get(), canvas, print_box, dry_run, false,
                          true);
   }
 
@@ -1099,7 +1097,7 @@ PrintSize Operation::RenderUnMinus(Canvas* canvas,
 }
 
 PrintSize Operation::RenderMinusPlus(Canvas* canvas,
-                                     const PrintPosition& print_pos,
+                                     const PrintBox& print_box,
                                      bool dry_run,
                                      MinusBehavior minus_behavior) const {
   //  1
@@ -1108,23 +1106,22 @@ PrintSize Operation::RenderMinusPlus(Canvas* canvas,
   //  ~~~~~ + ~ -- base_line
   //    b     3
 
-  PrintSize new_print_size = {};
-  PrintPosition operand_pos{print_pos};
+  PrintSize total_print_size = {};
+  PrintBox operand_box{print_box};
   for (size_t i = 0; i < operands_.size(); ++i) {
-    auto op_size = RenderOperand(operands_[i].get(), canvas, operand_pos.x,
-                                 print_pos.y + print_size_.base_line, dry_run,
-                                 false, i != 0);
-    operand_pos.x += op_size.width;
-    new_print_size.GrowRight(op_size);
+    auto operand_size = RenderOperand(operands_[i].get(), canvas, operand_box,
+                                      dry_run, false, i != 0);
+    operand_box = operand_box.ShrinkLeft(operand_size.width);
+    total_print_size = total_print_size.GrowWidth(operand_size);
   }
   if (!dry_run) {
-    assert(print_size_ == new_print_size);
+    assert(print_size_ == total_print_size);
   }
-  return print_size_ = new_print_size;
+  return print_size_ = total_print_size;
 }
 
 PrintSize Operation::RenderDiv(Canvas* canvas,
-                               const PrintPosition& print_pos,
+                               PrintBox print_box,
                                bool dry_run,
                                MinusBehavior minus_behavior) const {
   assert(op_info_->op == Op::Div);
@@ -1132,54 +1129,57 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       (minus_behavior == MinusBehavior::Force) ||
       (minus_behavior == MinusBehavior::Relax && HasFrontMinus());
 
+  PrintSize prefix_size = {};
+  if (has_front_minus) {
+    auto un_minus_size =
+        canvas->PrintAt(print_box, GetOpInfo(Op::UnMinus)->name, dry_run);
+    print_box = print_box.ShrinkLeft(un_minus_size.width + 1);
+    prefix_size = un_minus_size.GrowWidth({1, 1, 0});
+  }
+
   auto lh_size =
-      dry_run ? operands_[0]->Render(canvas, print_pos, dry_run,
+      dry_run ? operands_[0]->Render(canvas, PrintBox::Infinite(), dry_run,
                                      MinusBehavior::OmmitMinusAndBrackets)
               : operands_[0]->LastPrintSize();
   auto rh_size =
-      dry_run ? operands_[1]->Render(canvas, print_pos, dry_run,
+      dry_run ? operands_[1]->Render(canvas, PrintBox::Infinite(), dry_run,
                                      MinusBehavior::OmmitMinusAndBrackets)
               : operands_[1]->LastPrintSize();
 
-  PrintSize operands_size{std::max(lh_size.width, rh_size.width),
-                          1 + lh_size.height + rh_size.height, lh_size.height};
-
-  PrintPosition divider_pos = {print_pos.x,
-                               print_pos.y + operands_size.base_line};
-  PrintSize un_minus_with_space_size;
-  if (has_front_minus) {
-    un_minus_with_space_size = canvas->PrintAt(
-        {print_pos.x, divider_pos.y}, GetOpInfo(Op::UnMinus)->name, dry_run);
-    un_minus_with_space_size.width += 1;
-    divider_pos.x += un_minus_with_space_size.width;
-  }
+  // Render divider
+  auto div_size = canvas->RenderDivider(
+      print_box, std::max(lh_size.width, rh_size.width), dry_run);
 
   if (!dry_run) {
-    PrintPosition lh_pos = {
-        divider_pos.x + (operands_size.width - lh_size.width) / 2, print_pos.y};
-    auto lh_size2 = operands_[0]->Render(canvas, lh_pos, dry_run,
-                                         MinusBehavior::OmmitMinusAndBrackets);
-    assert(lh_size2 == lh_size);
-
-    canvas->PrintAt(divider_pos, std::string(operands_size.width, '~'),
-                    dry_run);
-
-    PrintPosition rh_pos = {
-        divider_pos.x + (operands_size.width - rh_size.width) / 2,
-        print_pos.y + operands_size.base_line + 1};
-    auto rh_size2 = operands_[1]->Render(canvas, rh_pos, dry_run,
-                                         MinusBehavior::OmmitMinusAndBrackets);
-    assert(rh_size2 == rh_size);
+    {
+      // Render top
+      PrintBox lh_box(print_box);
+      lh_box.x = lh_box.x + (div_size.width - lh_size.width) / 2;
+      lh_box.height = print_box.base_line - div_size.base_line;
+      lh_box.base_line = lh_box.height - (lh_size.height - lh_size.base_line);
+      auto lh_size2 = operands_[0]->Render(
+          canvas, lh_box, dry_run, MinusBehavior::OmmitMinusAndBrackets);
+      assert(lh_size2 == lh_size);
+    }
+    {
+      // Render bottom
+      PrintBox rh_box(print_box);
+      rh_box.x = rh_box.x + (div_size.width - rh_size.width) / 2;
+      rh_box.y = print_box.base_line + (div_size.height - div_size.base_line);
+      rh_box.base_line = rh_box.y + rh_size.base_line;
+      auto rh_size2 = operands_[1]->Render(
+          canvas, rh_box, dry_run, MinusBehavior::OmmitMinusAndBrackets);
+      assert(rh_size2 == rh_size);
+    }
   }
 
-  operands_size.GrowRight(un_minus_with_space_size);
-  return operands_size;
+  return prefix_size.GrowWidth(
+      lh_size.GrowDown(div_size, true).GrowDown(rh_size, false));
 }
 
 PrintSize Operation::RenderOperand(const INode* node,
                                    Canvas* canvas,
-                                   size_t start_x,
-                                   size_t base_line,
+                                   PrintBox print_box,
                                    bool dry_run,
                                    bool ommit_brackets,
                                    bool with_op) const {
@@ -1216,55 +1216,50 @@ PrintSize Operation::RenderOperand(const INode* node,
 
   PrintSize total_operand_size;
   if (with_op) {
-    auto op_size =
-        canvas->PrintAt({start_x + total_operand_size.width, base_line},
-                        op_to_print->name, dry_run);
-    total_operand_size.GrowRight(op_size);
+    auto op_size = canvas->PrintAt(print_box, op_to_print->name, dry_run);
+    total_operand_size = total_operand_size.GrowWidth(op_size);
+    print_box = print_box.ShrinkLeft(op_size.width);
   }
 
   PrintSize inner_size = !dry_run ? node->LastPrintSize() : PrintSize();
+  // Render Left bracket
   if (need_br) {
     if (!dry_run) {
-      auto expected_br_size =
-          canvas->RenderBracket({}, Bracket::Right, inner_size.height, true);
-      auto br_size =
-          canvas->RenderBracket({start_x + total_operand_size.width,
-                                 base_line - expected_br_size.base_line},
-                                Bracket::Left, inner_size.height, false);
-      total_operand_size.GrowRight(br_size);
+      auto br_size = canvas->RenderBracket(print_box, Bracket::Left,
+                                           inner_size.height, dry_run);
+      total_operand_size = total_operand_size.GrowWidth(br_size);
+      print_box = print_box.ShrinkLeft(br_size.width);
     }
   }
 
   // Render operand
   {
-    auto new_inner_size = node->Render(
-        canvas,
-        {start_x + total_operand_size.width, base_line - inner_size.base_line},
-        dry_run, minus_behavior);
+    auto new_inner_size =
+        node->Render(canvas, print_box, dry_run, minus_behavior);
     if (!dry_run) {
       assert(inner_size == new_inner_size);
     }
     inner_size = new_inner_size;
-    total_operand_size.GrowRight(inner_size);
+    total_operand_size = total_operand_size.GrowWidth(inner_size);
+    print_box = print_box.ShrinkLeft(inner_size.width);
   }
 
+  // Render Right bracket or calculate size of both brackets
   if (need_br) {
     if (!dry_run) {
-      auto expected_br_size =
-          canvas->RenderBracket({}, Bracket::Right, inner_size.height, true);
-      // do render
-      auto br_size =
-          canvas->RenderBracket({start_x + total_operand_size.width,
-                                 base_line - expected_br_size.base_line},
-                                Bracket::Right, inner_size.height, false);
-      total_operand_size.GrowRight(br_size);
+      auto br_size = canvas->RenderBracket(print_box, Bracket::Right,
+                                           inner_size.height, dry_run);
+      total_operand_size = total_operand_size.GrowWidth(br_size);
+      print_box = print_box.ShrinkLeft(br_size.width);
     } else {
-      auto left_br_size =
-          canvas->RenderBracket({}, Bracket::Left, inner_size.height, true);
-      total_operand_size.GrowRight(left_br_size);
-      auto right_br_size =
-          canvas->RenderBracket({}, Bracket::Right, inner_size.height, true);
-      total_operand_size.GrowRight(right_br_size);
+      auto left_br_size = canvas->RenderBracket(print_box, Bracket::Left,
+                                                inner_size.height, true);
+      total_operand_size = total_operand_size.GrowWidth(left_br_size);
+      print_box = print_box.ShrinkLeft(left_br_size.width);
+      auto right_br_size = canvas->RenderBracket(print_box, Bracket::Right,
+                                                 inner_size.height, true);
+      total_operand_size = total_operand_size.GrowWidth(right_br_size);
+      print_box = print_box.ShrinkLeft(right_br_size.width);
     }
   }
   return total_operand_size;
