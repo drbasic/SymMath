@@ -12,11 +12,17 @@ enum class Bracket {
 
 enum class BracketType;
 
-enum MinusBehavior {
+enum class MinusBehavior {
   Relax,
   Ommit,
   Force,
   OmmitMinusAndBrackets,
+};
+
+enum class BracketsBehavior {
+  Relax,
+  Ommit,
+  Force,
 };
 
 struct PrintSize {

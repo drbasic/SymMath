@@ -151,9 +151,10 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
   }
   if (height == 1) {
     if (!dry_run) {
-      data_[GetIndex(print_box.x, print_box.y)] =
-          br == Bracket::Left ? brackets[BracketsParts::Left]
-                              : brackets[BracketsParts::Right];
+      size_t y = print_box.base_line - height / 2;
+      data_[GetIndex(print_box.x, y)] =
+          (br == Bracket::Left ? brackets[BracketsParts::Left]
+                               : brackets[BracketsParts::Right]);
     }
     return {1, 1, 0};
   }

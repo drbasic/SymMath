@@ -21,11 +21,11 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  y = 1 + AddBrackets(BracketType::Square, a)  + a;
+  y = Sin(Cos(-a/2)) + Cos(-a);
   // y = (-(-(-(a)))) * ((-a * (1 / pi) * b)) / (-(-c * -(c / -x))) + c;
   std::wcout << y.Print() << "\n";
-  y.Simplify();
-  std::wcout << y.Print() << "\n";
+  //y.Simplify();
+  //std::wcout << y.Print() << "\n";
 
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);

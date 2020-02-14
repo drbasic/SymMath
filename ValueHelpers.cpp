@@ -92,6 +92,15 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
   return std::make_unique<Brackets>(bracket_type, std::move(value));
 }
 
+std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {
+  return std::make_unique<Operation>(GetOpInfo(Op::Sin), std::move(value));
+}
+
+std::unique_ptr<INode> Cos(std::unique_ptr<INode> value)
+{
+  return std::make_unique<Operation>(GetOpInfo(Op::Cos), std::move(value));
+}
+
 //=============================================================================
 std::wostream& operator<<(std::wostream& out, const Variable& v) {
   out << v.Print();

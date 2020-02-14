@@ -11,6 +11,8 @@ enum class Op : int {
   Plus,
   Mult,
   Div,
+  Sin,
+  Cos,
 };
 
 struct OpInfo {
@@ -27,6 +29,7 @@ struct OpInfo {
 
   TrivialF trivial_f;
   bool is_transitive = true;
+  int operands_count = -1;
   CalcF calc_f;
   PrintF print_f;
 };

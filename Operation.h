@@ -43,6 +43,7 @@ class Operation : public INode {
 
  private:
   friend class INodeAcessor;
+
   bool IsUnMinus() const;
 
   void CheckIntegrity() const;
@@ -72,19 +73,23 @@ class Operation : public INode {
                           const PrintBox& print_box,
                           bool dry_run,
                           MinusBehavior minus_behavior) const;
-  PrintSize RenderMinusPlus(Canvas* canvas,
-                            const PrintBox& print_box,
-                            bool dry_run,
-                            MinusBehavior minus_behavior) const;
+  PrintSize RenderMinusPlusMult(Canvas* canvas,
+                                const PrintBox& print_box,
+                                bool dry_run,
+                                MinusBehavior minus_behavior) const;
   PrintSize RenderDiv(Canvas* canvas,
                       PrintBox print_box,
                       bool dry_run,
                       MinusBehavior minus_behavior) const;
+  PrintSize RenderTrigonometric(Canvas* canvas,
+                                PrintBox print_box,
+                                bool dry_run,
+                                MinusBehavior minus_behavior) const;
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
                           PrintBox print_box,
                           bool dry_run,
-                          bool ommit_brackets,
+                          BracketsBehavior brackets_behaviour,
                           bool with_op) const;
 
   std::unique_ptr<INode> CalcUnMinus() const;
