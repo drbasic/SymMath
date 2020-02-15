@@ -7,13 +7,12 @@ Constant::Constant(double val) : value_(val) {}
 PrintSize Constant::Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
-                           MinusBehavior minus_behavior) const {
+                           RenderBehaviour render_behaviour) const {
   bool has_front_minus = HasFrontMinus();
+  auto minus_behaviour = render_behaviour.TakeMinus();
   double for_print =
-      (has_front_minus &&
-       (minus_behavior == MinusBehavior::Ommit ||
-        minus_behavior == MinusBehavior::OmmitMinusAndBrackets)) ||
-              (!has_front_minus && minus_behavior == MinusBehavior::Force)
+      ((has_front_minus && minus_behaviour == MinusBehaviour::Ommit) ||
+       (!has_front_minus && minus_behaviour == MinusBehaviour::Force))
           ? -value_
           : value_;
   std::stringstream ss;

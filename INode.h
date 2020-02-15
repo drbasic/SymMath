@@ -11,6 +11,31 @@ class Operation;
 class Constant;
 enum class Op;
 
+enum class MinusBehaviour {
+  Relax,
+  Ommit,
+  Force,
+};
+
+enum class BracketsBehaviour {
+  Relax,
+  Ommit,
+  Force,
+};
+
+class RenderBehaviour {
+ public:
+  MinusBehaviour TakeMinus();
+  void SetMunus(MinusBehaviour minus_behaviour);
+
+  BracketsBehaviour TakeBrackets();
+  void SetBrackets(BracketsBehaviour brackets_behaviour);
+
+ private:
+  MinusBehaviour minus_behaviour_ = MinusBehaviour::Relax;
+  BracketsBehaviour brackets_behaviour_ = BracketsBehaviour::Relax;
+};
+
 class INode {
  public:
   virtual ~INode() {}
@@ -31,7 +56,7 @@ class INode {
   virtual PrintSize Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
-                           MinusBehavior minus_behavior) const = 0;
+                           RenderBehaviour render_behaviour) const = 0;
   virtual PrintSize LastPrintSize() const = 0;
 
   virtual int Priority() const = 0;

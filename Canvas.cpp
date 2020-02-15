@@ -6,6 +6,7 @@
 #include "Brackets.h"
 
 namespace {
+
 enum BracketsParts {
   Left,
   Right,
@@ -144,8 +145,8 @@ PrintSize Canvas::RenderBrackets(PrintBox print_box,
                                  PrintBox* inner_print_box) {
   assert(inner_print_box);
   // Render Left bracket
-  PrintSize left_br_size = RenderBracket(print_box, Bracket::Left, bracket_type,
-                                         inner_size.height, dry_run);
+  PrintSize left_br_size = RenderBracket(
+      print_box, BracketSide::Left, bracket_type, inner_size.height, dry_run);
   print_box = print_box.ShrinkLeft(left_br_size.width);
 
   // Calculate PrintBox for inner value
@@ -159,13 +160,13 @@ PrintSize Canvas::RenderBrackets(PrintBox print_box,
 
   // Render right bracket
   PrintSize right_br_size = RenderBracket(
-      print_box, Bracket::Right, bracket_type, inner_size.height, dry_run);
+      print_box, BracketSide::Right, bracket_type, inner_size.height, dry_run);
   return left_br_size.GrowWidth(inner_size, false)
       .GrowWidth(right_br_size, false);
 }
 
 PrintSize Canvas::RenderBracket(const PrintBox& print_box,
-                                Bracket br,
+                                BracketSide side,
                                 BracketType bracket_type,
                                 size_t height,
                                 bool dry_run) {
@@ -185,8 +186,8 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
     if (!dry_run) {
       size_t y = print_box.base_line - height / 2;
       data_[GetIndex(print_box.x, y)] =
-          (br == Bracket::Left ? brackets[BracketsParts::Left]
-                               : brackets[BracketsParts::Right]);
+          (side == BracketSide::Left ? brackets[BracketsParts::Left]
+                                     : brackets[BracketsParts::Right]);
     }
     return {1, 1, 0};
   }
@@ -198,18 +199,19 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
     for (size_t i = 0; i < height; ++i) {
       wchar_t s = '?';
       if (i == 0) {
-        s = br == Bracket::Left ? brackets[BracketsParts::TopLeft]
-                                : brackets[BracketsParts::TopRight];
+        s = side == BracketSide::Left ? brackets[BracketsParts::TopLeft]
+                                      : brackets[BracketsParts::TopRight];
       } else if (i == height - 1) {
-        s = br == Bracket::Left ? brackets[BracketsParts::BottomLeft]
-                                : brackets[BracketsParts::BottomRight];
+        s = side == BracketSide::Left ? brackets[BracketsParts::BottomLeft]
+                                      : brackets[BracketsParts::BottomRight];
       } else if (i == height / 2) {
-        s = br == Bracket::Left ? brackets[BracketsParts::MiddleLeft]
-                                : brackets[BracketsParts::MiddleRight];
+        s = side == BracketSide::Left ? brackets[BracketsParts::MiddleLeft]
+                                      : brackets[BracketsParts::MiddleRight];
       } else {
         s = kSquareBrackets[BracketsParts::Stright];
       }
-      data_[GetIndex(print_box.x + (br == Bracket::Left ? 0 : 1), y + i)] = s;
+      data_[GetIndex(print_box.x + (side == BracketSide::Left ? 0 : 1),
+                     y + i)] = s;
     }
   }
   return {2, height, height / 2};

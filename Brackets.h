@@ -20,7 +20,7 @@ class Brackets : public INode {
                                   Canvas* canvas,
                                   PrintBox print_box,
                                   bool dry_run,
-                                  MinusBehavior minus_behavior);
+                                  RenderBehaviour render_behaviour);
 
   std::unique_ptr<INode> SymCalc() const override;
 
@@ -31,7 +31,7 @@ class Brackets : public INode {
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
-                   MinusBehavior minus_behavior) const override;
+                   RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;

@@ -390,28 +390,26 @@ std::unique_ptr<INode> Operation::Clone() const {
 PrintSize Operation::Render(Canvas* canvas,
                             PrintBox print_box,
                             bool dry_run,
-                            MinusBehavior minus_behavior) const {
-  // if (op_info_->print_f)
-  //  return op_info_->print_f(op_info_, operands_);
+                            RenderBehaviour render_behaviour) const {
   switch (op_info_->op) {
     case Op::UnMinus:
       return print_size_ =
-                 RenderUnMinus(canvas, print_box, dry_run, minus_behavior);
+                 RenderUnMinus(canvas, print_box, dry_run, render_behaviour);
       break;
     case Op::Minus:
     case Op::Plus:
     case Op::Mult:
       return print_size_ = RenderMinusPlusMult(canvas, print_box, dry_run,
-                                               minus_behavior);
+                                               render_behaviour);
       break;
     case Op::Div:
       return print_size_ =
-                 RenderDiv(canvas, print_box, dry_run, minus_behavior);
+                 RenderDiv(canvas, print_box, dry_run, render_behaviour);
       break;
     case Op::Sin:
     case Op::Cos:
       return print_size_ = RenderTrigonometric(canvas, print_box, dry_run,
-                                               minus_behavior);
+                                               render_behaviour);
       break;
   }
   assert(false);
@@ -1064,48 +1062,45 @@ void Operation::RemoveEmptyOperands() {
 }
 
 PrintSize Operation::RenderUnMinus(Canvas* canvas,
-                                   const PrintBox& print_box,
+                                   PrintBox print_box,
                                    bool dry_run,
-                                   MinusBehavior minus_behavior) const {
-  if (minus_behavior == MinusBehavior::Force) {
+                                   RenderBehaviour render_behaviour) const {
+  auto minus_behaviour = render_behaviour.TakeMinus();
+
+  if (minus_behaviour == MinusBehaviour::Force) {
     assert(!HasFrontMinus());
-    return operands_[0]->Render(canvas, print_box, dry_run,
-                                MinusBehavior::Force);
+    return operands_[0]->Render(canvas, print_box, dry_run, render_behaviour);
   }
 
   // - -a => a
   if (operands_[0]->HasFrontMinus()) {
-    return operands_[0]->Render(canvas, print_box, dry_run,
-                                MinusBehavior::Ommit);
+    render_behaviour.SetMunus(MinusBehaviour::Ommit);
+    return operands_[0]->Render(canvas, print_box, dry_run, render_behaviour);
   }
 
   // don't render this minus. a + (-b) -> a - b. Minus render from (+)
   // operation.
-  if (minus_behavior == MinusBehavior::Ommit ||
-      minus_behavior == MinusBehavior::OmmitMinusAndBrackets) {
+  if (minus_behaviour == MinusBehaviour::Ommit) {
     assert(HasFrontMinus());
     assert(!operands_[0]->HasFrontMinus());
-    return RenderOperand(
-        operands_[0].get(), canvas, print_box, dry_run,
-        (minus_behavior == MinusBehavior::OmmitMinusAndBrackets)
-            ? BracketsBehavior::Ommit
-            : BracketsBehavior::Relax,
-        false);
+    return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
+                         render_behaviour, false);
   }
 
-  if (minus_behavior == MinusBehavior::Relax) {
+  if (minus_behaviour == MinusBehaviour::Relax) {
     return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
-                         BracketsBehavior::Relax, true);
+                         render_behaviour, true);
   }
 
   assert(false);
   return {};
 }
 
-PrintSize Operation::RenderMinusPlusMult(Canvas* canvas,
-                                         const PrintBox& print_box,
-                                         bool dry_run,
-                                         MinusBehavior minus_behavior) const {
+PrintSize Operation::RenderMinusPlusMult(
+    Canvas* canvas,
+    PrintBox print_box,
+    bool dry_run,
+    RenderBehaviour render_behaviour) const {
   //  1
   //  ~ + 1 -- base_line
   //  2       1
@@ -1116,7 +1111,7 @@ PrintSize Operation::RenderMinusPlusMult(Canvas* canvas,
   PrintBox operand_box{print_box};
   for (size_t i = 0; i < operands_.size(); ++i) {
     auto operand_size = RenderOperand(operands_[i].get(), canvas, operand_box,
-                                      dry_run, BracketsBehavior::Relax, i != 0);
+                                      dry_run, render_behaviour, i != 0);
     operand_box = operand_box.ShrinkLeft(operand_size.width);
     total_print_size = total_print_size.GrowWidth(operand_size, true);
   }
@@ -1129,11 +1124,16 @@ PrintSize Operation::RenderMinusPlusMult(Canvas* canvas,
 PrintSize Operation::RenderDiv(Canvas* canvas,
                                PrintBox print_box,
                                bool dry_run,
-                               MinusBehavior minus_behavior) const {
+                               RenderBehaviour render_behaviour) const {
   assert(op_info_->op == Op::Div);
+  auto minus_behaviour = render_behaviour.TakeMinus();
+
   bool has_front_minus =
-      (minus_behavior == MinusBehavior::Force) ||
-      (minus_behavior == MinusBehavior::Relax && HasFrontMinus());
+      (minus_behaviour == MinusBehaviour::Force) ||
+      (minus_behaviour == MinusBehaviour::Relax && HasFrontMinus());
+
+  render_behaviour.SetMunus(MinusBehaviour::Ommit);
+  render_behaviour.SetBrackets(BracketsBehaviour::Ommit);
 
   PrintSize prefix_size = {};
   if (has_front_minus) {
@@ -1143,14 +1143,12 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
     prefix_size = un_minus_size.GrowWidth({1, 1, 0}, true);
   }
 
-  auto lh_size =
-      dry_run ? operands_[0]->Render(canvas, PrintBox::Infinite(), dry_run,
-                                     MinusBehavior::OmmitMinusAndBrackets)
-              : operands_[0]->LastPrintSize();
-  auto rh_size =
-      dry_run ? operands_[1]->Render(canvas, PrintBox::Infinite(), dry_run,
-                                     MinusBehavior::OmmitMinusAndBrackets)
-              : operands_[1]->LastPrintSize();
+  auto lh_size = dry_run ? operands_[0]->Render(canvas, PrintBox::Infinite(),
+                                                dry_run, render_behaviour)
+                         : operands_[0]->LastPrintSize();
+  auto rh_size = dry_run ? operands_[1]->Render(canvas, PrintBox::Infinite(),
+                                                dry_run, render_behaviour)
+                         : operands_[1]->LastPrintSize();
 
   // Render divider
   auto div_size = canvas->RenderDivider(
@@ -1163,8 +1161,8 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       lh_box.x = lh_box.x + (div_size.width - lh_size.width) / 2;
       lh_box.height = print_box.base_line - div_size.base_line;
       lh_box.base_line = lh_box.height - (lh_size.height - lh_size.base_line);
-      auto lh_size2 = operands_[0]->Render(
-          canvas, lh_box, dry_run, MinusBehavior::OmmitMinusAndBrackets);
+      auto lh_size2 =
+          operands_[0]->Render(canvas, lh_box, dry_run, render_behaviour);
       assert(lh_size2 == lh_size);
     }
     {
@@ -1173,8 +1171,8 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       rh_box.x = rh_box.x + (div_size.width - rh_size.width) / 2;
       rh_box.y = print_box.base_line + (div_size.height - div_size.base_line);
       rh_box.base_line = rh_box.y + rh_size.base_line;
-      auto rh_size2 = operands_[1]->Render(
-          canvas, rh_box, dry_run, MinusBehavior::OmmitMinusAndBrackets);
+      auto rh_size2 =
+          operands_[1]->Render(canvas, rh_box, dry_run, render_behaviour);
       assert(rh_size2 == rh_size);
     }
   }
@@ -1183,28 +1181,32 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       lh_size.GrowDown(div_size, true).GrowDown(rh_size, false), true);
 }
 
-PrintSize Operation::RenderTrigonometric(Canvas* canvas,
-                                         PrintBox print_box,
-                                         bool dry_run,
-                                         MinusBehavior minus_behavior) const {
+PrintSize Operation::RenderTrigonometric(
+    Canvas* canvas,
+    PrintBox print_box,
+    bool dry_run,
+    RenderBehaviour render_behaviour) const {
+  render_behaviour.SetBrackets(BracketsBehaviour::Force);
   return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
-                       BracketsBehavior::Force, true);
+                       render_behaviour, true);
 }
 
 PrintSize Operation::RenderOperand(const INode* node,
                                    Canvas* canvas,
                                    PrintBox print_box,
                                    bool dry_run,
-                                   BracketsBehavior brackets_behaviour,
+                                   RenderBehaviour render_behaviour,
                                    bool with_op) const {
-  bool need_br = (brackets_behaviour == BracketsBehavior::Force) ||
-                 ((brackets_behaviour != BracketsBehavior::Ommit) &&
+  auto brackets_behaviour = render_behaviour.TakeBrackets();
+
+  bool need_br = (brackets_behaviour == BracketsBehaviour::Force) ||
+                 ((brackets_behaviour != BracketsBehaviour::Ommit) &&
                   (node->Priority() < Priority()));
-  if (brackets_behaviour != BracketsBehavior::Ommit && with_op &&
+  if (brackets_behaviour != BracketsBehaviour::Ommit && with_op &&
       INodeAcessor::AsMult(this) && node->HasFrontMinus()) {
     need_br = true;
   }
-  if (brackets_behaviour != BracketsBehavior::Force && !with_op &&
+  if (brackets_behaviour != BracketsBehaviour::Force && !with_op &&
       INodeAcessor::AsMult(this) && node->HasFrontMinus()) {
     // when un minus first in multyple, remove brackets. Remove brackets -a *
     // b ;  Keep brackets b * (-a);
@@ -1212,23 +1214,22 @@ PrintSize Operation::RenderOperand(const INode* node,
   }
 
   auto op_to_print = op_info_;
-  MinusBehavior minus_behavior = MinusBehavior::Relax;
   if (with_op && op_info_->op == Op::Plus && node->HasFrontMinus()) {
     // +-1 -> -1 // minus (-) print here, so ommit (-) in operand
     op_to_print = GetOpInfo(Op::Minus);
-    minus_behavior = MinusBehavior::Ommit;
+    render_behaviour.SetMunus(MinusBehaviour::Ommit);
   } else if (with_op && op_info_->op == Op::Minus && node->HasFrontMinus()) {
     // --1 -> +1 // minus operation and front minus(--) -> print plus(+) here,
     // so ommit (-) in operand
     op_to_print = GetOpInfo(Op::Plus);
-    minus_behavior = MinusBehavior::Ommit;
+    render_behaviour.SetMunus(MinusBehaviour::Ommit);
   } else if (with_op && op_info_->op == Op::UnMinus &&
              INodeAcessor::AsDiv(node)) {
     assert(!node->HasFrontMinus());
     assert(HasFrontMinus());
     // div operand print un minus instead of us
     with_op = false;
-    minus_behavior = MinusBehavior::Force;
+    render_behaviour.SetMunus(MinusBehaviour::Force);
   }
 
   PrintSize total_operand_size;
@@ -1241,8 +1242,8 @@ PrintSize Operation::RenderOperand(const INode* node,
   // Render operand
   auto node_size =
       need_br ? Brackets::RenderBrackets(node, BracketType::Round, canvas,
-                                         print_box, dry_run, minus_behavior)
-              : node->Render(canvas, print_box, dry_run, minus_behavior);
+                                         print_box, dry_run, render_behaviour)
+              : node->Render(canvas, print_box, dry_run, render_behaviour);
   total_operand_size = total_operand_size.GrowWidth(node_size, true);
 
   return total_operand_size;

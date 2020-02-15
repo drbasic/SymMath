@@ -13,7 +13,7 @@ std::unique_ptr<INode> ErrorNode::Clone() const {
 PrintSize ErrorNode::Render(Canvas* canvas,
                             PrintBox print_box,
                             bool dry_run,
-                            MinusBehavior minus_behavior) const {
+                            RenderBehaviour render_behaviour) const {
   return canvas->PrintAt(print_box, error_, dry_run);
 }
 

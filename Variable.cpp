@@ -25,11 +25,12 @@ std::wstring Variable::Print() const {
   Canvas canvas;
   canvas.SetDryRun(true);
   PrintBox initial_print_box(0, 0, 1000, 1000, 0);
-  auto size = Render(&canvas, initial_print_box, true, MinusBehavior::Relax);
+  RenderBehaviour render_behaviour;
+  auto size = Render(&canvas, initial_print_box, true, render_behaviour);
   canvas.Resize(size);
   canvas.SetDryRun(false);
   PrintBox print_box(0, 0, size);
-  auto size2 = Render(&canvas, print_box, false, MinusBehavior::Relax);
+  auto size2 = Render(&canvas, print_box, false, render_behaviour);
   assert(size == size2);
   return canvas.ToString();
 }
@@ -119,11 +120,11 @@ std::unique_ptr<INode> Variable::Clone() const {
 PrintSize Variable::Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
-                           MinusBehavior minus_behavior) const {
+                           RenderBehaviour render_behaviour) const {
   if (name_.empty()) {
     if (value_) {
       return print_size_ =
-                 value_->Render(canvas, print_box, dry_run, minus_behavior);
+                 value_->Render(canvas, print_box, dry_run, render_behaviour);
     }
   }
 
@@ -133,7 +134,7 @@ PrintSize Variable::Render(Canvas* canvas,
   auto lh_size = canvas->PrintAt(print_box, var_printable_name, dry_run);
   print_box = print_box.ShrinkLeft(lh_size.width);
   auto rh_size =
-      value_ ? value_->Render(canvas, print_box, dry_run, minus_behavior)
+      value_ ? value_->Render(canvas, print_box, dry_run, render_behaviour)
              : canvas->PrintAt(print_box, kNull, dry_run);
 
   return print_size_ = lh_size.GrowWidth(rh_size, true);

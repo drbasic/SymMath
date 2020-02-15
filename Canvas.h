@@ -5,25 +5,7 @@
 #include <string_view>
 #include <vector>
 
-enum class Bracket {
-  Left,
-  Right,
-};
-
 enum class BracketType;
-
-enum class MinusBehavior {
-  Relax,
-  Ommit,
-  Force,
-  OmmitMinusAndBrackets,
-};
-
-enum class BracketsBehavior {
-  Relax,
-  Ommit,
-  Force,
-};
 
 struct PrintSize {
   bool operator==(const PrintSize& rh) const;
@@ -83,9 +65,13 @@ class Canvas {
   void SetDryRun(bool dry_run);
 
  private:
+  enum class BracketSide {
+    Left,
+    Right,
+  };
   size_t GetIndex(size_t x, size_t y) const;
   PrintSize RenderBracket(const PrintBox& print_box,
-                          Bracket br,
+                          BracketSide side,
                           BracketType bracket_type,
                           size_t height,
                           bool dry_run);

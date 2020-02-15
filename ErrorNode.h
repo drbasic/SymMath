@@ -13,7 +13,7 @@ class ErrorNode : public INode {
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
-                   MinusBehavior minus_behavior) const override;
+                   RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;

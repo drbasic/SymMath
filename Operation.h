@@ -30,7 +30,7 @@ class Operation : public INode {
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
-                   MinusBehavior minus_behavior) const override;
+                   RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
@@ -70,26 +70,26 @@ class Operation : public INode {
   void RemoveEmptyOperands();
 
   PrintSize RenderUnMinus(Canvas* canvas,
-                          const PrintBox& print_box,
+                          PrintBox print_box,
                           bool dry_run,
-                          MinusBehavior minus_behavior) const;
+                          RenderBehaviour render_behaviour) const;
   PrintSize RenderMinusPlusMult(Canvas* canvas,
-                                const PrintBox& print_box,
+                                PrintBox print_box,
                                 bool dry_run,
-                                MinusBehavior minus_behavior) const;
+                                RenderBehaviour render_behaviour) const;
   PrintSize RenderDiv(Canvas* canvas,
                       PrintBox print_box,
                       bool dry_run,
-                      MinusBehavior minus_behavior) const;
+                      RenderBehaviour render_behaviour) const;
   PrintSize RenderTrigonometric(Canvas* canvas,
                                 PrintBox print_box,
                                 bool dry_run,
-                                MinusBehavior minus_behavior) const;
+                                RenderBehaviour render_behaviour) const;
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
                           PrintBox print_box,
                           bool dry_run,
-                          BracketsBehavior brackets_behaviour,
+                          RenderBehaviour render_behaviour,
                           bool with_op) const;
 
   std::unique_ptr<INode> CalcUnMinus() const;
