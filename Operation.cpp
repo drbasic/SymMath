@@ -30,20 +30,6 @@ std::vector<std::unique_ptr<INode>> CalcOperands(
   return result;
 }
 
-std::optional<std::vector<double>> AsTrivial(
-    const std::vector<std::unique_ptr<INode>>& operands) {
-  std::vector<double> result;
-  result.reserve(operands.size());
-  for (const auto& operand : operands) {
-    if (Constant* as_const = dynamic_cast<Constant*>(operand.get())) {
-      result.push_back(as_const->Value());
-    } else {
-      return std::nullopt;
-    }
-  }
-  return result;
-}
-
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
                             const std::vector<const INode*>& rhs) {
   if (lhs.size() != rhs.size())
@@ -294,7 +280,32 @@ int Operation::Priority() const {
 std::unique_ptr<INode> Operation::SymCalc() const {
   if (op_info_->calc_f)
     return op_info_->calc_f(op_info_, operands_);
-  return CalcMinusPlusMultDiv();
+
+  std::vector<std::unique_ptr<INode>> calculated_operands =
+      CalcOperands(operands_);
+  if (!IsAllOperandsConst(calculated_operands) || !op_info_->trivial_f) {
+    auto result = Clone();
+    INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
+    return result;
+  }
+
+  if (calculated_operands.size() == 1) {
+    double result =
+        op_info_->trivial_f(calculated_operands[0]->AsConstant()->Value(), 0.0);
+    return INodeHelper::MakeConst(result);
+  }
+
+  auto trivial_f = op_info_->trivial_f;
+  auto node_adaptor = [trivial_f](double lh, const std::unique_ptr<INode>& rh) {
+    auto rh_val = rh->AsConstant();
+    assert(rh_val);
+    return trivial_f(lh, rh_val->Value());
+  };
+
+  double result = std::accumulate(
+      std::begin(calculated_operands) + 1, std::end(calculated_operands),
+      calculated_operands[0]->AsConstant()->Value(), node_adaptor);
+  return INodeHelper::MakeConst(result);
 }
 
 PrintSize Operation::LastPrintSize() const {
@@ -654,8 +665,9 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
   return is_optimized;
 }
 
-bool Operation::IsAllOperandsConst() const {
-  for (const auto& operand : operands_) {
+bool Operation::IsAllOperandsConst(
+    const std::vector<std::unique_ptr<INode>>& operands) const {
+  for (const auto& operand : operands) {
     Constant* constant = operand->AsConstant();
     if (!constant)
       return false;
@@ -664,7 +676,7 @@ bool Operation::IsAllOperandsConst() const {
 }
 
 bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
-  if (IsAllOperandsConst()) {
+  if (IsAllOperandsConst(operands_)) {
     *new_node = SymCalc();
     return true;
   }
@@ -996,21 +1008,5 @@ PrintSize Operation::RenderOperand(const INode* node,
   total_operand_size = total_operand_size.GrowWidth(node_size, true);
 
   return total_operand_size;
-}
-
-std::unique_ptr<INode> Operation::CalcMinusPlusMultDiv() const {
-  std::vector<std::unique_ptr<INode>> calculated_operands =
-      CalcOperands(operands_);
-  auto trivials = AsTrivial(calculated_operands);
-  if (!trivials) {
-    auto result = Clone();
-    INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
-    return result;
-  }
-
-  double result =
-      std::accumulate(std::begin(*trivials) + 1, std::end(*trivials),
-                      (*trivials).front(), op_info_->trivial_f);
-  return std::make_unique<Constant>(result);
 }
 //=============================================================================

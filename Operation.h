@@ -59,8 +59,6 @@ class Operation : public INode {
 
   friend class INodeHelper;
 
-  bool IsUnMinus() const;
-
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node);
@@ -68,7 +66,8 @@ class Operation : public INode {
   bool SimplifyDivMul();
   bool SimplifyChain();
   bool SimplifySame(std::unique_ptr<INode>* new_node);
-  bool IsAllOperandsConst() const;
+  bool IsAllOperandsConst(
+      const std::vector<std::unique_ptr<INode>>& operands) const;
   bool SimplifyConsts(std::unique_ptr<INode>* new_node);
   bool NeedConvertToChain() const;
   void ConvertToPlus();
@@ -83,8 +82,6 @@ class Operation : public INode {
   std::vector<std::unique_ptr<INode>> TakeOperands(Op op);
 
   void RemoveEmptyOperands();
-
-  std::unique_ptr<INode> CalcMinusPlusMultDiv() const;
 
   const OpInfo* op_info_;
   mutable PrintSize print_size_;
