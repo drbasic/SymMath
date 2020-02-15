@@ -2,6 +2,7 @@
 
 #include "Brackets.h"
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INode.h"
 #include "OpInfo.h"
 #include "Operation.h"
@@ -70,18 +71,17 @@ std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh, double rh) {
 //=============================================================================
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
-                                     std::move(rh));
+  return std::make_unique<DivOperation>(std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator/(double lh, std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(
-      GetOpInfo(Op::Div), std::make_unique<Constant>(lh), std::move(rh));
+  return std::make_unique<DivOperation>(std::make_unique<Constant>(lh),
+                                        std::move(rh));
 }
 
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
-                                     std::make_unique<Constant>(rh));
+  return std::make_unique<DivOperation>(std::move(lh),
+                                        std::make_unique<Constant>(rh));
 }
 
 std::unique_ptr<INode> AddBrackets(std::unique_ptr<INode> value) {

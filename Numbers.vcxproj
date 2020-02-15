@@ -152,6 +152,7 @@
     <ClCompile Include="Brackets.cpp" />
     <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="Constant.cpp" />
+    <ClCompile Include="DivOperation.cpp" />
     <ClCompile Include="ErrorNode.cpp" />
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="INode.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="Brackets.h" />
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="Constant.h" />
+    <ClInclude Include="DivOperation.h" />
     <ClInclude Include="ErrorNode.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="INode.h" />

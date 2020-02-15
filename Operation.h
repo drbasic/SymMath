@@ -83,10 +83,7 @@ class Operation : public INode {
                                 PrintBox print_box,
                                 bool dry_run,
                                 RenderBehaviour render_behaviour) const;
-  PrintSize RenderDiv(Canvas* canvas,
-                      PrintBox print_box,
-                      bool dry_run,
-                      RenderBehaviour render_behaviour) const;
+
 
   std::unique_ptr<INode> CalcUnMinus() const;
   std::unique_ptr<INode> CalcMinusPlusMultDiv() const;

@@ -11,6 +11,7 @@ class ErrorNode;
 class Operation;
 class Constant;
 class Canvas;
+class DivOperation;
 class Variable;
 class TrigonometricOperator;
 enum class Op;
@@ -24,6 +25,7 @@ class INode {
  protected:
   friend class Brackets;
   friend class Constant;
+  friend class DivOperation;
   friend class ErrorNode;
   friend class INodeHelper;
   friend class Operation;
