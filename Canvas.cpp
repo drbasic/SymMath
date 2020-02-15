@@ -137,6 +137,33 @@ PrintSize Canvas::PrintAt(const PrintBox& print_box,
   return {str.size(), 1, 0};
 }
 
+PrintSize Canvas::RenderBrackets(PrintBox print_box,
+                                 BracketType bracket_type,
+                                 PrintSize inner_size,
+                                 bool dry_run,
+                                 PrintBox* inner_print_box) {
+  assert(inner_print_box);
+  // Render Left bracket
+  PrintSize left_br_size = RenderBracket(print_box, Bracket::Left, bracket_type,
+                                         inner_size.height, dry_run);
+  print_box = print_box.ShrinkLeft(left_br_size.width);
+
+  // Calculate PrintBox for inner value
+  *inner_print_box = print_box;
+  inner_print_box->y = print_box.base_line - left_br_size.height / 2 +
+                       (left_br_size.height - inner_size.height) / 2;
+  inner_print_box->height = inner_print_box->y + inner_size.height;
+  inner_print_box->width = inner_size.width;
+  inner_print_box->base_line = inner_print_box->y + inner_size.base_line;
+  print_box = print_box.ShrinkLeft(inner_size.width);
+
+  // Render right bracket
+  PrintSize right_br_size = RenderBracket(
+      print_box, Bracket::Right, bracket_type, inner_size.height, dry_run);
+  return left_br_size.GrowWidth(inner_size, false)
+      .GrowWidth(right_br_size, false);
+}
+
 PrintSize Canvas::RenderBracket(const PrintBox& print_box,
                                 Bracket br,
                                 BracketType bracket_type,
@@ -167,7 +194,7 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
   height += 2;
 
   if (!dry_run) {
-    size_t y = print_box.y;  // base_line - height / 2;
+    size_t y = print_box.base_line - height / 2;
     for (size_t i = 0; i < height; ++i) {
       wchar_t s = '?';
       if (i == 0) {

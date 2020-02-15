@@ -70,11 +70,11 @@ class Canvas {
                     std::wstring_view str,
                     bool dry_run);
 
-  PrintSize RenderBracket(const PrintBox& print_box,
-                          Bracket br,
-                          BracketType bracket_type,
-                          size_t height,
-                          bool dry_run);
+  PrintSize RenderBrackets(PrintBox print_box,
+                           BracketType bracket_type,
+                           PrintSize inner_size,
+                           bool dry_run,
+                           PrintBox* inner_print_box);
 
   PrintSize RenderDivider(const PrintBox& print_box,
                           size_t width,
@@ -84,6 +84,11 @@ class Canvas {
 
  private:
   size_t GetIndex(size_t x, size_t y) const;
+  PrintSize RenderBracket(const PrintBox& print_box,
+                          Bracket br,
+                          BracketType bracket_type,
+                          size_t height,
+                          bool dry_run);
 
   bool dry_run_ = false;
   PrintSize print_size_;
