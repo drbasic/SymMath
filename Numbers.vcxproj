@@ -155,8 +155,11 @@
     <ClCompile Include="ErrorNode.cpp" />
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="INode.cpp" />
+    <ClCompile Include="INodeHelper.cpp" />
     <ClCompile Include="Operations.cpp" />
     <ClCompile Include="OpInfo.cpp" />
+    <ClCompile Include="RenderBehaviour.cpp" />
+    <ClCompile Include="TrigonometricOperator.cpp" />
     <ClCompile Include="ValueHelpers.cpp" />
     <ClCompile Include="Numbers.cpp" />
     <ClCompile Include="Operation.cpp" />
@@ -170,8 +173,11 @@
     <ClInclude Include="ErrorNode.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="INode.h" />
+    <ClInclude Include="INodeHelper.h" />
     <ClInclude Include="Operations.h" />
     <ClInclude Include="OpInfo.h" />
+    <ClInclude Include="RenderBehaviour.h" />
+    <ClInclude Include="TrigonometricOperator.h" />
     <ClInclude Include="ValueHelpers.h" />
     <ClInclude Include="Operation.h" />
     <ClInclude Include="Variable.h" />

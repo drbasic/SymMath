@@ -10,91 +10,10 @@
 #include "Brackets.h"
 #include "Constant.h"
 #include "Exception.h"
+#include "INodeHelper.h"
 #include "OpInfo.h"
 #include "Operation.h"
 #include "ValueHelpers.h"
-
-class INodeAcessor {
- public:
-  static bool IsNodesEqual(const INode* lh, const INode* rh) {
-    return lh->IsEqual(rh);
-  }
-
-  static const Constant* AsConstant(const INode* lh) {
-    return lh->AsConstant();
-  }
-
-  static const Operation* AsOperation(const INode* lh) {
-    return lh->AsOperation();
-  }
-
-  static Operation* AsOperation(INode* lh) { return lh->AsOperation(); }
-
-  static Operation* AsMult(INode* lh) {
-    auto result = lh->AsOperation();
-    if (result && result->op_info_->op == Op::Mult) {
-      return result;
-    }
-    return nullptr;
-  }
-
-  static const Operation* AsMult(const INode* lh) {
-    auto result = lh->AsOperation();
-    if (result && result->op_info_->op == Op::Mult) {
-      return result;
-    }
-    return nullptr;
-  }
-
-  static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op) {
-    return op->operands_;
-  }
-
-  static bool IsUnMinus(const INode* lh) {
-    if (auto op = AsOperation(lh))
-      return op->IsUnMinus();
-    return false;
-  }
-
-  static Operation* AsUnMinus(INode* lh) {
-    if (auto op = AsOperation(lh))
-      return op->IsUnMinus() ? op : nullptr;
-    return nullptr;
-  }
-
-  static const Operation* AsDiv(const INode* lh) {
-    if (auto op = AsOperation(lh))
-      return op->op_info_->op == Op::Div ? op : nullptr;
-    return nullptr;
-  }
-
-  static Operation* AsDiv(INode* lh) {
-    if (auto op = AsOperation(lh))
-      return op->op_info_->op == Op::Div ? op : nullptr;
-    return nullptr;
-  }
-
-  static std::unique_ptr<Operation> ConvertToMul(std::unique_ptr<INode> rh) {
-    assert(rh);
-    if (auto* mult = AsMult(rh.get())) {
-      rh.release();
-      return std::unique_ptr<Operation>(mult);
-    }
-    return std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(rh),
-                                       Const(1.0));
-  }
-
-  static std::unique_ptr<Operation> MakeUnMinus(std::unique_ptr<INode> inner) {
-    return std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
-                                       std::move(inner));
-  }
-
-  static std::unique_ptr<Operation> MakeDiv(std::unique_ptr<INode> lh,
-                                            std::unique_ptr<INode> rh) {
-    return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
-                                       std::move(rh));
-  }
-};
 
 namespace {
 
@@ -134,7 +53,7 @@ bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      if (!INodeAcessor::IsNodesEqual(lhs[i], rhs[i]))
+      if (!INodeHelper::IsNodesEqual(lhs[i], rhs[i]))
         continue;
       used[j] = true;
       equal_found = true;
@@ -192,7 +111,7 @@ std::vector<std::unique_ptr<INode>*> GetNodesPointersWithoutConstant(
     double* constant) {
   std::vector<std::unique_ptr<INode>*> result;
   for (auto node : src) {
-    if (auto c = INodeAcessor::AsConstant(node->get()))
+    if (auto c = INodeHelper::AsConstant(node->get()))
       *constant += c->Value();
     else
       result.push_back(node);
@@ -210,7 +129,7 @@ bool TakeTransitiveEqualNodesTheSame(
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      if (!INodeAcessor::IsNodesEqual(lhs[i]->get(), rhs[i]->get()))
+      if (!INodeHelper::IsNodesEqual(lhs[i]->get(), rhs[i]->get()))
         continue;
       used[j] = true;
       equal_found = true;
@@ -329,15 +248,15 @@ double TryExctractSum(const CanonicMultDiv& canonic,
                       double* remains) {
   if (canonic.nodes.size() != 1)
     return 0.0;
-  Operation* canonic_op = INodeAcessor::AsOperation(canonic.nodes[0]->get());
+  Operation* canonic_op = INodeHelper::AsOperation(canonic.nodes[0]->get());
   if (!canonic_op)
     return 0.0;
 
-  if (INodeAcessor::GetOperands(canonic_op).size() > free_operands.size())
+  if (INodeHelper::GetOperands(canonic_op).size() > free_operands.size())
     return 0.0;
 
   double count = TakeTransitiveEqualNodes(
-      GetNodesPointers(INodeAcessor::GetOperands(canonic_op),
+      GetNodesPointers(INodeHelper::GetOperands(canonic_op),
                        std::numeric_limits<size_t>::max()),
       free_operands, remains);
   return count;
@@ -406,13 +325,9 @@ PrintSize Operation::Render(Canvas* canvas,
       return print_size_ =
                  RenderDiv(canvas, print_box, dry_run, render_behaviour);
       break;
-    case Op::Sin:
-    case Op::Cos:
-      return print_size_ = RenderTrigonometric(canvas, print_box, dry_run,
-                                               render_behaviour);
-      break;
+    default:
+      assert(false);
   }
-  assert(false);
   return {};
 }
 
@@ -424,7 +339,7 @@ bool Operation::HasFrontMinus() const {
   if (IsUnMinus()) {
     return !operands_[0]->HasFrontMinus();
   }
-  if (const auto* div = INodeAcessor::AsDiv(this)) {
+  if (const auto* div = INodeHelper::AsDiv(this)) {
     bool lh_minus = div->operands_[0]->HasFrontMinus();
     bool rh_minus = div->operands_[1]->HasFrontMinus();
     return lh_minus ^ rh_minus;
@@ -553,7 +468,7 @@ bool Operation::IsUnMinus() const {
 bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   if (!IsUnMinus())
     return false;
-  Operation* sub_un_minus = INodeAcessor::AsUnMinus(operands_[0].get());
+  Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get());
   if (!sub_un_minus)
     return false;
 
@@ -562,7 +477,7 @@ bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
 }
 
 bool Operation::SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node) {
-  if (!INodeAcessor::AsDiv(this))
+  if (!INodeHelper::AsDiv(this))
     return false;
 
   bool need_convert_this = false;
@@ -573,7 +488,7 @@ bool Operation::SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node) {
         for (bool need_more = true; need_more;) {
           need_more = false;
           for (auto& node : *operands) {
-            if (auto* un_minus = INodeAcessor::AsUnMinus(node.get())) {
+            if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
               need_convert_this = !need_convert_this;
               need_more = true;
               is_simlified = true;
@@ -586,33 +501,33 @@ bool Operation::SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node) {
   // extract (-(a*b)) / (-(b*c) )
   um_minus_exctractor(&operands_);
   for (auto& node : operands_) {
-    if (auto* mult = INodeAcessor::AsMult(node.get())) {
+    if (auto* mult = INodeHelper::AsMult(node.get())) {
       um_minus_exctractor(&mult->operands_);
     }
   }
 
   if (need_convert_this) {
-    *new_node = INodeAcessor::MakeUnMinus(INodeAcessor::MakeDiv(
-        std::move(operands_[0]), std::move(operands_[1])));
+    *new_node = INodeHelper::MakeUnMinus(
+        INodeHelper::MakeDiv(std::move(operands_[0]), std::move(operands_[1])));
   }
   return is_simlified;
 }
 
 bool Operation::SimplifyDivDiv() {
-  if (!INodeAcessor::AsDiv(this))
+  if (!INodeHelper::AsDiv(this))
     return false;
-  auto* top = INodeAcessor::AsDiv(operands_[0].get());
-  auto* bottom = INodeAcessor::AsDiv(operands_[1].get());
+  auto* top = INodeHelper::AsDiv(operands_[0].get());
+  auto* bottom = INodeHelper::AsDiv(operands_[1].get());
   if (!top && !bottom)
     return false;
 
   std::unique_ptr<Operation> new_top;
   std::unique_ptr<Operation> new_bottom;
   if (top) {
-    new_top = INodeAcessor::ConvertToMul(std::move(top->operands_[0]));
-    new_bottom = INodeAcessor::ConvertToMul(std::move(top->operands_[1]));
+    new_top = INodeHelper::ConvertToMul(std::move(top->operands_[0]));
+    new_bottom = INodeHelper::ConvertToMul(std::move(top->operands_[1]));
   } else {
-    new_top = INodeAcessor::ConvertToMul(std::move(operands_[0]));
+    new_top = INodeHelper::ConvertToMul(std::move(operands_[0]));
   }
 
   if (bottom) {
@@ -620,12 +535,12 @@ bool Operation::SimplifyDivDiv() {
     if (new_bottom)
       new_bottom->operands_.push_back(std::move(bottom->operands_[0]));
     else
-      new_bottom = INodeAcessor::ConvertToMul(std::move(bottom->operands_[0]));
+      new_bottom = INodeHelper::ConvertToMul(std::move(bottom->operands_[0]));
   } else {
     if (new_bottom)
       new_bottom->operands_.push_back(std::move(operands_[1]));
     else
-      new_bottom = INodeAcessor::ConvertToMul(std::move(operands_[1]));
+      new_bottom = INodeHelper::ConvertToMul(std::move(operands_[1]));
   }
   operands_[0] = std::move(new_top);
   operands_[1] = std::move(new_bottom);
@@ -641,16 +556,16 @@ bool Operation::SimplifyDivDiv() {
 }
 
 bool Operation::SimplifyDivMul() {
-  if (!INodeAcessor::AsDiv(this))
+  if (!INodeHelper::AsDiv(this))
     return false;
-  if (!INodeAcessor::AsMult(operands_[0].get()) &&
-      !INodeAcessor::AsMult(operands_[1].get()))
+  if (!INodeHelper::AsMult(operands_[0].get()) &&
+      !INodeHelper::AsMult(operands_[1].get()))
     return false;
 
   auto is_contains_div = [](const INode* node) {
-    if (auto* mult = INodeAcessor::AsMult(node)) {
+    if (auto* mult = INodeHelper::AsMult(node)) {
       for (const auto& node : mult->operands_) {
-        if (INodeAcessor::AsDiv(node.get()))
+        if (INodeHelper::AsDiv(node.get()))
           return true;
       }
     }
@@ -662,18 +577,18 @@ bool Operation::SimplifyDivMul() {
     return false;
 
   std::unique_ptr<Operation> new_top =
-      INodeAcessor::ConvertToMul(std::move(operands_[0]));
+      INodeHelper::ConvertToMul(std::move(operands_[0]));
   std::unique_ptr<Operation> new_bottom =
-      INodeAcessor::ConvertToMul(std::move(operands_[1]));
+      INodeHelper::ConvertToMul(std::move(operands_[1]));
 
   for (auto& node : new_top->operands_) {
-    if (auto* div = INodeAcessor::AsDiv(node.get())) {
+    if (auto* div = INodeHelper::AsDiv(node.get())) {
       new_bottom->operands_.push_back(std::move(div->operands_[1]));
       node = std::move(div->operands_[0]);
     }
   }
   for (auto& node : new_bottom->operands_) {
-    if (auto* div = INodeAcessor::AsDiv(node.get())) {
+    if (auto* div = INodeHelper::AsDiv(node.get())) {
       new_top->operands_.push_back(std::move(div->operands_[1]));
       node = std::move(div->operands_[0]);
     }
@@ -724,7 +639,7 @@ bool Operation::SimplifyChain() {
 
   if (op_info_->op == Op::Mult) {
     for (size_t i = 1; i < new_nodes.size(); ++i) {
-      auto* un_minus = INodeAcessor::AsUnMinus(new_nodes[i].get());
+      auto* un_minus = INodeHelper::AsUnMinus(new_nodes[i].get());
       if (!un_minus)
         continue;
       auto un_minus_sub_node = un_minus->TakeOperands(Op::UnMinus);
@@ -865,7 +780,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     }
     // x * 34 / 17
     if (i == 1 && op_info_->op == Op::Div) {
-      if (auto* mult = INodeAcessor::AsMult(operands_[0].get())) {
+      if (auto* mult = INodeHelper::AsMult(operands_[0].get())) {
         if (mult->ReduceFor(constant->Value())) {
           *new_node = std::move(operands_[0]);
           return true;
@@ -1133,7 +1048,6 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       (minus_behaviour == MinusBehaviour::Relax && HasFrontMinus());
 
   render_behaviour.SetMunus(MinusBehaviour::Ommit);
-  render_behaviour.SetBrackets(BracketsBehaviour::Ommit);
 
   PrintSize prefix_size = {};
   if (has_front_minus) {
@@ -1181,15 +1095,6 @@ PrintSize Operation::RenderDiv(Canvas* canvas,
       lh_size.GrowDown(div_size, true).GrowDown(rh_size, false), true);
 }
 
-PrintSize Operation::RenderTrigonometric(
-    Canvas* canvas,
-    PrintBox print_box,
-    bool dry_run,
-    RenderBehaviour render_behaviour) const {
-  render_behaviour.SetBrackets(BracketsBehaviour::Force);
-  return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
-                       render_behaviour, true);
-}
 
 PrintSize Operation::RenderOperand(const INode* node,
                                    Canvas* canvas,
@@ -1203,11 +1108,11 @@ PrintSize Operation::RenderOperand(const INode* node,
                  ((brackets_behaviour != BracketsBehaviour::Ommit) &&
                   (node->Priority() < Priority()));
   if (brackets_behaviour != BracketsBehaviour::Ommit && with_op &&
-      INodeAcessor::AsMult(this) && node->HasFrontMinus()) {
+      INodeHelper::AsMult(this) && node->HasFrontMinus()) {
     need_br = true;
   }
   if (brackets_behaviour != BracketsBehaviour::Force && !with_op &&
-      INodeAcessor::AsMult(this) && node->HasFrontMinus()) {
+      INodeHelper::AsMult(this) && node->HasFrontMinus()) {
     // when un minus first in multyple, remove brackets. Remove brackets -a *
     // b ;  Keep brackets b * (-a);
     need_br = false;
@@ -1224,7 +1129,7 @@ PrintSize Operation::RenderOperand(const INode* node,
     op_to_print = GetOpInfo(Op::Plus);
     render_behaviour.SetMunus(MinusBehaviour::Ommit);
   } else if (with_op && op_info_->op == Op::UnMinus &&
-             INodeAcessor::AsDiv(node)) {
+             INodeHelper::AsDiv(node)) {
     assert(!node->HasFrontMinus());
     assert(HasFrontMinus());
     // div operand print un minus instead of us

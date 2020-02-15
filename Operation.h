@@ -41,8 +41,14 @@ class Operation : public INode {
 
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
- private:
-  friend class INodeAcessor;
+  PrintSize RenderOperand(const INode* node,
+                          Canvas* canvas,
+                          PrintBox print_box,
+                          bool dry_run,
+                          RenderBehaviour render_behaviour,
+                          bool with_op) const;
+
+  friend class INodeHelper;
 
   bool IsUnMinus() const;
 
@@ -81,16 +87,6 @@ class Operation : public INode {
                       PrintBox print_box,
                       bool dry_run,
                       RenderBehaviour render_behaviour) const;
-  PrintSize RenderTrigonometric(Canvas* canvas,
-                                PrintBox print_box,
-                                bool dry_run,
-                                RenderBehaviour render_behaviour) const;
-  PrintSize RenderOperand(const INode* node,
-                          Canvas* canvas,
-                          PrintBox print_box,
-                          bool dry_run,
-                          RenderBehaviour render_behaviour,
-                          bool with_op) const;
 
   std::unique_ptr<INode> CalcUnMinus() const;
   std::unique_ptr<INode> CalcMinusPlusMultDiv() const;

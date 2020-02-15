@@ -20,12 +20,12 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-
-  y = a + (-(-a + a));
-  y = (-(-(-(a)))) * ((-a * (1 / pi) * b)) / (-(-c * -(c / -x))) + c;
+  Variable t= a * x *x + b* x + c;
+  t = Sin(t);
+  y =( Sin(t + 1/a) *t  )/ ( t+t + b*x);
   std::wcout << y.Print() << "\n";
-  // y.Simplify();
-  // std::wcout << y.Print() << "\n";
+   y.Simplify();
+   std::wcout << y.Print() << "\n";
 
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);

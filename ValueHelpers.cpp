@@ -5,6 +5,7 @@
 #include "INode.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "TrigonometricOperator.h"
 
 Variable Var(std::string name) {
   return Variable(std::move(name));
@@ -93,12 +94,13 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
 }
 
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Sin), std::move(value));
+  return std::make_unique<TrigonometricOperator>(GetOpInfo(Op::Sin),
+                                                 std::move(value));
 }
 
-std::unique_ptr<INode> Cos(std::unique_ptr<INode> value)
-{
-  return std::make_unique<Operation>(GetOpInfo(Op::Cos), std::move(value));
+std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
+  return std::make_unique<TrigonometricOperator>(GetOpInfo(Op::Cos),
+                                                 std::move(value));
 }
 
 //=============================================================================

@@ -4,37 +4,16 @@
 #include <vector>
 
 #include "Canvas.h"
+#include "RenderBehaviour.h"
 
 struct OpInfo;
 class ErrorNode;
 class Operation;
 class Constant;
+class Canvas;
+class Variable;
+class TrigonometricOperator;
 enum class Op;
-
-enum class MinusBehaviour {
-  Relax,
-  Ommit,
-  Force,
-};
-
-enum class BracketsBehaviour {
-  Relax,
-  Ommit,
-  Force,
-};
-
-class RenderBehaviour {
- public:
-  MinusBehaviour TakeMinus();
-  void SetMunus(MinusBehaviour minus_behaviour);
-
-  BracketsBehaviour TakeBrackets();
-  void SetBrackets(BracketsBehaviour brackets_behaviour);
-
- private:
-  MinusBehaviour minus_behaviour_ = MinusBehaviour::Relax;
-  BracketsBehaviour brackets_behaviour_ = BracketsBehaviour::Relax;
-};
 
 class INode {
  public:
@@ -46,9 +25,10 @@ class INode {
   friend class Brackets;
   friend class Constant;
   friend class ErrorNode;
+  friend class INodeHelper;
   friend class Operation;
   friend class Variable;
-  friend class INodeAcessor;
+  friend class TrigonometricOperator;
 
   virtual bool IsEqual(const INode* rh) const = 0;
   virtual std::unique_ptr<INode> Clone() const = 0;
