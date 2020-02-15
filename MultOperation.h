@@ -1,9 +1,10 @@
 #pragma once
 #include "Operation.h"
 
-class DivOperation : public Operation {
+class MultOperation : public Operation {
  public:
-  DivOperation(std::unique_ptr<INode> top, std::unique_ptr<INode> bottom);
+  MultOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
+  MultOperation(std::vector<std::unique_ptr<INode>> operands);
 
  protected:
   std::unique_ptr<INode> Clone() const override;
@@ -13,7 +14,7 @@ class DivOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
-  DivOperation* AsDivOperation() override { return this; }
-  const DivOperation* AsDivOperation() const override { return this; }
+  MultOperation* AsMultOperation() override { return this; }
+  const MultOperation* AsMultOperation() const override { return this; }
   bool HasFrontMinus() const override;
 };

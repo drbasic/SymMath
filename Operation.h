@@ -33,11 +33,18 @@ class Operation : public INode {
                    RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override;
-  bool HasFrontMinus() const override;
+  bool HasFrontMinus() const override { return false; };
   bool CheckCircular(const INode* other) const override;
 
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
+
+  virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
+  virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
+  virtual MultOperation* AsMultOperation() { return nullptr; }
+  virtual const MultOperation* AsMultOperation() const { return nullptr; }
+  virtual DivOperation* AsDivOperation() { return nullptr; }
+  virtual const DivOperation* AsDivOperation() const { return nullptr; }
 
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
@@ -75,17 +82,11 @@ class Operation : public INode {
 
   void RemoveEmptyOperands();
 
-  PrintSize RenderUnMinus(Canvas* canvas,
-                          PrintBox print_box,
-                          bool dry_run,
-                          RenderBehaviour render_behaviour) const;
   PrintSize RenderMinusPlusMult(Canvas* canvas,
                                 PrintBox print_box,
                                 bool dry_run,
                                 RenderBehaviour render_behaviour) const;
 
-
-  std::unique_ptr<INode> CalcUnMinus() const;
   std::unique_ptr<INode> CalcMinusPlusMultDiv() const;
 
   const OpInfo* op_info_;

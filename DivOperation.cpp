@@ -14,6 +14,12 @@ std::unique_ptr<INode> DivOperation::Clone() const {
                                         operands_[1]->Clone());
 }
 
+bool DivOperation::HasFrontMinus() const {
+  bool lh_minus = operands_[0]->HasFrontMinus();
+  bool rh_minus = operands_[1]->HasFrontMinus();
+  return lh_minus ^ rh_minus;
+}
+
 PrintSize DivOperation::Render(Canvas* canvas,
                                PrintBox print_box,
                                bool dry_run,
@@ -68,6 +74,6 @@ PrintSize DivOperation::Render(Canvas* canvas,
     }
   }
 
-  return prefix_size.GrowWidth(
-      lh_size.GrowDown(div_size, true).GrowDown(rh_size, false), true);
+  lh_size = lh_size.GrowDown(div_size, true).GrowDown(rh_size, false);
+  return print_size_ = prefix_size.GrowWidth(lh_size, true);
 }

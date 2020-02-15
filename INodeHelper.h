@@ -6,6 +6,9 @@ class INode;
 class Operation;
 class Constant;
 class Canvas;
+class MultOperation;
+class DivOperation;
+class UnMinusOperation;
 class Variable;
 
 class INodeHelper {
@@ -14,28 +17,26 @@ class INodeHelper {
 
   static const Constant* AsConstant(const INode* lh);
 
+  static Operation* AsOperation(INode* lh);
   static const Operation* AsOperation(const INode* lh);
 
-  static Operation* AsOperation(INode* lh);
-
-  static Operation* AsMult(INode* lh);
-
-  static const Operation* AsMult(const INode* lh);
+  static MultOperation* AsMult(INode* lh);
+  static const MultOperation* AsMult(const INode* lh);
 
   static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op);
 
   static bool IsUnMinus(const INode* lh);
+  static UnMinusOperation* AsUnMinus(INode* lh);
+  static const UnMinusOperation* AsUnMinus(const INode* lh);
 
-  static Operation* AsUnMinus(INode* lh);
+  static DivOperation* AsDiv(INode* lh);
+  static const DivOperation* AsDiv(const INode* lh);
 
-  static const Operation* AsDiv(const INode* lh);
+  static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
 
-  static Operation* AsDiv(INode* lh);
-
-  static std::unique_ptr<Operation> ConvertToMul(std::unique_ptr<INode> rh);
-
-  static std::unique_ptr<Operation> MakeUnMinus(std::unique_ptr<INode> inner);
-
-  static std::unique_ptr<Operation> MakeDiv(std::unique_ptr<INode> lh,
-                                            std::unique_ptr<INode> rh);
+  static std::unique_ptr<Constant> MakeConst(double value);
+  static std::unique_ptr<UnMinusOperation> MakeUnMinus(
+      std::unique_ptr<INode> value);
+  static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
+                                               std::unique_ptr<INode> rh);
 };

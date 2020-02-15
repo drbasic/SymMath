@@ -3,9 +3,12 @@
 #include <cassert>
 
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INode.h"
+#include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 
 // static
@@ -19,31 +22,25 @@ const Constant* INodeHelper::AsConstant(const INode* lh) {
 }
 
 // static
-const Operation* INodeHelper::AsOperation(const INode* lh) {
-  return lh->AsOperation();
-}
-
-// static
 Operation* INodeHelper::AsOperation(INode* lh) {
   return lh->AsOperation();
 }
 
 // static
-Operation* INodeHelper::AsMult(INode* lh) {
-  auto result = lh->AsOperation();
-  if (result && result->op_info_->op == Op::Mult) {
-    return result;
-  }
-  return nullptr;
+const Operation* INodeHelper::AsOperation(const INode* lh) {
+  return lh->AsOperation();
 }
 
 // static
-const Operation* INodeHelper::AsMult(const INode* lh) {
+MultOperation* INodeHelper::AsMult(INode* lh) {
   auto result = lh->AsOperation();
-  if (result && result->op_info_->op == Op::Mult) {
-    return result;
-  }
-  return nullptr;
+  return (result) ? result->AsMultOperation() : nullptr;
+}
+
+// static
+const MultOperation* INodeHelper::AsMult(const INode* lh) {
+  auto result = lh->AsOperation();
+  return (result) ? result->AsMultOperation() : nullptr;
 }
 
 // static
@@ -53,53 +50,59 @@ std::vector<std::unique_ptr<INode>>& INodeHelper::GetOperands(Operation* op) {
 
 // static
 bool INodeHelper::IsUnMinus(const INode* lh) {
-  if (auto op = AsOperation(lh))
-    return op->IsUnMinus();
-  return false;
+  auto result = lh->AsOperation();
+  return (result) ? result->AsUnMinusOperation() != nullptr : false;
 }
 
 // static
-Operation* INodeHelper::AsUnMinus(INode* lh) {
-  if (auto op = AsOperation(lh))
-    return op->IsUnMinus() ? op : nullptr;
-  return nullptr;
+UnMinusOperation* INodeHelper::AsUnMinus(INode* lh) {
+  auto result = lh->AsOperation();
+  return (result) ? result->AsUnMinusOperation() : nullptr;
 }
 
 // static
-const Operation* INodeHelper::AsDiv(const INode* lh) {
-  if (auto op = AsOperation(lh))
-    return op->op_info_->op == Op::Div ? op : nullptr;
-  return nullptr;
+const UnMinusOperation* INodeHelper::AsUnMinus(const INode* lh) {
+  auto result = lh->AsOperation();
+  return (result) ? result->AsUnMinusOperation() : nullptr;
 }
 
 // static
-Operation* INodeHelper::AsDiv(INode* lh) {
-  if (auto op = AsOperation(lh))
-    return op->op_info_->op == Op::Div ? op : nullptr;
-  return nullptr;
+const DivOperation* INodeHelper::AsDiv(const INode* lh) {
+  auto result = lh->AsOperation();
+  return (result) ? result->AsDivOperation() : nullptr;
 }
 
 // static
-std::unique_ptr<Operation> INodeHelper::ConvertToMul(
+DivOperation* INodeHelper::AsDiv(INode* lh) {
+  auto result = lh->AsOperation();
+  return (result) ? result->AsDivOperation() : nullptr;
+}
+
+// static
+std::unique_ptr<MultOperation> INodeHelper::ConvertToMul(
     std::unique_ptr<INode> rh) {
   assert(rh);
   if (auto* mult = AsMult(rh.get())) {
     rh.release();
-    return std::unique_ptr<Operation>(mult);
+    return std::unique_ptr<MultOperation>(mult);
   }
-  return std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(rh),
-                                     Const(1.0));
+  return std::make_unique<MultOperation>(std::move(rh), Const(1.0));
 }
 
 // static
-std::unique_ptr<Operation> INodeHelper::MakeUnMinus(
-    std::unique_ptr<INode> inner) {
-  return std::make_unique<Operation>(GetOpInfo(Op::UnMinus), std::move(inner));
+std::unique_ptr<Constant> INodeHelper::MakeConst(double value)
+{
+  return std::make_unique<Constant>(std::move(value));
 }
 
 // static
-std::unique_ptr<Operation> INodeHelper::MakeDiv(std::unique_ptr<INode> lh,
-                                                std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(lh),
-                                     std::move(rh));
+std::unique_ptr<UnMinusOperation> INodeHelper::MakeUnMinus(
+    std::unique_ptr<INode> value) {
+  return std::make_unique<UnMinusOperation>(std::move(value));
+}
+
+// static
+std::unique_ptr<DivOperation> INodeHelper::MakeDiv(std::unique_ptr<INode> lh,
+                                                   std::unique_ptr<INode> rh) {
+  return std::make_unique<DivOperation>(std::move(lh), std::move(rh));
 }

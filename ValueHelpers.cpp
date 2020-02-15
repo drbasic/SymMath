@@ -4,6 +4,7 @@
 #include "Constant.h"
 #include "DivOperation.h"
 #include "INode.h"
+#include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
 #include "TrigonometricOperator.h"
@@ -55,18 +56,17 @@ std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh, double rh) {
 //=============================================================================
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(lh),
-                                     std::move(rh));
+  return std::make_unique<MultOperation>(std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator*(double lh, std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(
-      GetOpInfo(Op::Mult), std::make_unique<Constant>(lh), std::move(rh));
+  return std::make_unique<MultOperation>(std::make_unique<Constant>(lh),
+                                         std::move(rh));
 }
 
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh, double rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(lh),
-                                     std::make_unique<Constant>(rh));
+  return std::make_unique<MultOperation>(std::move(lh),
+                                         std::make_unique<Constant>(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh,

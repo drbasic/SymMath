@@ -9,10 +9,13 @@
 
 #include "Brackets.h"
 #include "Constant.h"
+#include "DivOperation.h"
 #include "Exception.h"
 #include "INodeHelper.h"
+#include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 
 namespace {
@@ -144,6 +147,7 @@ bool TakeTransitiveEqualNodesTheSame(
   }
   return true;
 }
+
 std::unique_ptr<INode> MakeMult(double dividend,
                                 double divider,
                                 std::vector<std::unique_ptr<INode>*> nodes) {
@@ -267,7 +271,7 @@ double TryExctractSum(const CanonicMultDiv& canonic,
 Operation::Operation(const OpInfo* op_info, std::unique_ptr<INode> lh)
     : op_info_(op_info) {
   operands_.push_back(std::move(lh));
-  assert(operands_[0]);
+  CheckIntegrity();
 }
 
 Operation::Operation(const OpInfo* op_info,
@@ -277,7 +281,7 @@ Operation::Operation(const OpInfo* op_info,
   operands_.reserve(2);
   operands_.push_back(std::move(lh));
   operands_.push_back(std::move(rh));
-  assert(operands_[0] && operands_[1]);
+  CheckIntegrity();
 }
 
 Operation::Operation(const OpInfo* op_info,
@@ -293,8 +297,6 @@ int Operation::Priority() const {
 std::unique_ptr<INode> Operation::SymCalc() const {
   if (op_info_->calc_f)
     return op_info_->calc_f(op_info_, operands_);
-  if (IsUnMinus())
-    return CalcUnMinus();
   return CalcMinusPlusMultDiv();
 }
 
@@ -311,13 +313,8 @@ PrintSize Operation::Render(Canvas* canvas,
                             bool dry_run,
                             RenderBehaviour render_behaviour) const {
   switch (op_info_->op) {
-    case Op::UnMinus:
-      return print_size_ =
-                 RenderUnMinus(canvas, print_box, dry_run, render_behaviour);
-      break;
     case Op::Minus:
     case Op::Plus:
-    case Op::Mult:
       return print_size_ = RenderMinusPlusMult(canvas, print_box, dry_run,
                                                render_behaviour);
       break;
@@ -330,18 +327,6 @@ PrintSize Operation::Render(Canvas* canvas,
 
 PrintSize Operation::LastPrintSize() const {
   return print_size_;
-}
-
-bool Operation::HasFrontMinus() const {
-  if (IsUnMinus()) {
-    return !operands_[0]->HasFrontMinus();
-  }
-  if (const auto* div = INodeHelper::AsDiv(this)) {
-    bool lh_minus = div->operands_[0]->HasFrontMinus();
-    bool rh_minus = div->operands_[1]->HasFrontMinus();
-    return lh_minus ^ rh_minus;
-  }
-  return false;
 }
 
 bool Operation::CheckCircular(const INode* other) const {
@@ -458,12 +443,8 @@ void Operation::CheckIntegrity() const {
   }
 }
 
-bool Operation::IsUnMinus() const {
-  return op_info_->op == Op::UnMinus;
-}
-
 bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
-  if (!IsUnMinus())
+  if (!INodeHelper::AsUnMinus(this))
     return false;
   Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get());
   if (!sub_un_minus)
@@ -973,41 +954,6 @@ void Operation::RemoveEmptyOperands() {
       std::end(operands_));
 }
 
-PrintSize Operation::RenderUnMinus(Canvas* canvas,
-                                   PrintBox print_box,
-                                   bool dry_run,
-                                   RenderBehaviour render_behaviour) const {
-  auto minus_behaviour = render_behaviour.TakeMinus();
-
-  if (minus_behaviour == MinusBehaviour::Force) {
-    assert(!HasFrontMinus());
-    return operands_[0]->Render(canvas, print_box, dry_run, render_behaviour);
-  }
-
-  // - -a => a
-  if (operands_[0]->HasFrontMinus()) {
-    render_behaviour.SetMunus(MinusBehaviour::Ommit);
-    return operands_[0]->Render(canvas, print_box, dry_run, render_behaviour);
-  }
-
-  // don't render this minus. a + (-b) -> a - b. Minus render from (+)
-  // operation.
-  if (minus_behaviour == MinusBehaviour::Ommit) {
-    assert(HasFrontMinus());
-    assert(!operands_[0]->HasFrontMinus());
-    return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
-                         render_behaviour, false);
-  }
-
-  if (minus_behaviour == MinusBehaviour::Relax) {
-    return RenderOperand(operands_[0].get(), canvas, print_box, dry_run,
-                         render_behaviour, true);
-  }
-
-  assert(false);
-  return {};
-}
-
 PrintSize Operation::RenderMinusPlusMult(
     Canvas* canvas,
     PrintBox print_box,
@@ -1089,14 +1035,6 @@ PrintSize Operation::RenderOperand(const INode* node,
   total_operand_size = total_operand_size.GrowWidth(node_size, true);
 
   return total_operand_size;
-}
-
-std::unique_ptr<INode> Operation::CalcUnMinus() const {
-  std::unique_ptr<INode> val = operands_[0]->SymCalc();
-  if (Constant* as_const = val->AsConstant()) {
-    return Const(op_info_->trivial_f(as_const->Value(), 0.0));
-  }
-  return std::make_unique<Operation>(op_info_, std::move(val));
 }
 
 std::unique_ptr<INode> Operation::CalcMinusPlusMultDiv() const {

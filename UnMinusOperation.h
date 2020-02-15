@@ -1,9 +1,11 @@
 #pragma once
+
 #include "Operation.h"
 
-class DivOperation : public Operation {
+class UnMinusOperation : public Operation {
  public:
-  DivOperation(std::unique_ptr<INode> top, std::unique_ptr<INode> bottom);
+  UnMinusOperation(std::unique_ptr<INode> value);
+  std::unique_ptr<INode> SymCalc() const override;
 
  protected:
   std::unique_ptr<INode> Clone() const override;
@@ -13,7 +15,8 @@ class DivOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
-  DivOperation* AsDivOperation() override { return this; }
-  const DivOperation* AsDivOperation() const override { return this; }
+
   bool HasFrontMinus() const override;
+  UnMinusOperation* AsUnMinusOperation() override { return this; }
+  const UnMinusOperation* AsUnMinusOperation() const override { return this; }
 };

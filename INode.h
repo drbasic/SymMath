@@ -8,11 +8,13 @@
 
 struct OpInfo;
 class ErrorNode;
+class MultOperation;
 class Operation;
 class Constant;
 class Canvas;
 class DivOperation;
 class Variable;
+class UnMinusOperation;
 class TrigonometricOperator;
 enum class Op;
 
@@ -28,8 +30,10 @@ class INode {
   friend class DivOperation;
   friend class ErrorNode;
   friend class INodeHelper;
+  friend class MultOperation;
   friend class Operation;
   friend class Variable;
+  friend class UnMinusOperation;
   friend class TrigonometricOperator;
 
   virtual bool IsEqual(const INode* rh) const = 0;
