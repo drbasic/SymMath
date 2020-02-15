@@ -10,6 +10,7 @@ struct OpInfo;
 class ErrorNode;
 class MultOperation;
 class Operation;
+class PlusOperation;
 class Constant;
 class Canvas;
 class DivOperation;
@@ -32,6 +33,7 @@ class INode {
   friend class INodeHelper;
   friend class MultOperation;
   friend class Operation;
+  friend class PlusOperation;
   friend class Variable;
   friend class UnMinusOperation;
   friend class TrigonometricOperator;

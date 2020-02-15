@@ -7,6 +7,7 @@ class Operation;
 class Constant;
 class Canvas;
 class MultOperation;
+class PlusOperation;
 class DivOperation;
 class UnMinusOperation;
 class Variable;
@@ -37,6 +38,14 @@ class INodeHelper {
   static std::unique_ptr<Constant> MakeConst(double value);
   static std::unique_ptr<UnMinusOperation> MakeUnMinus(
       std::unique_ptr<INode> value);
+  static std::unique_ptr<PlusOperation> MakeMinus(std::unique_ptr<INode> lh,
+                                                  std::unique_ptr<INode> rh);
+  static std::unique_ptr<PlusOperation> MakePlus(std::unique_ptr<INode> lh,
+                                                 std::unique_ptr<INode> rh);
+  static std::unique_ptr<MultOperation> MakeMult(std::unique_ptr<INode> lh,
+                                                 std::unique_ptr<INode> rh);
+  static std::unique_ptr<MultOperation> MakeMult(
+      std::vector<std::unique_ptr<INode>> operands);
   static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
 };

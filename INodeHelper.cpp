@@ -8,6 +8,7 @@
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "PlusOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 
@@ -90,8 +91,7 @@ std::unique_ptr<MultOperation> INodeHelper::ConvertToMul(
 }
 
 // static
-std::unique_ptr<Constant> INodeHelper::MakeConst(double value)
-{
+std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
 }
 
@@ -99,6 +99,30 @@ std::unique_ptr<Constant> INodeHelper::MakeConst(double value)
 std::unique_ptr<UnMinusOperation> INodeHelper::MakeUnMinus(
     std::unique_ptr<INode> value) {
   return std::make_unique<UnMinusOperation>(std::move(value));
+}
+
+std::unique_ptr<PlusOperation> INodeHelper::MakeMinus(
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<INode> rh) {
+  return std::make_unique<PlusOperation>(std::move(lh),
+                                         MakeUnMinus(std::move(rh)));
+}
+
+std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<INode> rh) {
+  return std::make_unique<PlusOperation>(std::move(lh), std::move(rh));
+}
+
+std::unique_ptr<MultOperation> INodeHelper::MakeMult(
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<INode> rh) {
+  return std::make_unique<MultOperation>(std::move(lh), std::move(rh));
+}
+
+std::unique_ptr<MultOperation> INodeHelper::MakeMult(
+    std::vector<std::unique_ptr<INode>> operands) {
+  return std::make_unique<MultOperation>(std::move(operands));
 }
 
 // static

@@ -1,26 +1,26 @@
-#include "MultOperation.h"
+#include "PlusOperation.h"
 
 #include <algorithm>
 #include <cassert>
 
 #include "OpInfo.h"
 
-MultOperation::MultOperation(std::unique_ptr<INode> lh,
+PlusOperation::PlusOperation(std::unique_ptr<INode> lh,
                              std::unique_ptr<INode> rh)
-    : Operation(GetOpInfo(Op::Mult), std::move(lh), std::move(rh)) {}
+    : Operation(GetOpInfo(Op::Plus), std::move(lh), std::move(rh)) {}
 
-MultOperation::MultOperation(std::vector<std::unique_ptr<INode>> operands)
-    : Operation(GetOpInfo(Op::Mult), std::move(operands)) {}
+PlusOperation::PlusOperation(std::vector<std::unique_ptr<INode>> operands)
+    : Operation(GetOpInfo(Op::Plus), std::move(operands)) {}
 
-std::unique_ptr<INode> MultOperation::Clone() const {
+std::unique_ptr<INode> PlusOperation::Clone() const {
   std::vector<std::unique_ptr<INode>> new_nodes;
   new_nodes.reserve(operands_.size());
   for (const auto& op : operands_)
     new_nodes.push_back(op->Clone());
-  return std::make_unique<MultOperation>(std::move(new_nodes));
+  return std::make_unique<PlusOperation>(std::move(new_nodes));
 }
 
-PrintSize MultOperation::Render(Canvas* canvas,
+PrintSize PlusOperation::Render(Canvas* canvas,
                                 PrintBox print_box,
                                 bool dry_run,
                                 RenderBehaviour render_behaviour) const {
@@ -28,6 +28,6 @@ PrintSize MultOperation::Render(Canvas* canvas,
              RenderOperandChain(canvas, print_box, dry_run, render_behaviour);
 }
 
-bool MultOperation::HasFrontMinus() const {
+bool PlusOperation::HasFrontMinus() const {
   return false;
 }

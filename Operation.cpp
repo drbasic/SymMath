@@ -159,8 +159,7 @@ std::unique_ptr<INode> MakeMult(double dividend,
     for (auto& node : nodes) {
       operands.push_back(std::move(*node));
     }
-    return std::make_unique<Operation>(GetOpInfo(Op::Mult),
-                                       std::move(operands));
+    return INodeHelper::MakeMult(std::move(operands));
   }
 
   std::unique_ptr<INode> result;
@@ -172,15 +171,13 @@ std::unique_ptr<INode> MakeMult(double dividend,
     for (auto& node : nodes) {
       operands.push_back(std::move(*node));
     }
-    result =
-        std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+    result = INodeHelper::MakeMult(std::move(operands));
   } else {
     result = std::move(*nodes[0]);
   }
   if (divider == 1.0)
     return result;
-  result = std::make_unique<Operation>(GetOpInfo(Op::Div), std::move(result),
-                                       Const(divider));
+  result = INodeHelper::MakeDiv(std::move(result), Const(divider));
   return result;
 }
 
@@ -300,31 +297,6 @@ std::unique_ptr<INode> Operation::SymCalc() const {
   return CalcMinusPlusMultDiv();
 }
 
-std::unique_ptr<INode> Operation::Clone() const {
-  std::vector<std::unique_ptr<INode>> new_nodes;
-  new_nodes.reserve(operands_.size());
-  for (const auto& op : operands_)
-    new_nodes.push_back(op->Clone());
-  return std::make_unique<Operation>(op_info_, std::move(new_nodes));
-}
-
-PrintSize Operation::Render(Canvas* canvas,
-                            PrintBox print_box,
-                            bool dry_run,
-                            RenderBehaviour render_behaviour) const {
-  switch (op_info_->op) {
-    case Op::Minus:
-    case Op::Plus:
-      return print_size_ = RenderMinusPlusMult(canvas, print_box, dry_run,
-                                               render_behaviour);
-      break;
-    default:
-      assert(false);
-  }
-
-  return {};
-}
-
 PrintSize Operation::LastPrintSize() const {
   return print_size_;
 }
@@ -354,14 +326,6 @@ bool Operation::IsEqual(const INode* rh) const {
   }
 
   return IsNodesTransitiveEqual(operands_, rh_op->operands_);
-}
-
-Operation* Operation::AsOperation() {
-  return this;
-}
-
-const Operation* Operation::AsOperation() const {
-  return this;
 }
 
 std::vector<std::unique_ptr<INode>> Operation::TakeOperands(Op op) {
@@ -676,8 +640,7 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
       for (auto& node : conanic_1.nodes) {
         operands.push_back(std::move(*node));
       }
-      operands_[i] =
-          std::make_unique<Operation>(GetOpInfo(Op::Mult), std::move(operands));
+      operands_[i] = INodeHelper::MakeMult(std::move(operands));
       if (remains)
         operands_.push_back(Const(remains));
       is_optimized = true;
@@ -797,8 +760,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     return true;
   }
   if (op_info_->op == Op::Mult && accumulator == -1.0) {
-    operands_[0] = std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
-                                               std::move(operands_[0]));
+    operands_[0] = INodeHelper::MakeUnMinus(std::move(operands_[0]));
     const_count = 0;
     is_optimized = true;
   }
@@ -845,8 +807,7 @@ void Operation::ConvertToPlus() {
   operands_.swap(add_nodes);
   operands_.reserve(operands_.size() + sub_nodes.size());
   for (auto& sub_node : sub_nodes) {
-    operands_.push_back(std::make_unique<Operation>(GetOpInfo(Op::UnMinus),
-                                                    std::move(sub_node)));
+    operands_.push_back(INodeHelper::MakeUnMinus(std::move(sub_node)));
   }
   op_info_ = GetOpInfo(Op::Plus);
   CheckIntegrity();
@@ -954,7 +915,7 @@ void Operation::RemoveEmptyOperands() {
       std::end(operands_));
 }
 
-PrintSize Operation::RenderMinusPlusMult(
+PrintSize Operation::RenderOperandChain(
     Canvas* canvas,
     PrintBox print_box,
     bool dry_run,
@@ -1042,8 +1003,9 @@ std::unique_ptr<INode> Operation::CalcMinusPlusMultDiv() const {
       CalcOperands(operands_);
   auto trivials = AsTrivial(calculated_operands);
   if (!trivials) {
-    return std::make_unique<Operation>(op_info_,
-                                       std::move(calculated_operands));
+    auto result = Clone();
+    INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
+    return result;
   }
 
   double result =

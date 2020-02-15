@@ -4,10 +4,13 @@
 #include "Constant.h"
 #include "DivOperation.h"
 #include "INode.h"
+#include "INodeHelper.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "PlusOperation.h"
 #include "TrigonometricOperator.h"
+#include "UnMinusOperation.h"
 
 Variable Var(std::string name) {
   return Variable(std::move(name));
@@ -19,39 +22,33 @@ std::unique_ptr<INode> Const(double val) {
 
 //=============================================================================
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::UnMinus), std::move(lh));
+  return INodeHelper::MakeUnMinus(std::move(lh));
 }
 
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Minus), std::move(lh),
-                                     std::move(rh));
+  return INodeHelper::MakeMinus(std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator-(double lh, std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(
-      GetOpInfo(Op::Minus), std::make_unique<Constant>(lh), std::move(rh));
+  return INodeHelper::MakeMinus(std::make_unique<Constant>(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh, double rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Minus), std::move(lh),
-                                     std::make_unique<Constant>(rh));
+  return INodeHelper::MakeMinus(std::move(lh), std::make_unique<Constant>(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Plus), std::move(lh),
-                                     std::move(rh));
+  return INodeHelper::MakePlus(std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator+(double lh, std::unique_ptr<INode> rh) {
-  return std::make_unique<Operation>(
-      GetOpInfo(Op::Plus), std::make_unique<Constant>(lh), std::move(rh));
+  return INodeHelper::MakePlus(std::make_unique<Constant>(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh, double rh) {
-  return std::make_unique<Operation>(GetOpInfo(Op::Plus), std::move(lh),
-                                     std::make_unique<Constant>(rh));
+  return INodeHelper::MakePlus(std::move(lh), std::make_unique<Constant>(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh,

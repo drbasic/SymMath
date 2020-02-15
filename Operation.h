@@ -26,21 +26,19 @@ class Operation : public INode {
 
  protected:
   bool IsEqual(const INode* rh) const override;
-  std::unique_ptr<INode> Clone() const override;
-  PrintSize Render(Canvas* canvas,
-                   PrintBox print_box,
-                   bool dry_run,
-                   RenderBehaviour render_behaviour) const override;
+
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override { return false; };
   bool CheckCircular(const INode* other) const override;
 
-  Operation* AsOperation() override;
-  const Operation* AsOperation() const override;
+  Operation* AsOperation() override { return this; }
+  const Operation* AsOperation() const override { return this; }
 
   virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
   virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
+  virtual PlusOperation* AsPlusOperation() { return nullptr; }
+  virtual const PlusOperation* AsPlusOperation() const { return nullptr; }
   virtual MultOperation* AsMultOperation() { return nullptr; }
   virtual const MultOperation* AsMultOperation() const { return nullptr; }
   virtual DivOperation* AsDivOperation() { return nullptr; }
@@ -48,6 +46,10 @@ class Operation : public INode {
 
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
+  PrintSize RenderOperandChain(Canvas* canvas,
+                               PrintBox print_box,
+                               bool dry_run,
+                               RenderBehaviour render_behaviour) const;
   PrintSize RenderOperand(const INode* node,
                           Canvas* canvas,
                           PrintBox print_box,
@@ -81,11 +83,6 @@ class Operation : public INode {
   std::vector<std::unique_ptr<INode>> TakeOperands(Op op);
 
   void RemoveEmptyOperands();
-
-  PrintSize RenderMinusPlusMult(Canvas* canvas,
-                                PrintBox print_box,
-                                bool dry_run,
-                                RenderBehaviour render_behaviour) const;
 
   std::unique_ptr<INode> CalcMinusPlusMultDiv() const;
 
