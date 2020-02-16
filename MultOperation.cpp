@@ -66,16 +66,8 @@ void MultOperation::SimplifyChain() {
 }
 
 void MultOperation::UnfoldChain() {
-  std::vector<std::unique_ptr<INode>> positive_nodes;
-  std::vector<std::unique_ptr<INode>> negative_nodes;
-  for (auto& node : operands_) {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(node), &positive_nodes,
-                                     &negative_nodes);
-  }
-  operands_.swap(positive_nodes);
-  operands_.reserve(operands_.size() + negative_nodes.size());
-  for (auto& node : negative_nodes) {
-    operands_.push_back(INodeHelper::Negate(std::move(node)));
-  }
+  std::vector<std::unique_ptr<INode>> new_nodes;
+  INodeHelper::ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
+  operands_.swap(new_nodes);
   CheckIntegrity();
 }

@@ -6,6 +6,7 @@
 #include "INode.h"
 #include "INodeHelper.h"
 #include "Operation.h"
+#include "DivOperation.h"
 #include "ValueHelpers.h"
 
 namespace {
@@ -18,6 +19,7 @@ const TestInfo kTests[] = {
     {&Tests::TestSimplifyPlusChain, "TestSimplifyPlusChain"},
     {&Tests::TestSimplifyMultChain, "TestSimplifyMultChain"},
     {&Tests::TestSimplifyChainRecursive, "TestSimplifyChainRecursive"},
+    {&Tests::TestSimplifyDivDiv, "TestSimplifyDivDiv"},
 };
 }  // namespace
 
@@ -34,7 +36,7 @@ void Tests::Run() {
 }
 
 // static
-bool Tests::TestSimplifyPlusChain() {
+bool Tests::TestSimplifyMultChain() {
   auto a = Var("a", 1);
   auto b = Var("b", 2);
   auto c = Var("c", 3);
@@ -53,7 +55,7 @@ bool Tests::TestSimplifyPlusChain() {
 }
 
 // static
-bool Tests::TestSimplifyMultChain() {
+bool Tests::TestSimplifyPlusChain() {
   auto a = Var("a", 1);
   auto b = Var("b", 2);
   auto c = Var("c", 3);
@@ -89,6 +91,30 @@ bool Tests::TestSimplifyChainRecursive() {
   }
   auto expected_result = Const(216);
   if (!s.SymCalc()->IsEqual(expected_result.get()))
+    return false;
+  return true;
+}
+
+// static
+bool Tests::TestSimplifyDivDiv() {
+  auto a = Var("a", 240);
+  auto b = Var("b", 2);
+  auto c = Var("c", 3);
+  auto d = Var("d", 4);
+  auto e = Var("e", 5);
+  Variable s = (a / b) / c  /d / e;
+  auto* op = s.AsOperation();
+  op->SimplifyDivDiv();
+  auto* div = INodeHelper::AsDiv(op);
+  if (!div)
+    return false;
+  if (!div->Top()->AsVariable())
+    return false;
+  if (div->Bottom()->AsOperation()->operands_.size() != 4)
+    return false;
+  auto expected_result = Const(2);
+  auto result = s.SymCalc();
+  if (!result->IsEqual(expected_result.get()))
     return false;
   return true;
 }

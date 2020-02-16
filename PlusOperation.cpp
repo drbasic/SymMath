@@ -40,16 +40,8 @@ void PlusOperation::SimplifyChain() {
 }
 
 void PlusOperation::UnfoldChain() {
-  std::vector<std::unique_ptr<INode>> add_nodes;
-  std::vector<std::unique_ptr<INode>> sub_nodes;
-  for (auto& node : operands_) {
-    INodeHelper::ExctractNodesWithOp(Op::Plus, std::move(node), &add_nodes,
-                                     &sub_nodes);
-  }
-  operands_.swap(add_nodes);
-  operands_.reserve(operands_.size() + sub_nodes.size());
-  for (auto& node : sub_nodes) {
-    operands_.push_back(INodeHelper::Negate(std::move(node)));
-  }
+  std::vector<std::unique_ptr<INode>> new_nodes;
+  INodeHelper::ExctractNodesWithOp(Op::Plus, &operands_, &new_nodes);
+  operands_.swap(new_nodes);
   CheckIntegrity();
 }

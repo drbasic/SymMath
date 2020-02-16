@@ -108,28 +108,54 @@ void INodeHelper::MergeCanonic(std::unique_ptr<INode>* node,
   }
 }
 
+void INodeHelper::ExctractNodesWithOp(
+    Op op,
+    std::vector<std::unique_ptr<INode>>* src,
+    std::vector<std::unique_ptr<INode>>* nodes) {
+  for (auto& node : *src) {
+    ExctractNodesWithOp(op, std::move(node), nodes);
+  }
+}
+
+void INodeHelper::ExctractNodesWithOp(
+    Op op,
+    std::unique_ptr<INode> src,
+    std::vector<std::unique_ptr<INode>>* nodes) {
+  std::vector<std::unique_ptr<INode>> positive_nodes;
+  std::vector<std::unique_ptr<INode>> negative_nodes;
+  INodeHelper::ExctractNodesWithOp(op, std::move(src), &positive_nodes,
+                                   &negative_nodes);
+  nodes->reserve(nodes->size() + positive_nodes.size() + negative_nodes.size());
+  for (auto& node : positive_nodes) {
+    nodes->push_back(std::move(node));
+  }
+  for (auto& node : negative_nodes) {
+    nodes->push_back(INodeHelper::Negate(std::move(node)));
+  }
+}
+
 // static
 void INodeHelper::ExctractNodesWithOp(
     Op op,
     std::unique_ptr<INode> src,
-    std::vector<std::unique_ptr<INode>>* positvie_nodes,
+    std::vector<std::unique_ptr<INode>>* positive_nodes,
     std::vector<std::unique_ptr<INode>>* negative_nodes) {
   Operation* operation = AsOperation(src.get());
   if (!operation) {
-    positvie_nodes->push_back(std::move(src));
+    positive_nodes->push_back(std::move(src));
     return;
   }
   if (operation->op_info_->op == Op::UnMinus) {
     ExctractNodesWithOp(op, std::move(operation->operands_[0]), negative_nodes,
-                        positvie_nodes);
+                        positive_nodes);
     return;
   }
   if (operation->op_info_->op != op) {
-    positvie_nodes->push_back(std::move(src));
+    positive_nodes->push_back(std::move(src));
     return;
   }
   for (auto& node : operation->operands_) {
-    ExctractNodesWithOp(op, std::move(node), positvie_nodes, negative_nodes);
+    ExctractNodesWithOp(op, std::move(node), positive_nodes, negative_nodes);
   }
 }
 
@@ -139,6 +165,15 @@ std::unique_ptr<INode> INodeHelper::Negate(std::unique_ptr<INode> node) {
     return std::move(un_minus->operands_[0]);
   }
   return MakeUnMinus(std::move(node));
+}
+
+// static
+std::unique_ptr<INode> INodeHelper::MakeMultIfNeeded(
+    std::vector<std::unique_ptr<INode>> nodes) {
+  assert(!nodes.empty());
+  if (nodes.size() == 1)
+    return std::move(nodes[0]);
+  return MakeMult(std::move(nodes));
 }
 
 // static

@@ -6,6 +6,7 @@
 
 struct CanonicMult;
 class INode;
+class INodeImpl;
 class Operation;
 class Constant;
 class Canvas;
@@ -39,13 +40,20 @@ class INodeHelper {
   static CanonicMult GetCanonic(std::unique_ptr<INode>* node);
   static void MergeCanonic(std::unique_ptr<INode>* node, CanonicMult* output);
 
+  static void ExctractNodesWithOp(Op op,
+                                  std::vector<std::unique_ptr<INode>>* src,
+                                  std::vector<std::unique_ptr<INode>>* nodes);
+  static void ExctractNodesWithOp(Op op,
+                                  std::unique_ptr<INode> src,
+                                  std::vector<std::unique_ptr<INode>>* nodes);
   static void ExctractNodesWithOp(
       Op op,
       std::unique_ptr<INode> src,
-      std::vector<std::unique_ptr<INode>>* positvie_nodes,
+      std::vector<std::unique_ptr<INode>>* positive_nodes,
       std::vector<std::unique_ptr<INode>>* negative_nodes);
   static std::unique_ptr<INode> Negate(std::unique_ptr<INode> node);
-
+  static std::unique_ptr<INode> MakeMultIfNeeded(
+      std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
 
   static std::unique_ptr<Constant> MakeConst(double value);

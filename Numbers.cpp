@@ -8,9 +8,8 @@
 
 #include "Brackets.h"
 #include "INode.h"
-#include "ValueHelpers.h"
 #include "Tests.h"
-
+#include "ValueHelpers.h"
 
 int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
@@ -19,12 +18,14 @@ int main() {
   auto a = Var("a");
   auto b = Var("b");
   auto c = Var("c");
+  auto d = Var("d");
+  auto e = Var("e");
   auto y = Var("y");
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = a - b - 1;
-  y = 2 * t + t + a + b;
+  Variable t = (a / b) / c / d / e;
+  y = t;
   Variable calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
   y.Simplify();

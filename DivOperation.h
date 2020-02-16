@@ -20,4 +20,13 @@ class DivOperation : public Operation {
   std::optional<CanonicMult> GetCanonic() override;
   DivOperation* AsDivOperation() override { return this; }
   const DivOperation* AsDivOperation() const override { return this; }
+  void SimplifyDivDiv() override;
+
+private:
+  friend class Tests;
+
+  INodeImpl* Top();
+  const INodeImpl* Top() const;
+  INodeImpl* Bottom();
+  const INodeImpl* Bottom() const;
 };

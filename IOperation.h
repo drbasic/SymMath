@@ -18,7 +18,6 @@ struct CanonicMult {
 class IOperation : public INodeImpl {
  public:
   virtual std::optional<CanonicMult> GetCanonic() = 0;
-  virtual void SimplifyChain() = 0;
 
   virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
   virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
@@ -28,4 +27,7 @@ class IOperation : public INodeImpl {
   virtual const MultOperation* AsMultOperation() const { return nullptr; }
   virtual DivOperation* AsDivOperation() { return nullptr; }
   virtual const DivOperation* AsDivOperation() const { return nullptr; }
+
+  virtual void SimplifyChain() = 0;
+  virtual void SimplifyDivDiv() = 0;
 };

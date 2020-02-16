@@ -32,8 +32,9 @@ class Operation : public IOperation {
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
-  std::optional<CanonicMult> GetCanonic() override;
+  std::optional<CanonicMult> GetCanonic() override { return std::nullopt; };
   void SimplifyChain() override;
+  void SimplifyDivDiv() override;
 
  protected:
   INodeImpl* Operand(size_t indx);
@@ -56,7 +57,6 @@ class Operation : public IOperation {
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node);
-  bool SimplifyDivDiv();
   bool SimplifyDivMul();
   bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool IsAllOperandsConst(
