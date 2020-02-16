@@ -37,6 +37,7 @@ class INode {
   friend class Variable;
   friend class UnMinusOperation;
   friend class TrigonometricOperation;
+  friend class Tests;
 
   virtual bool IsEqual(const INode* rh) const = 0;
   virtual std::unique_ptr<INode> Clone() const = 0;

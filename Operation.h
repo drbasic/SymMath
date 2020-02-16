@@ -12,7 +12,23 @@ struct CanonicMult {
   std::vector<std::unique_ptr<INode>*> nodes;
 };
 
-class Operation : public INode {
+class IOperation : public INode {
+ public:
+  virtual ~IOperation(){};
+  virtual std::optional<CanonicMult> GetCanonic() = 0;
+  virtual void SimplifyChain() = 0;
+
+  virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
+  virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
+  virtual PlusOperation* AsPlusOperation() { return nullptr; }
+  virtual const PlusOperation* AsPlusOperation() const { return nullptr; }
+  virtual MultOperation* AsMultOperation() { return nullptr; }
+  virtual const MultOperation* AsMultOperation() const { return nullptr; }
+  virtual DivOperation* AsDivOperation() { return nullptr; }
+  virtual const DivOperation* AsDivOperation() const { return nullptr; }
+};
+
+class Operation : public IOperation {
  public:
   Operation(const OpInfo* op_info, std::unique_ptr<INode> lh);
   Operation(const OpInfo* op_info,
@@ -34,15 +50,8 @@ class Operation : public INode {
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
 
-  virtual std::optional<CanonicMult> GetCanonic();
-  virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
-  virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
-  virtual PlusOperation* AsPlusOperation() { return nullptr; }
-  virtual const PlusOperation* AsPlusOperation() const { return nullptr; }
-  virtual MultOperation* AsMultOperation() { return nullptr; }
-  virtual const MultOperation* AsMultOperation() const { return nullptr; }
-  virtual DivOperation* AsDivOperation() { return nullptr; }
-  virtual const DivOperation* AsDivOperation() const { return nullptr; }
+  std::optional<CanonicMult> GetCanonic() override;
+  void SimplifyChain() override;
 
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
@@ -58,21 +67,17 @@ class Operation : public INode {
                           bool with_op) const;
 
   friend class INodeHelper;
+  friend class Tests;
 
   void CheckIntegrity() const;
   bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyDivDiv();
   bool SimplifyDivMul();
-  bool SimplifyChain();
   bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool IsAllOperandsConst(
       const std::vector<std::unique_ptr<INode>>& operands) const;
   bool SimplifyConsts(std::unique_ptr<INode>* new_node);
-  bool NeedConvertToChain() const;
-  void ConvertToPlus();
-  void ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
-                     std::vector<std::unique_ptr<INode>>* sub_nodes);
 
   bool ReduceFor(double val);
 

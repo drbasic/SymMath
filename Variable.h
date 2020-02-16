@@ -41,6 +41,7 @@ class Variable : public INode {
 
  private:
   friend class VariableRef;
+  friend class Tests;
   INode* GetVisibleNode() const;
   std::string PrintRef(bool ommit_front_minus) const;
 

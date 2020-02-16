@@ -16,6 +16,13 @@ Variable Var(std::string name) {
   return Variable(std::move(name));
 }
 
+Variable Var(std::string name, double val)
+{
+  auto result = Variable(std::move(name));
+  result = Const(val);
+  return result;
+}
+
 std::unique_ptr<INode> Const(double val) {
   return std::make_unique<Constant>(val);
 }

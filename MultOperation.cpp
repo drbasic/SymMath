@@ -5,6 +5,7 @@
 
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "UnMinusOperation.h"
 #include "OpInfo.h"
 
 MultOperation::MultOperation(std::unique_ptr<INode> lh,
@@ -44,4 +45,37 @@ std::optional<CanonicMult> MultOperation::GetCanonic() {
       INodeHelper::MergeCanonic(&op, &result);
   }
   return result;
+}
+
+void MultOperation::SimplifyChain() {
+  UnfoldChain();
+  bool is_positve = true;
+  size_t i = 0;
+  for (auto& node : operands_) {
+    if (i++ == 0)
+      continue;
+    if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
+     is_positve = !is_positve;
+     node = INodeHelper::Negate(std::move(node));
+    }
+  }
+  if (!is_positve) {
+    operands_[0] = INodeHelper::Negate(std::move(operands_[0]));
+  }
+  Operation::SimplifyChain();
+}
+
+void MultOperation::UnfoldChain() {
+  std::vector<std::unique_ptr<INode>> positive_nodes;
+  std::vector<std::unique_ptr<INode>> negative_nodes;
+  for (auto& node : operands_) {
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(node), &positive_nodes,
+                                     &negative_nodes);
+  }
+  operands_.swap(positive_nodes);
+  operands_.reserve(operands_.size() + negative_nodes.size());
+  for (auto& node : negative_nodes) {
+    operands_.push_back(INodeHelper::Negate(std::move(node)));
+  }
+  CheckIntegrity();
 }

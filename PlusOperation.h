@@ -15,6 +15,9 @@ class PlusOperation : public Operation {
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
+  void SimplifyChain() override;
   PlusOperation* AsPlusOperation() override { return this; }
   const PlusOperation* AsPlusOperation() const override { return this; }
+
+  void UnfoldChain();
 };

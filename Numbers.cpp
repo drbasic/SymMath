@@ -9,9 +9,12 @@
 #include "Brackets.h"
 #include "INode.h"
 #include "ValueHelpers.h"
+#include "Tests.h"
+
 
 int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
+  Tests::Run();
 
   auto a = Var("a");
   auto b = Var("b");
@@ -20,8 +23,8 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = a + 1;
-  y = t + t;
+  Variable t = a - b - 1;
+  y = 2 * t + t + a + b;
   Variable calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
   y.Simplify();

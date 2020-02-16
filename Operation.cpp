@@ -376,10 +376,7 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
     simplified = true;
   }
 
-  while (SimplifyChain()) {
-    CheckIntegrity();
-    simplified = true;
-  }
+  SimplifyChain();
 
   while (SimplifySame(new_node)) {
     if (new_node->get())
@@ -560,58 +557,8 @@ bool Operation::SimplifyDivMul() {
   return true;
 }
 
-bool Operation::SimplifyChain() {
-  if (op_info_->op != Op::Plus && op_info_->op != Op::Mult &&
-      op_info_->op != Op::Minus)
-    return false;
-
-  if (NeedConvertToChain()) {
-    ConvertToPlus();
-  }
-
-  bool is_optimized = false;
-  std::vector<std::unique_ptr<INode>> new_nodes;
-
-  for (auto& node : operands_) {
-    auto* operation = node->AsOperation();
-    if (!operation) {
-      new_nodes.push_back(std::move(node));
-      continue;
-    }
-    auto sub_nodes = operation->TakeOperands(op_info_->op);
-    if (sub_nodes.empty()) {
-      new_nodes.push_back(std::move(node));
-    } else {
-      is_optimized = true;
-      new_nodes.reserve(new_nodes.size() + sub_nodes.size());
-      for (auto& sub_node : sub_nodes)
-        new_nodes.push_back(std::move(sub_node));
-    }
-  }
-  operands_.clear();
-
-  if (op_info_->op == Op::Mult) {
-    for (size_t i = 1; i < new_nodes.size(); ++i) {
-      auto* un_minus = INodeHelper::AsUnMinus(new_nodes[i].get());
-      if (!un_minus)
-        continue;
-      auto un_minus_sub_node = un_minus->TakeOperands(Op::UnMinus);
-      assert(un_minus_sub_node.empty() || un_minus_sub_node.size() == 1);
-      if (!un_minus_sub_node.empty()) {
-        is_optimized = true;
-        new_nodes.push_back(Const(-1.0));
-        new_nodes[i] = std::move(un_minus_sub_node[0]);
-      }
-    }
-  }
-
-  operands_.swap(new_nodes);
-
-  return is_optimized;
-}
-
 bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
-  if (op_info_->op != Op::Plus && op_info_->op != Op::Minus)
+  if (op_info_->op != Op::Plus)
     return false;
   bool is_optimized = false;
   for (size_t i = 0; i < operands_.size(); ++i) {
@@ -680,8 +627,8 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     *new_node = SymCalc();
     return true;
   }
-  if (op_info_->op != Op::Minus && op_info_->op != Op::Plus &&
-      op_info_->op != Op::Mult && op_info_->op != Op::Div)
+  if (op_info_->op != Op::Plus && op_info_->op != Op::Mult &&
+      op_info_->op != Op::Div)
     return false;
 
   size_t const_count = 0;
@@ -702,19 +649,6 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     if (constant->Value() == 0.0 && op_info_->op == Op::Plus) {
       is_optimized = true;
       operands_[i].reset();
-    }
-    // x - 0
-    if (constant->Value() == 0.0 && i != 0 && op_info_->op == Op::Minus) {
-      is_optimized = true;
-      operands_[i].reset();
-    }
-    // 0 -x
-    if (constant->Value() == 0.0 && i == 0 && op_info_->op == Op::Minus) {
-      if (i + 1 < operands_.size()) {
-      } else {
-        *new_node = Const(0.0);
-        return true;
-      }
     }
     // 0 / x
     if (constant->Value() == 0.0 && i == 0 && op_info_->op == Op::Div) {
@@ -791,62 +725,16 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   return is_optimized;
 }
 
-bool Operation::NeedConvertToChain() const {
-  if (op_info_->op == Op::Minus)
-    return true;
-
-  if (op_info_->op != Op::Plus)
-    return false;
-
-  for (const auto& operand : operands_) {
-    if (operand->AsConstant())
-      return true;
-    const Operation* as_operation = operand->AsOperation();
-    if (as_operation && (as_operation->op_info_->op == Op::Minus ||
-                         as_operation->op_info_->op == Op::Plus))
-      return true;
-  }
-  return false;
-}
-
-void Operation::ConvertToPlus() {
-  assert(op_info_->op == Op::Minus || op_info_->op == Op::Plus);
-
-  std::vector<std::unique_ptr<INode>> add_nodes;
-  std::vector<std::unique_ptr<INode>> sub_nodes;
-
-  ConvertToPlus(&add_nodes, &sub_nodes);
-  operands_.swap(add_nodes);
-  operands_.reserve(operands_.size() + sub_nodes.size());
-  for (auto& sub_node : sub_nodes) {
-    operands_.push_back(INodeHelper::MakeUnMinus(std::move(sub_node)));
-  }
-  op_info_ = GetOpInfo(Op::Plus);
-  CheckIntegrity();
-}
-
-void Operation::ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
-                              std::vector<std::unique_ptr<INode>>* sub_nodes) {
-  assert(op_info_->op == Op::Minus || op_info_->op == Op::Plus);
-
-  size_t i = 0;
-  for (auto& operand : operands_) {
-    bool revert_nodes = (op_info_->op == Op::Minus) && (i++ != 0);
-
-    Operation* as_operation = operand->AsOperation();
-    if (as_operation && (as_operation->op_info_->op == Op::Minus ||
-                         as_operation->op_info_->op == Op::Plus)) {
-      as_operation->ConvertToPlus(revert_nodes ? sub_nodes : add_nodes,
-                                  revert_nodes ? add_nodes : sub_nodes);
-      operand.reset();
-    } else {
-      (revert_nodes ? sub_nodes : add_nodes)->push_back(std::move(operand));
-    }
-  }
-}
-
 std::optional<CanonicMult> Operation::GetCanonic() {
   return std::nullopt;
+}
+
+void Operation::SimplifyChain() {
+  for (auto& node : operands_) {
+    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
+      operation->SimplifyChain();
+    }
+  }
 }
 
 bool Operation::ReduceFor(double val) {
@@ -925,11 +813,6 @@ PrintSize Operation::RenderOperand(const INode* node,
   if (with_op && op_info_->op == Op::Plus && node->HasFrontMinus()) {
     // +-1 -> -1 // minus (-) print here, so ommit (-) in operand
     op_to_print = GetOpInfo(Op::Minus);
-    render_behaviour.SetMunus(MinusBehaviour::Ommit);
-  } else if (with_op && op_info_->op == Op::Minus && node->HasFrontMinus()) {
-    // --1 -> +1 // minus operation and front minus(--) -> print plus(+) here,
-    // so ommit (-) in operand
-    op_to_print = GetOpInfo(Op::Plus);
     render_behaviour.SetMunus(MinusBehaviour::Ommit);
   } else if (with_op && op_info_->op == Op::UnMinus &&
              INodeHelper::AsDiv(node)) {

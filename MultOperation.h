@@ -16,6 +16,8 @@ class MultOperation : public Operation {
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
   std::optional<CanonicMult> GetCanonic() override;
+  void SimplifyChain() override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
+  void UnfoldChain();
 };

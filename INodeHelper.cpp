@@ -67,6 +67,11 @@ const UnMinusOperation* INodeHelper::AsUnMinus(const INode* lh) {
   return (result) ? result->AsUnMinusOperation() : nullptr;
 }
 
+PlusOperation* INodeHelper::AsPlus(INode* lh) {
+  auto result = lh->AsOperation();
+  return (result) ? result->AsPlusOperation() : nullptr;
+}
+
 // static
 const DivOperation* INodeHelper::AsDiv(const INode* lh) {
   auto result = lh->AsOperation();
@@ -95,6 +100,39 @@ void INodeHelper::MergeCanonic(std::unique_ptr<INode>* node,
   for (auto* n : node_canonic.nodes) {
     output->nodes.push_back(n);
   }
+}
+
+// static
+void INodeHelper::ExctractNodesWithOp(
+    Op op,
+    std::unique_ptr<INode> src,
+    std::vector<std::unique_ptr<INode>>* positvie_nodes,
+    std::vector<std::unique_ptr<INode>>* negative_nodes) {
+  Operation* operation = AsOperation(src.get());
+  if (!operation) {
+    positvie_nodes->push_back(std::move(src));
+    return;
+  }
+  if (operation->op_info_->op == Op::UnMinus) {
+    ExctractNodesWithOp(op, std::move(operation->operands_[0]), negative_nodes,
+                        positvie_nodes);
+    return;
+  }
+  if (operation->op_info_->op != op) {
+    positvie_nodes->push_back(std::move(src));
+    return;
+  }
+  for (auto& node : operation->operands_) {
+    ExctractNodesWithOp(op, std::move(node), positvie_nodes, negative_nodes);
+  }
+}
+
+// static
+std::unique_ptr<INode> INodeHelper::Negate(std::unique_ptr<INode> node) {
+  if (auto* un_minus = AsUnMinus(node.get())) {
+    return std::move(un_minus->operands_[0]);
+  }
+  return MakeUnMinus(std::move(node));
 }
 
 // static

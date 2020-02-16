@@ -7,6 +7,7 @@
 
 class INode;
 Variable Var(std::string name);
+Variable Var(std::string name, double val);
 std::unique_ptr<INode> Const(double val);
 
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh);

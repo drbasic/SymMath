@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cassert>
 
+#include "INodeHelper.h"
 #include "OpInfo.h"
+#include "UnMinusOperation.h"
 
 PlusOperation::PlusOperation(std::unique_ptr<INode> lh,
                              std::unique_ptr<INode> rh)
@@ -30,4 +32,24 @@ PrintSize PlusOperation::Render(Canvas* canvas,
 
 bool PlusOperation::HasFrontMinus() const {
   return false;
+}
+
+void PlusOperation::SimplifyChain() {
+  UnfoldChain();
+  Operation::SimplifyChain();
+}
+
+void PlusOperation::UnfoldChain() {
+  std::vector<std::unique_ptr<INode>> add_nodes;
+  std::vector<std::unique_ptr<INode>> sub_nodes;
+  for (auto& node : operands_) {
+    INodeHelper::ExctractNodesWithOp(Op::Plus, std::move(node), &add_nodes,
+                                     &sub_nodes);
+  }
+  operands_.swap(add_nodes);
+  operands_.reserve(operands_.size() + sub_nodes.size());
+  for (auto& node : sub_nodes) {
+    operands_.push_back(INodeHelper::Negate(std::move(node)));
+  }
+  CheckIntegrity();
 }
