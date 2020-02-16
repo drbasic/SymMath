@@ -1,32 +1,13 @@
 #pragma once
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "INode.h"
-
-struct CanonicMult {
-  double a = 1;
-  double b = 1;
-  std::vector<std::unique_ptr<INode>*> nodes;
-};
-
-class IOperation : public INode {
- public:
-  virtual ~IOperation(){};
-  virtual std::optional<CanonicMult> GetCanonic() = 0;
-  virtual void SimplifyChain() = 0;
-
-  virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
-  virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
-  virtual PlusOperation* AsPlusOperation() { return nullptr; }
-  virtual const PlusOperation* AsPlusOperation() const { return nullptr; }
-  virtual MultOperation* AsMultOperation() { return nullptr; }
-  virtual const MultOperation* AsMultOperation() const { return nullptr; }
-  virtual DivOperation* AsDivOperation() { return nullptr; }
-  virtual const DivOperation* AsDivOperation() const { return nullptr; }
-};
+#include "INodeImpl.h"
+#include "IOperation.h"
+#include "OpInfo.h"
 
 class Operation : public IOperation {
  public:
@@ -37,29 +18,32 @@ class Operation : public IOperation {
   Operation(const OpInfo* op_info,
             std::vector<std::unique_ptr<INode>> operands);
 
+  // INode implementation
+  bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> SymCalc() const override;
 
- protected:
-  bool IsEqual(const INode* rh) const override;
-
+  // INodeImpl interface
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override { return false; };
-  bool CheckCircular(const INode* other) const override;
-
+  bool CheckCircular(const INodeImpl* other) const override;
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
+  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
+  // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override;
   void SimplifyChain() override;
 
-  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+ protected:
+  INodeImpl* Operand(size_t indx);
+  const INodeImpl* Operand(size_t indx) const;
 
   PrintSize RenderOperandChain(Canvas* canvas,
                                PrintBox print_box,
                                bool dry_run,
                                RenderBehaviour render_behaviour) const;
-  PrintSize RenderOperand(const INode* node,
+  PrintSize RenderOperand(const INodeImpl* node,
                           Canvas* canvas,
                           PrintBox print_box,
                           bool dry_run,

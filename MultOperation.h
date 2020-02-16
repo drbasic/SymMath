@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Operation.h"
 
 class MultOperation : public Operation {
@@ -6,18 +7,22 @@ class MultOperation : public Operation {
   MultOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
   MultOperation(std::vector<std::unique_ptr<INode>> operands);
 
- protected:
+  // INode implementation
   std::unique_ptr<INode> Clone() const override;
 
- private:
+  // INodeImpl interface
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
+
+  // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override;
   void SimplifyChain() override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
+
+ private:
   void UnfoldChain();
 };

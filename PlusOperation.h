@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Operation.h"
 
 class PlusOperation : public Operation {
@@ -6,18 +7,21 @@ class PlusOperation : public Operation {
   PlusOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
   PlusOperation(std::vector<std::unique_ptr<INode>> operands);
 
- protected:
+  // INode implementation
   std::unique_ptr<INode> Clone() const override;
 
- private:
+  // INodeImpl interface
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
+
+  // IOperation implementation
   void SimplifyChain() override;
   PlusOperation* AsPlusOperation() override { return this; }
   const PlusOperation* AsPlusOperation() const override { return this; }
 
+ private:
   void UnfoldChain();
 };

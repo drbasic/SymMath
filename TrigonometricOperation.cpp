@@ -21,6 +21,6 @@ PrintSize TrigonometricOperation::Render(
     bool dry_run,
     RenderBehaviour render_behaviour) const {
   render_behaviour.SetBrackets(BracketsBehaviour::Force);
-  return print_size_ = RenderOperand(operands_[0].get(), canvas, print_box,
-                                     dry_run, render_behaviour, true);
+  return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
+                                     render_behaviour, true);
 }

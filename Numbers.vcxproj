@@ -157,6 +157,8 @@
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="INode.cpp" />
     <ClCompile Include="INodeHelper.cpp" />
+    <ClCompile Include="INodeImpl.cpp" />
+    <ClCompile Include="IOperation.cpp" />
     <ClCompile Include="MultOperation.cpp" />
     <ClCompile Include="Operations.cpp" />
     <ClCompile Include="OpInfo.cpp" />
@@ -180,6 +182,8 @@
     <ClInclude Include="Exception.h" />
     <ClInclude Include="INode.h" />
     <ClInclude Include="INodeHelper.h" />
+    <ClInclude Include="INodeImpl.h" />
+    <ClInclude Include="IOperation.h" />
     <ClInclude Include="MultOperation.h" />
     <ClInclude Include="Operations.h" />
     <ClInclude Include="OpInfo.h" />

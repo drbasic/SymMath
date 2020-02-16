@@ -1,14 +1,13 @@
 #pragma once
 
 #include "INode.h"
+#include "INodeImpl.h"
 
-class Variable : public INode {
+class Variable : public INodeImpl {
  public:
   Variable(std::string name);
   Variable(std::unique_ptr<INode> value);
   Variable(const Variable& var);
-
-  std::unique_ptr<INode> SymCalc() const override;
 
   std::wstring Print() const;
   bool Simplify();
@@ -19,9 +18,12 @@ class Variable : public INode {
   void operator=(double val);
   operator std::unique_ptr<INode>() const;
 
- protected:
+  // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
+  std::unique_ptr<INode> SymCalc() const override;
+
+  // INodeImpl interface
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
@@ -29,21 +31,24 @@ class Variable : public INode {
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
-  bool CheckCircular(const INode* other) const override;
+  bool CheckCircular(const INodeImpl* other) const override;
   Constant* AsConstant() override;
   const Constant* AsConstant() const override;
   const ErrorNode* AsError() const override;
-  const Variable* AsVariable() const override;
+  Variable* AsVariable() override { return this; }
+  const Variable* AsVariable() const override { return this; }
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
-
   bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
   friend class VariableRef;
   friend class Tests;
-  INode* GetVisibleNode() const;
-  std::string PrintRef(bool ommit_front_minus) const;
+
+  INodeImpl* Value();
+  const INodeImpl* Value() const;
+  INodeImpl* GetVisibleNode();
+  const INodeImpl* GetVisibleNode() const;
 
   mutable PrintSize print_size_;
   std::string name_;

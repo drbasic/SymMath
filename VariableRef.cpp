@@ -12,7 +12,7 @@ bool VariableRef::HasFrontMinus() const {
   return var_->HasFrontMinus();
 }
 
-bool VariableRef::CheckCircular(const INode* other) const {
+bool VariableRef::CheckCircular(const INodeImpl* other) const {
   return var_->CheckCircular(other);
 }
 
@@ -53,6 +53,10 @@ const Constant* VariableRef::AsConstant() const {
 
 const ErrorNode* VariableRef::AsError() const {
   return var_->AsError();
+}
+
+ Variable* VariableRef::AsVariable() {
+  return const_cast<Variable*>(var_)->AsVariable();
 }
 
 const Variable* VariableRef::AsVariable() const {

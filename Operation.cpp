@@ -290,21 +290,22 @@ std::unique_ptr<INode> Operation::SymCalc() const {
   }
 
   if (calculated_operands.size() == 1) {
-    double result =
-        op_info_->trivial_f(calculated_operands[0]->AsConstant()->Value(), 0.0);
+    double result = op_info_->trivial_f(
+        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(), 0.0);
     return INodeHelper::MakeConst(result);
   }
 
   auto trivial_f = op_info_->trivial_f;
   auto node_adaptor = [trivial_f](double lh, const std::unique_ptr<INode>& rh) {
-    auto rh_val = rh->AsConstant();
+    auto rh_val = rh->AsNodeImpl()->AsConstant();
     assert(rh_val);
     return trivial_f(lh, rh_val->Value());
   };
 
   double result = std::accumulate(
       std::begin(calculated_operands) + 1, std::end(calculated_operands),
-      calculated_operands[0]->AsConstant()->Value(), node_adaptor);
+      calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
+      node_adaptor);
   return INodeHelper::MakeConst(result);
 }
 
@@ -312,16 +313,16 @@ PrintSize Operation::LastPrintSize() const {
   return print_size_;
 }
 
-bool Operation::CheckCircular(const INode* other) const {
+bool Operation::CheckCircular(const INodeImpl* other) const {
   for (const auto& operand : operands_) {
-    if (operand->CheckCircular(other))
+    if (operand->AsNodeImpl()->CheckCircular(other))
       return true;
   }
   return false;
 }
 
 bool Operation::IsEqual(const INode* rh) const {
-  const Operation* rh_op = rh->AsOperation();
+  const Operation* rh_op = rh->AsNodeImpl()->AsOperation();
   if (!rh_op)
     return false;
   if (op_info_ != rh_op->op_info_)
@@ -357,7 +358,7 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   }
   for (auto& node : operands_) {
     std::unique_ptr<INode> new_sub_node;
-    while (node->SimplifyImpl(&new_sub_node)) {
+    while (node->AsNodeImpl()->SimplifyImpl(&new_sub_node)) {
       simplified = true;
       if (new_sub_node)
         node = std::move(new_sub_node);
@@ -497,7 +498,7 @@ bool Operation::SimplifyDivDiv() {
 
   for (auto& operand : operands_) {
     std::unique_ptr<INode> new_node;
-    if (operand->SimplifyImpl(&new_node)) {
+    if (operand->AsNodeImpl()->SimplifyImpl(&new_node)) {
       if (new_node)
         operand = std::move(new_node);
     }
@@ -549,7 +550,7 @@ bool Operation::SimplifyDivMul() {
 
   for (auto& operand : operands_) {
     std::unique_ptr<INode> new_node;
-    if (operand->SimplifyImpl(&new_node)) {
+    if (operand->AsNodeImpl()->SimplifyImpl(&new_node)) {
       if (new_node)
         operand = std::move(new_node);
     }
@@ -615,7 +616,7 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
 bool Operation::IsAllOperandsConst(
     const std::vector<std::unique_ptr<INode>>& operands) const {
   for (const auto& operand : operands) {
-    Constant* constant = operand->AsConstant();
+    Constant* constant = operand->AsNodeImpl()->AsConstant();
     if (!constant)
       return false;
   }
@@ -636,7 +637,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    Constant* constant = operands_[i]->AsConstant();
+    Constant* constant = Operand(i)->AsConstant();
     if (!constant)
       continue;
     ++const_count;
@@ -691,7 +692,7 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    Constant* constant = operands_[i]->AsConstant();
+    Constant* constant = Operand(i)->AsConstant();
     if (!constant)
       continue;
     if (op_info_->op != Op::Div) {
@@ -737,12 +738,20 @@ void Operation::SimplifyChain() {
   }
 }
 
+INodeImpl* Operation::Operand(size_t indx) {
+  return operands_[indx]->AsNodeImpl();
+}
+
+const INodeImpl* Operation::Operand(size_t indx) const {
+  return operands_[indx]->AsNodeImpl();
+}
+
 bool Operation::ReduceFor(double val) {
   assert(op_info_->op == Op::Mult);
   assert(val != 0.0);
 
   for (size_t i = 0; i < operands_.size(); ++i) {
-    Constant* constant = operands_[i]->AsConstant();
+    Constant* constant = Operand(i)->AsConstant();
     if (!constant)
       continue;
     double d = constant->Value() / val;
@@ -776,8 +785,8 @@ PrintSize Operation::RenderOperandChain(
   PrintSize total_print_size = {};
   PrintBox operand_box{print_box};
   for (size_t i = 0; i < operands_.size(); ++i) {
-    auto operand_size = RenderOperand(operands_[i].get(), canvas, operand_box,
-                                      dry_run, render_behaviour, i != 0);
+    auto operand_size = RenderOperand(Operand(i), canvas, operand_box, dry_run,
+                                      render_behaviour, i != 0);
     operand_box = operand_box.ShrinkLeft(operand_size.width);
     total_print_size = total_print_size.GrowWidth(operand_size, true);
   }
@@ -787,7 +796,7 @@ PrintSize Operation::RenderOperandChain(
   return print_size_ = total_print_size;
 }
 
-PrintSize Operation::RenderOperand(const INode* node,
+PrintSize Operation::RenderOperand(const INodeImpl* node,
                                    Canvas* canvas,
                                    PrintBox print_box,
                                    bool dry_run,
@@ -797,7 +806,7 @@ PrintSize Operation::RenderOperand(const INode* node,
 
   bool need_br = (brackets_behaviour == BracketsBehaviour::Force) ||
                  ((brackets_behaviour != BracketsBehaviour::Ommit) &&
-                  (node->Priority() < Priority()));
+                  (node->AsNodeImpl()->Priority() < Priority()));
   if (brackets_behaviour != BracketsBehaviour::Ommit && with_op &&
       INodeHelper::AsMult(this) && node->HasFrontMinus()) {
     need_br = true;

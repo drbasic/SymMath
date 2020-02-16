@@ -83,7 +83,7 @@ bool Tests::TestSimplifyChainRecursive() {
   if (op->operands_.size() != 3)
     return false;
   for (auto& sub : op->operands_) {
-    auto* sub_op = sub->AsOperation();
+    auto* sub_op = sub->AsNodeImpl()->AsOperation();
     if (sub_op->operands_.size() != 3)
       return false;
   }

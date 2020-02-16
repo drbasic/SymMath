@@ -9,6 +9,7 @@
 #include "OpInfo.h"
 #include "Operation.h"
 #include "PlusOperation.h"
+#include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 
@@ -18,29 +19,34 @@ bool INodeHelper::IsNodesEqual(const INode* lh, const INode* rh) {
 }
 
 // static
+Constant* INodeHelper::AsConstant(INode* lh) {
+  return lh->AsNodeImpl()->AsConstant();
+}
+
+// static
 const Constant* INodeHelper::AsConstant(const INode* lh) {
-  return lh->AsConstant();
+  return lh->AsNodeImpl()->AsConstant();
 }
 
 // static
 Operation* INodeHelper::AsOperation(INode* lh) {
-  return lh->AsOperation();
+  return lh->AsNodeImpl()->AsOperation();
 }
 
 // static
 const Operation* INodeHelper::AsOperation(const INode* lh) {
-  return lh->AsOperation();
+  return lh->AsNodeImpl()->AsOperation();
 }
 
 // static
 MultOperation* INodeHelper::AsMult(INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsMultOperation() : nullptr;
 }
 
 // static
 const MultOperation* INodeHelper::AsMult(const INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsMultOperation() : nullptr;
 }
 
@@ -51,30 +57,30 @@ std::vector<std::unique_ptr<INode>>& INodeHelper::GetOperands(Operation* op) {
 
 // static
 bool INodeHelper::IsUnMinus(const INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsUnMinusOperation() != nullptr : false;
 }
 
 // static
 UnMinusOperation* INodeHelper::AsUnMinus(INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsUnMinusOperation() : nullptr;
 }
 
 // static
 const UnMinusOperation* INodeHelper::AsUnMinus(const INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsUnMinusOperation() : nullptr;
 }
 
 PlusOperation* INodeHelper::AsPlus(INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsPlusOperation() : nullptr;
 }
 
 // static
 const DivOperation* INodeHelper::AsDiv(const INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsDivOperation() : nullptr;
 }
 
@@ -137,7 +143,7 @@ std::unique_ptr<INode> INodeHelper::Negate(std::unique_ptr<INode> node) {
 
 // static
 DivOperation* INodeHelper::AsDiv(INode* lh) {
-  auto result = lh->AsOperation();
+  auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsDivOperation() : nullptr;
 }
 
@@ -163,6 +169,7 @@ std::unique_ptr<UnMinusOperation> INodeHelper::MakeUnMinus(
   return std::make_unique<UnMinusOperation>(std::move(value));
 }
 
+// static
 std::unique_ptr<PlusOperation> INodeHelper::MakeMinus(
     std::unique_ptr<INode> lh,
     std::unique_ptr<INode> rh) {
@@ -170,18 +177,21 @@ std::unique_ptr<PlusOperation> INodeHelper::MakeMinus(
                                          MakeUnMinus(std::move(rh)));
 }
 
+// static
 std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
     std::unique_ptr<INode> lh,
     std::unique_ptr<INode> rh) {
   return std::make_unique<PlusOperation>(std::move(lh), std::move(rh));
 }
 
+// static
 std::unique_ptr<MultOperation> INodeHelper::MakeMult(
     std::unique_ptr<INode> lh,
     std::unique_ptr<INode> rh) {
   return std::make_unique<MultOperation>(std::move(lh), std::move(rh));
 }
 
+// static
 std::unique_ptr<MultOperation> INodeHelper::MakeMult(
     std::vector<std::unique_ptr<INode>> operands) {
   return std::make_unique<MultOperation>(std::move(operands));
@@ -191,4 +201,12 @@ std::unique_ptr<MultOperation> INodeHelper::MakeMult(
 std::unique_ptr<DivOperation> INodeHelper::MakeDiv(std::unique_ptr<INode> lh,
                                                    std::unique_ptr<INode> rh) {
   return std::make_unique<DivOperation>(std::move(lh), std::move(rh));
+}
+
+// static
+std::unique_ptr<TrigonometricOperation> INodeHelper::MakeTrigonometric(
+    Op op,
+    std::unique_ptr<INode> value) {
+  return std::make_unique<TrigonometricOperation>(GetOpInfo(op),
+                                                  std::move(value));
 }

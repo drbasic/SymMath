@@ -3,31 +3,30 @@
 #include <string>
 #include <vector>
 
-#include "INode.h"
+#include "INodeImpl.h"
 
-class Constant : public INode {
+class Constant : public INodeImpl {
  public:
   Constant(double val);
 
-  std::unique_ptr<INode> SymCalc() const override;
-
-  double Value() const { return value_; }
-
- protected:
+  // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
+  std::unique_ptr<INode> SymCalc() const override;
 
+  // INodeImpl interface
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
-  int Priority() const override;
+  int Priority() const override { return 100; }
   bool HasFrontMinus() const override;
-  bool CheckCircular(const INode* other) const override;
+  bool CheckCircular(const INodeImpl* other) const override { return false; }
+  Constant* AsConstant() override { return this; }
+  const Constant* AsConstant() const override { return this; }
 
-  Constant* AsConstant() override;
-  const Constant* AsConstant() const override;
+  double Value() const { return value_; }
 
  private:
   mutable PrintSize print_size_;

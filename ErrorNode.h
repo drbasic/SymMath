@@ -1,24 +1,28 @@
 #pragma once
-#include "INode.h"
 
-class ErrorNode : public INode {
+#include "INode.h"
+#include "INodeImpl.h"
+
+class ErrorNode : public INodeImpl {
  public:
   ErrorNode(std::string error);
 
-  std::unique_ptr<INode> SymCalc() const override;
-
- protected:
+  // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
+  std::unique_ptr<INode> SymCalc() const override;
+
+  // INodeImpl interface
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
-  int Priority() const override;
-  bool HasFrontMinus() const override;
-  bool CheckCircular(const INode* other) const override;
+  int Priority() const override { return 0; }
+  bool HasFrontMinus() const override { return false; }
+  bool CheckCircular(const INodeImpl* other) const override { return false; }
 
+ protected:
  private:
   mutable PrintSize print_size_;
   std::string error_;

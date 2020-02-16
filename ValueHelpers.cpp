@@ -16,8 +16,7 @@ Variable Var(std::string name) {
   return Variable(std::move(name));
 }
 
-Variable Var(std::string name, double val)
-{
+Variable Var(std::string name, double val) {
   auto result = Variable(std::move(name));
   result = Const(val);
   return result;
@@ -60,32 +59,28 @@ std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh, double rh) {
 //=============================================================================
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
-  return std::make_unique<MultOperation>(std::move(lh), std::move(rh));
+  return INodeHelper::MakeMult(std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator*(double lh, std::unique_ptr<INode> rh) {
-  return std::make_unique<MultOperation>(std::make_unique<Constant>(lh),
-                                         std::move(rh));
+  return INodeHelper::MakeMult(std::make_unique<Constant>(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh, double rh) {
-  return std::make_unique<MultOperation>(std::move(lh),
-                                         std::make_unique<Constant>(rh));
+  return INodeHelper::MakeMult(std::move(lh), std::make_unique<Constant>(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
-  return std::make_unique<DivOperation>(std::move(lh), std::move(rh));
+  return INodeHelper::MakeDiv(std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator/(double lh, std::unique_ptr<INode> rh) {
-  return std::make_unique<DivOperation>(std::make_unique<Constant>(lh),
-                                        std::move(rh));
+  return INodeHelper::MakeDiv(std::make_unique<Constant>(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
-  return std::make_unique<DivOperation>(std::move(lh),
-                                        std::make_unique<Constant>(rh));
+  return INodeHelper::MakeDiv(std::move(lh), std::make_unique<Constant>(rh));
 }
 
 std::unique_ptr<INode> AddBrackets(std::unique_ptr<INode> value) {
@@ -98,13 +93,11 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
 }
 
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {
-  return std::make_unique<TrigonometricOperation>(GetOpInfo(Op::Sin),
-                                                 std::move(value));
+  return INodeHelper::MakeTrigonometric(Op::Sin, std::move(value));
 }
 
 std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
-  return std::make_unique<TrigonometricOperation>(GetOpInfo(Op::Cos),
-                                                 std::move(value));
+  return INodeHelper::MakeTrigonometric(Op::Cos, std::move(value));
 }
 
 //=============================================================================

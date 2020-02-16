@@ -13,6 +13,7 @@ class MultOperation;
 class PlusOperation;
 class DivOperation;
 class UnMinusOperation;
+class TrigonometricOperation;
 class Variable;
 
 class INodeHelper {
@@ -22,6 +23,7 @@ class INodeHelper {
   static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op);
 
   static bool IsUnMinus(const INode* lh);
+  static Constant* AsConstant(INode* lh);
   static const Constant* AsConstant(const INode* lh);
   static Operation* AsOperation(INode* lh);
   static const Operation* AsOperation(const INode* lh);
@@ -59,4 +61,7 @@ class INodeHelper {
       std::vector<std::unique_ptr<INode>> operands);
   static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
+  static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
+      Op op,
+      std::unique_ptr<INode> value);
 };

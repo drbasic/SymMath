@@ -5,8 +5,8 @@
 
 #include "Constant.h"
 #include "INodeHelper.h"
-#include "UnMinusOperation.h"
 #include "OpInfo.h"
+#include "UnMinusOperation.h"
 
 MultOperation::MultOperation(std::unique_ptr<INode> lh,
                              std::unique_ptr<INode> rh)
@@ -38,7 +38,7 @@ bool MultOperation::HasFrontMinus() const {
 std::optional<CanonicMult> MultOperation::GetCanonic() {
   CanonicMult result;
   for (auto& op : operands_) {
-    Constant* constant = op->AsConstant();
+    Constant* constant = op->AsNodeImpl()->AsConstant();
     if (constant)
       result.a = op_info_->trivial_f(result.a, constant->Value());
     else
@@ -55,8 +55,8 @@ void MultOperation::SimplifyChain() {
     if (i++ == 0)
       continue;
     if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
-     is_positve = !is_positve;
-     node = INodeHelper::Negate(std::move(node));
+      is_positve = !is_positve;
+      node = INodeHelper::Negate(std::move(node));
     }
   }
   if (!is_positve) {

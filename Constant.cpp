@@ -24,28 +24,13 @@ PrintSize Constant::LastPrintSize() const {
   return print_size_;
 }
 
-int Constant::Priority() const {
-  return 100;
-}
-
 bool Constant::HasFrontMinus() const {
   return value_ < 0;
 }
 
-bool Constant::CheckCircular(const INode* other) const {
-  return false;
-}
-
 bool Constant::IsEqual(const INode* rh) const {
-  const Constant* rh_const = rh->AsConstant();
+  const Constant* rh_const = rh->AsNodeImpl()->AsConstant();
   return rh_const && (Value() == rh_const->Value());
-}
-
-Constant* Constant::AsConstant() {
-  return this;
-}
-const Constant* Constant::AsConstant() const {
-  return this;
 }
 
 std::unique_ptr<INode> Constant::SymCalc() const {

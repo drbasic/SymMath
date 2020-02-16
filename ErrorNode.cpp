@@ -21,19 +21,7 @@ PrintSize ErrorNode::LastPrintSize() const {
   return print_size_;
 }
 
-int ErrorNode::Priority() const {
-  return 0;
-}
-
-bool ErrorNode::HasFrontMinus() const {
-  return false;
-}
-
-bool ErrorNode::CheckCircular(const INode* other) const {
-  return false;
-}
-
 bool ErrorNode::IsEqual(const INode* rh) const {
-  const ErrorNode* rh_error = rh->AsError();
+  const ErrorNode* rh_error = rh->AsNodeImpl()->AsError();
   return rh_error && (error_ == rh_error->error_);
 }

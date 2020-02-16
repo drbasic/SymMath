@@ -4,16 +4,16 @@
 #include <cassert>
 
 #include "Constant.h"
-#include "OpInfo.h"
 #include "INodeHelper.h"
+#include "OpInfo.h"
 
 DivOperation::DivOperation(std::unique_ptr<INode> top,
                            std::unique_ptr<INode> bottom)
     : Operation(GetOpInfo(Op::Div), std::move(top), std::move(bottom)) {}
 
 std::unique_ptr<INode> DivOperation::Clone() const {
-  return std::make_unique<DivOperation>(operands_[0]->Clone(),
-                                        operands_[1]->Clone());
+  return std::make_unique<DivOperation>(Operand(0)->Clone(),
+                                        Operand(1)->Clone());
 }
 
 PrintSize DivOperation::Render(Canvas* canvas,
@@ -36,12 +36,12 @@ PrintSize DivOperation::Render(Canvas* canvas,
     prefix_size = un_minus_size.GrowWidth({1, 1, 0}, true);
   }
 
-  auto lh_size = dry_run ? operands_[0]->Render(canvas, PrintBox::Infinite(),
-                                                dry_run, render_behaviour)
-                         : operands_[0]->LastPrintSize();
-  auto rh_size = dry_run ? operands_[1]->Render(canvas, PrintBox::Infinite(),
-                                                dry_run, render_behaviour)
-                         : operands_[1]->LastPrintSize();
+  auto lh_size = dry_run ? Operand(0)->Render(canvas, PrintBox::Infinite(),
+                                              dry_run, render_behaviour)
+                         : Operand(0)->LastPrintSize();
+  auto rh_size = dry_run ? Operand(1)->Render(canvas, PrintBox::Infinite(),
+                                              dry_run, render_behaviour)
+                         : Operand(1)->LastPrintSize();
 
   // Render divider
   auto div_size = canvas->RenderDivider(
@@ -55,7 +55,7 @@ PrintSize DivOperation::Render(Canvas* canvas,
       lh_box.height = print_box.base_line - div_size.base_line;
       lh_box.base_line = lh_box.height - (lh_size.height - lh_size.base_line);
       auto lh_size2 =
-          operands_[0]->Render(canvas, lh_box, dry_run, render_behaviour);
+          Operand(0)->Render(canvas, lh_box, dry_run, render_behaviour);
       assert(lh_size2 == lh_size);
     }
     {
@@ -65,7 +65,7 @@ PrintSize DivOperation::Render(Canvas* canvas,
       rh_box.y = print_box.base_line + (div_size.height - div_size.base_line);
       rh_box.base_line = rh_box.y + rh_size.base_line;
       auto rh_size2 =
-          operands_[1]->Render(canvas, rh_box, dry_run, render_behaviour);
+          Operand(1)->Render(canvas, rh_box, dry_run, render_behaviour);
       assert(rh_size2 == rh_size);
     }
   }
@@ -75,7 +75,7 @@ PrintSize DivOperation::Render(Canvas* canvas,
 }
 
 std::optional<CanonicMult> DivOperation::GetCanonic() {
-  if (Constant* rh = operands_[1]->AsConstant()) {
+  if (Constant* rh = Operand(1)->AsConstant()) {
     CanonicMult result;
     result.b = rh->Value();
     INodeHelper::MergeCanonic(&operands_[0], &result);
@@ -85,7 +85,7 @@ std::optional<CanonicMult> DivOperation::GetCanonic() {
 }
 
 bool DivOperation::HasFrontMinus() const {
-  bool lh_minus = operands_[0]->HasFrontMinus();
-  bool rh_minus = operands_[1]->HasFrontMinus();
+  bool lh_minus = Operand(0)->HasFrontMinus();
+  bool rh_minus = Operand(1)->HasFrontMinus();
   return lh_minus ^ rh_minus;
 }

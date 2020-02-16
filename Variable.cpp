@@ -37,7 +37,7 @@ std::wstring Variable::Print() const {
 
 int Variable::Priority() const {
   if (name_.empty() && value_)
-    return value_->Priority();
+    return value_->AsNodeImpl()->Priority();
   return 100;
 }
 
@@ -45,17 +45,17 @@ bool Variable::HasFrontMinus() const {
   if (!name_.empty())
     return false;
   if (value_)
-    return value_->HasFrontMinus();
+    return value_->AsNodeImpl()->HasFrontMinus();
   return false;
 }
 
-bool Variable::CheckCircular(const INode* other) const {
-  return this == other || (value_ && value_->CheckCircular(other));
+bool Variable::CheckCircular(const INodeImpl* other) const {
+  return this == other || (Value() && Value()->CheckCircular(other));
 }
 
 bool Variable::IsEqual(const INode* rh) const {
   if (!name_.empty()) {
-    const Variable* rh_var = rh->AsVariable();
+    const Variable* rh_var = rh->AsNodeImpl()->AsVariable();
     return rh_var && (name_ == rh_var->name_);
   }
   if (value_)
@@ -68,9 +68,9 @@ std::string Variable::GetName() const {
 }
 
 bool Variable::SimplifyImpl(std::unique_ptr<INode>* new_node) {
-  if (!value_)
+  if (!Value())
     return false;
-  return value_->SimplifyImpl(new_node);
+  return Value()->SimplifyImpl(new_node);
 }
 
 bool Variable::Simplify() {
@@ -85,7 +85,7 @@ bool Variable::Simplify() {
 }
 
 void Variable::operator=(std::unique_ptr<INode> value) {
-  if (value->CheckCircular(this)) {
+  if (value->AsNodeImpl()->CheckCircular(this)) {
     value_ = std::make_unique<ErrorNode>(
         "Circular deps on [" + (name_.empty() ? "<unonimous>" : name_) + "]");
   } else {
@@ -126,7 +126,7 @@ PrintSize Variable::Render(Canvas* canvas,
   if (name_.empty()) {
     if (value_) {
       return print_size_ =
-                 value_->Render(canvas, print_box, dry_run, render_behaviour);
+                 Value()->Render(canvas, print_box, dry_run, render_behaviour);
     }
   }
 
@@ -136,7 +136,7 @@ PrintSize Variable::Render(Canvas* canvas,
   auto lh_size = canvas->PrintAt(print_box, var_printable_name, dry_run);
   print_box = print_box.ShrinkLeft(lh_size.width);
   auto rh_size =
-      value_ ? value_->Render(canvas, print_box, dry_run, render_behaviour)
+      value_ ? Value()->Render(canvas, print_box, dry_run, render_behaviour)
              : canvas->PrintAt(print_box, kNull, dry_run);
 
   return print_size_ = lh_size.GrowWidth(rh_size, true);
@@ -164,10 +164,6 @@ const ErrorNode* Variable::AsError() const {
   return nullptr;
 }
 
-const Variable* Variable::AsVariable() const {
-  return this;
-}
-
 Operation* Variable::AsOperation() {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsOperation() : nullptr;
@@ -180,12 +176,32 @@ const Operation* Variable::AsOperation() const {
   return nullptr;
 }
 
-INode* Variable::GetVisibleNode() const {
+INodeImpl* Variable::Value() {
+  return value_ ? value_->AsNodeImpl() : nullptr;
+}
+
+const INodeImpl* Variable::Value() const {
+  return value_ ? value_->AsNodeImpl() : nullptr;
+}
+
+INodeImpl* Variable::GetVisibleNode() {
   if (!name_.empty())
-    return const_cast<INode*>(static_cast<const INode*>(this));
-  INode* inner = const_cast<INode*>(value_.get());
-  if (!inner)
+    return this;
+  if (!value_)
     return nullptr;
+  auto* inner = Value();
+  if (auto* inner_variable = inner->AsVariable()) {
+    return inner_variable->GetVisibleNode();
+  }
+  return inner;
+}
+
+const INodeImpl* Variable::GetVisibleNode() const {
+  if (!name_.empty())
+    return this;
+  if (!value_)
+    return nullptr;
+  auto* inner = Value();
   if (auto* inner_variable = inner->AsVariable()) {
     return inner_variable->GetVisibleNode();
   }

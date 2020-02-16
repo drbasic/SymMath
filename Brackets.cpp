@@ -5,7 +5,7 @@
 Brackets::Brackets(BracketType bracket_type, std::unique_ptr<INode> value)
     : bracket_type_(bracket_type), value_(std::move(value)) {}
 
-PrintSize Brackets::RenderBrackets(const INode* node,
+PrintSize Brackets::RenderBrackets(const INodeImpl* node,
                                    BracketType bracket_type,
                                    Canvas* canvas,
                                    PrintBox print_box,
@@ -45,7 +45,7 @@ PrintSize Brackets::Render(Canvas* canvas,
                            bool dry_run,
                            RenderBehaviour render_behaviour) const {
   return print_size_ =
-             RenderBrackets(value_.get(), bracket_type_, canvas,
+             RenderBrackets(value_->AsNodeImpl(), bracket_type_, canvas,
                             std::move(print_box), dry_run, render_behaviour);
 }
 
@@ -53,38 +53,38 @@ PrintSize Brackets::LastPrintSize() const {
   return print_size_;
 }
 
-int Brackets::Priority() const {
-  return 1000;
-}
-
-bool Brackets::HasFrontMinus() const {
-  return false;
-}
-
-bool Brackets::CheckCircular(const INode* other) const {
-  return value_->CheckCircular(other);
+bool Brackets::CheckCircular(const INodeImpl* other) const {
+  return value_->AsNodeImpl()->CheckCircular(other);
 }
 
 Constant* Brackets::AsConstant() {
-  return transparent_ ? value_->AsConstant() : nullptr;
+  return transparent_ ? Value()->AsConstant() : nullptr;
 }
 
 const Constant* Brackets::AsConstant() const {
-  return transparent_ ? value_->AsConstant() : nullptr;
+  return transparent_ ? Value()->AsConstant() : nullptr;
 }
 
 const ErrorNode* Brackets::AsError() const {
-  return transparent_ ? value_->AsError() : nullptr;
+  return transparent_ ? Value()->AsError() : nullptr;
 }
 
 const Variable* Brackets::AsVariable() const {
-  return transparent_ ? value_->AsVariable() : nullptr;
+  return transparent_ ? Value()->AsVariable() : nullptr;
 }
 
 Operation* Brackets::AsOperation() {
-  return transparent_ ? value_->AsOperation() : nullptr;
+  return transparent_ ? Value()->AsOperation() : nullptr;
 }
 
 const Operation* Brackets::AsOperation() const {
-  return transparent_ ? value_->AsOperation() : nullptr;
+  return transparent_ ? Value()->AsOperation() : nullptr;
+}
+
+INodeImpl* Brackets::Value() {
+  return value_ ? value_->AsNodeImpl() : nullptr;
+}
+
+const INodeImpl* Brackets::Value() const {
+  return value_ ? value_->AsNodeImpl() : nullptr;
 }
