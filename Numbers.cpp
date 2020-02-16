@@ -20,12 +20,8 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = a * x * x + b * x + c;
-  a = 1;
-  x = 2;
-  //b = 3;
-  c = 4;
-  y = Sin(t);
+  Variable t = a + 1;
+  y = t + t;
   Variable calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
   y.Simplify();

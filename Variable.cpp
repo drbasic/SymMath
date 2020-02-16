@@ -36,6 +36,8 @@ std::wstring Variable::Print() const {
 }
 
 int Variable::Priority() const {
+  if (name_.empty() && value_)
+    return value_->Priority();
   return 100;
 }
 

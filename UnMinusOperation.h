@@ -15,8 +15,8 @@ class UnMinusOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
-
   bool HasFrontMinus() const override;
+  std::optional<CanonicMult> GetCanonic() override;
   UnMinusOperation* AsUnMinusOperation() override { return this; }
   const UnMinusOperation* AsUnMinusOperation() const override { return this; }
 };

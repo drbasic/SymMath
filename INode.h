@@ -16,7 +16,7 @@ class Canvas;
 class DivOperation;
 class Variable;
 class UnMinusOperation;
-class TrigonometricOperator;
+class TrigonometricOperation;
 enum class Op;
 
 class INode {
@@ -36,7 +36,7 @@ class INode {
   friend class PlusOperation;
   friend class Variable;
   friend class UnMinusOperation;
-  friend class TrigonometricOperator;
+  friend class TrigonometricOperation;
 
   virtual bool IsEqual(const INode* rh) const = 0;
   virtual std::unique_ptr<INode> Clone() const = 0;

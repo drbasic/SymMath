@@ -1,11 +1,12 @@
 #pragma once
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "INode.h"
 
-struct CanonicMultDiv {
+struct CanonicMult {
   double a = 1;
   double b = 1;
   std::vector<std::unique_ptr<INode>*> nodes;
@@ -22,8 +23,6 @@ class Operation : public INode {
 
   std::unique_ptr<INode> SymCalc() const override;
 
-  static CanonicMultDiv GetCanonic(std::unique_ptr<INode>* node);
-
  protected:
   bool IsEqual(const INode* rh) const override;
 
@@ -35,6 +34,7 @@ class Operation : public INode {
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
 
+  virtual std::optional<CanonicMult> GetCanonic();
   virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
   virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
   virtual PlusOperation* AsPlusOperation() { return nullptr; }
@@ -74,9 +74,6 @@ class Operation : public INode {
   void ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
                      std::vector<std::unique_ptr<INode>>* sub_nodes);
 
-  CanonicMultDiv GetCanonicMult();
-  CanonicMultDiv GetCanonicDiv();
-  CanonicMultDiv GetCanonicUnMinus();
   bool ReduceFor(double val);
 
   std::vector<std::unique_ptr<INode>> TakeOperands(Op op);

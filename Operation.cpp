@@ -174,12 +174,12 @@ double TakeTransitiveEqualNodesCount(
   used.resize(rhs.size());
   for (size_t i = 0; i < lhs.size(); ++i) {
     bool equal_found = false;
-    CanonicMultDiv canonic_lh = Operation::GetCanonic(lhs[i]);
+    CanonicMult canonic_lh = INodeHelper::GetCanonic(lhs[i]);
 
     for (size_t j = 0; j < rhs.size(); ++j) {
       if (used[j])
         continue;
-      CanonicMultDiv canonic_rh = Operation::GetCanonic(rhs[j]);
+      CanonicMult canonic_rh = INodeHelper::GetCanonic(rhs[j]);
       bool eq = IsNodesTransitiveEqual(canonic_lh.nodes, canonic_rh.nodes);
       if (!eq)
         continue;
@@ -207,7 +207,7 @@ double TakeTransitiveEqualNodesCount(
     if (used[i] == counter) {
       rhs[i]->reset();
     } else {
-      CanonicMultDiv canonic_rh = Operation::GetCanonic(rhs[i]);
+      CanonicMult canonic_rh = INodeHelper::GetCanonic(rhs[i]);
       double dividend = (canonic_rh.a - counter) * canonic_rh.b;
       double divider = canonic_rh.a;
       *rhs[i] = MakeMult(dividend, divider, {rhs[i]});
@@ -230,7 +230,7 @@ double TakeTransitiveEqualNodes(const std::vector<std::unique_ptr<INode>*>& lhs,
   return count;
 }
 
-double TryExctractSum(const CanonicMultDiv& canonic,
+double TryExctractSum(const CanonicMult& canonic,
                       std::vector<std::unique_ptr<INode>*> free_operands,
                       double* remains) {
   if (canonic.nodes.size() != 1)
@@ -617,14 +617,14 @@ bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    CanonicMultDiv conanic_1 = GetCanonic(&operands_[i]);
+    CanonicMult conanic_1 = INodeHelper::GetCanonic(&operands_[i]);
     if (conanic_1.nodes.empty())
       continue;
     bool is_operand_optimized = false;
     for (size_t j = i + 1; j < operands_.size(); ++j) {
       if (!operands_[j])
         continue;
-      CanonicMultDiv conanic_2 = GetCanonic(&operands_[j]);
+      CanonicMult conanic_2 = INodeHelper::GetCanonic(&operands_[j]);
       if (conanic_2.nodes.empty())
         continue;
       if (!IsNodesTransitiveEqual(conanic_1.nodes, conanic_2.nodes))
@@ -845,61 +845,8 @@ void Operation::ConvertToPlus(std::vector<std::unique_ptr<INode>>* add_nodes,
   }
 }
 
-CanonicMultDiv Operation::GetCanonic(std::unique_ptr<INode>* node) {
-  CanonicMultDiv result{};
-  if (!node || !node->get())
-    return result;
-
-  Operation* oper = node->get()->AsOperation();
-  if (!oper ||
-      (oper->op_info_->op != Op::Mult && oper->op_info_->op != Op::Div &&
-       oper->op_info_->op != Op::UnMinus)) {
-    result.nodes.push_back(node);
-    return result;
-  }
-
-  if (oper->op_info_->op == Op::Mult) {
-    return oper->GetCanonicMult();
-  }
-  if (oper->op_info_->op == Op::Div) {
-    return oper->GetCanonicDiv();
-  }
-  if (oper->op_info_->op == Op::UnMinus) {
-    return oper->GetCanonicUnMinus();
-  }
-  assert(false);
-  return result;
-}
-
-CanonicMultDiv Operation::GetCanonicMult() {
-  assert(op_info_->op == Op::Mult);
-  CanonicMultDiv result;
-  for (auto& op : operands_) {
-    Constant* constant = op->AsConstant();
-    if (constant)
-      result.a = op_info_->trivial_f(result.a, constant->Value());
-    else
-      result.nodes.push_back(&op);
-  }
-  return result;
-}
-
-CanonicMultDiv Operation::GetCanonicDiv() {
-  assert(op_info_->op == Op::Div);
-  CanonicMultDiv result;
-  Constant* rh = operands_[1]->AsConstant();
-  if (rh) {
-    result.b = rh->Value();
-    result.nodes.push_back(&operands_[0]);
-  }
-  return result;
-}
-
-CanonicMultDiv Operation::GetCanonicUnMinus() {
-  assert(op_info_->op == Op::UnMinus);
-  CanonicMultDiv result = GetCanonic(&operands_[0]);
-  result.a *= -1;
-  return result;
+std::optional<CanonicMult> Operation::GetCanonic() {
+  return std::nullopt;
 }
 
 bool Operation::ReduceFor(double val) {

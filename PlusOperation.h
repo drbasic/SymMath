@@ -14,7 +14,7 @@ class PlusOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
+  bool HasFrontMinus() const override;
   PlusOperation* AsPlusOperation() override { return this; }
   const PlusOperation* AsPlusOperation() const override { return this; }
-  bool HasFrontMinus() const override;
 };

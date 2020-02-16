@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 
+struct CanonicMult;
 class INode;
 class Operation;
 class Constant;
@@ -32,6 +33,9 @@ class INodeHelper {
 
   static DivOperation* AsDiv(INode* lh);
   static const DivOperation* AsDiv(const INode* lh);
+
+  static CanonicMult GetCanonic(std::unique_ptr<INode>* node);
+  static void MergeCanonic(std::unique_ptr<INode>* node, CanonicMult* output);
 
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
 

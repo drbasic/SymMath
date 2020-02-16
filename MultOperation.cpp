@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 
+#include "Constant.h"
+#include "INodeHelper.h"
 #include "OpInfo.h"
 
 MultOperation::MultOperation(std::unique_ptr<INode> lh,
@@ -30,4 +32,16 @@ PrintSize MultOperation::Render(Canvas* canvas,
 
 bool MultOperation::HasFrontMinus() const {
   return false;
+}
+
+std::optional<CanonicMult> MultOperation::GetCanonic() {
+  CanonicMult result;
+  for (auto& op : operands_) {
+    Constant* constant = op->AsConstant();
+    if (constant)
+      result.a = op_info_->trivial_f(result.a, constant->Value());
+    else
+      INodeHelper::MergeCanonic(&op, &result);
+  }
+  return result;
 }

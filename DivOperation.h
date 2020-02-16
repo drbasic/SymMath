@@ -13,7 +13,8 @@ class DivOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
+  bool HasFrontMinus() const override;
+  std::optional<CanonicMult> GetCanonic() override;
   DivOperation* AsDivOperation() override { return this; }
   const DivOperation* AsDivOperation() const override { return this; }
-  bool HasFrontMinus() const override;
 };

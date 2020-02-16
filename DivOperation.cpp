@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cassert>
 
+#include "Constant.h"
 #include "OpInfo.h"
+#include "INodeHelper.h"
 
 DivOperation::DivOperation(std::unique_ptr<INode> top,
                            std::unique_ptr<INode> bottom)
@@ -12,12 +14,6 @@ DivOperation::DivOperation(std::unique_ptr<INode> top,
 std::unique_ptr<INode> DivOperation::Clone() const {
   return std::make_unique<DivOperation>(operands_[0]->Clone(),
                                         operands_[1]->Clone());
-}
-
-bool DivOperation::HasFrontMinus() const {
-  bool lh_minus = operands_[0]->HasFrontMinus();
-  bool rh_minus = operands_[1]->HasFrontMinus();
-  return lh_minus ^ rh_minus;
 }
 
 PrintSize DivOperation::Render(Canvas* canvas,
@@ -76,4 +72,20 @@ PrintSize DivOperation::Render(Canvas* canvas,
 
   lh_size = lh_size.GrowDown(div_size, true).GrowDown(rh_size, false);
   return print_size_ = prefix_size.GrowWidth(lh_size, true);
+}
+
+std::optional<CanonicMult> DivOperation::GetCanonic() {
+  if (Constant* rh = operands_[1]->AsConstant()) {
+    CanonicMult result;
+    result.b = rh->Value();
+    INodeHelper::MergeCanonic(&operands_[0], &result);
+    return result;
+  }
+  return std::nullopt;
+}
+
+bool DivOperation::HasFrontMinus() const {
+  bool lh_minus = operands_[0]->HasFrontMinus();
+  bool rh_minus = operands_[1]->HasFrontMinus();
+  return lh_minus ^ rh_minus;
 }

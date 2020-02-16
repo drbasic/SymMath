@@ -74,6 +74,30 @@ const DivOperation* INodeHelper::AsDiv(const INode* lh) {
 }
 
 // static
+CanonicMult INodeHelper::GetCanonic(std::unique_ptr<INode>* node) {
+  if (auto* operation = AsOperation(node->get())) {
+    auto inner_canonic = operation->GetCanonic();
+    if (inner_canonic)
+      return *inner_canonic;
+  }
+  CanonicMult result;
+  result.nodes.push_back(node);
+  return result;
+}
+
+// static
+void INodeHelper::MergeCanonic(std::unique_ptr<INode>* node,
+                               CanonicMult* output) {
+  auto node_canonic = GetCanonic(node);
+  output->a *= node_canonic.a;
+  output->b *= node_canonic.b;
+  output->nodes.reserve(output->nodes.size() + node_canonic.nodes.size());
+  for (auto* n : node_canonic.nodes) {
+    output->nodes.push_back(n);
+  }
+}
+
+// static
 DivOperation* INodeHelper::AsDiv(INode* lh) {
   auto result = lh->AsOperation();
   return (result) ? result->AsDivOperation() : nullptr;

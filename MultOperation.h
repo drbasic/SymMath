@@ -14,7 +14,8 @@ class MultOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
+  bool HasFrontMinus() const override;
+  std::optional<CanonicMult> GetCanonic() override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
-  bool HasFrontMinus() const override;
 };

@@ -2,9 +2,9 @@
 
 #include <cassert>
 
-#include "OpInfo.h"
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "OpInfo.h"
 
 UnMinusOperation::UnMinusOperation(std::unique_ptr<INode> value)
     : Operation(GetOpInfo(Op::UnMinus), std::move(value)) {}
@@ -58,4 +58,11 @@ PrintSize UnMinusOperation::Render(Canvas* canvas,
 
 bool UnMinusOperation::HasFrontMinus() const {
   return !operands_[0]->HasFrontMinus();
+}
+
+std::optional<CanonicMult> UnMinusOperation::GetCanonic() {
+  CanonicMult result;
+  result.a *= -1;
+  result.nodes.push_back(&operands_[0]);
+  return result;
 }

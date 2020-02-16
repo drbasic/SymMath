@@ -162,7 +162,7 @@
     <ClCompile Include="OpInfo.cpp" />
     <ClCompile Include="PlusOperation.cpp" />
     <ClCompile Include="RenderBehaviour.cpp" />
-    <ClCompile Include="TrigonometricOperator.cpp" />
+    <ClCompile Include="TrigonometricOperation.cpp" />
     <ClCompile Include="UnMinusOperation.cpp" />
     <ClCompile Include="ValueHelpers.cpp" />
     <ClCompile Include="Numbers.cpp" />
@@ -184,7 +184,7 @@
     <ClInclude Include="OpInfo.h" />
     <ClInclude Include="PlusOperation.h" />
     <ClInclude Include="RenderBehaviour.h" />
-    <ClInclude Include="TrigonometricOperator.h" />
+    <ClInclude Include="TrigonometricOperation.h" />
     <ClInclude Include="UnMinusOperation.h" />
     <ClInclude Include="ValueHelpers.h" />
     <ClInclude Include="Operation.h" />
