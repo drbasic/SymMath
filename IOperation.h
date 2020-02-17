@@ -19,6 +19,9 @@ class IOperation : public INodeImpl {
  public:
   virtual std::optional<CanonicMult> GetCanonic() = 0;
 
+  virtual void ProcessImaginary(
+      std::vector<std::unique_ptr<INode>>* nodes) const {};
+
   virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
   virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
   virtual PlusOperation* AsPlusOperation() { return nullptr; }
@@ -28,6 +31,6 @@ class IOperation : public INodeImpl {
   virtual DivOperation* AsDivOperation() { return nullptr; }
   virtual const DivOperation* AsDivOperation() const { return nullptr; }
 
-  virtual void SimplifyChain() = 0;
+  virtual void SimplifyChain(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyDivDiv() = 0;
 };

@@ -6,6 +6,7 @@
 
 class Constant;
 class ErrorNode;
+class Imaginary;
 class Variable;
 class Operation;
 
@@ -28,6 +29,8 @@ class INodeImpl : public INode {
 
   virtual Constant* AsConstant() { return nullptr; }
   virtual const Constant* AsConstant() const { return nullptr; }
+  virtual Imaginary* AsImaginary() { return nullptr; }
+  virtual const Imaginary* AsImaginary() const { return nullptr; }
   virtual const ErrorNode* AsError() const { return nullptr; }
   virtual Variable* AsVariable() { return nullptr; }
   virtual const Variable* AsVariable() const { return nullptr; }

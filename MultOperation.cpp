@@ -5,6 +5,7 @@
 
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "Imaginary.h"
 #include "OpInfo.h"
 #include "UnMinusOperation.h"
 
@@ -47,10 +48,30 @@ std::optional<CanonicMult> MultOperation::GetCanonic() {
   return result;
 }
 
-void MultOperation::SimplifyChain() {
+void MultOperation::ProcessImaginary(
+    std::vector<std::unique_ptr<INode>>* nodes) const {
+  bool has_imaginary = false;
+  for (auto& node : *nodes) {
+    if (!node->AsNodeImpl()->AsImaginary())
+      continue;
+    if (has_imaginary) {
+      node = INodeHelper::MakeConst(-1);
+      has_imaginary = false;
+    } else {
+      node.reset();
+      has_imaginary = true;
+    }
+  }
+  INodeHelper::RemoveEmptyOperands(nodes);
+  if (has_imaginary)
+    nodes->push_back(INodeHelper::MakeImaginary());
+}
+
+void MultOperation::SimplifyChain(std::unique_ptr<INode>* new_node) {
   UnfoldChain();
   bool is_positve = true;
   size_t i = 0;
+  ProcessImaginary(&operands_);
   for (auto& node : operands_) {
     if (i++ == 0)
       continue;
@@ -62,7 +83,7 @@ void MultOperation::SimplifyChain() {
   if (!is_positve) {
     operands_[0] = INodeHelper::Negate(std::move(operands_[0]));
   }
-  Operation::SimplifyChain();
+  Operation::SimplifyChain(new_node);
 }
 
 void MultOperation::UnfoldChain() {

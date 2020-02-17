@@ -1,10 +1,12 @@
 #include "INodeHelper.h"
 
 #include <cassert>
+#include <algorithm>
 
 #include "Constant.h"
 #include "DivOperation.h"
 #include "INode.h"
+#include "Imaginary.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
@@ -193,9 +195,21 @@ std::unique_ptr<MultOperation> INodeHelper::ConvertToMul(
   return std::make_unique<MultOperation>(std::move(rh), Const(1.0));
 }
 
+void INodeHelper::RemoveEmptyOperands(
+    std::vector<std::unique_ptr<INode>>* nodes) {
+  nodes->erase(
+      std::remove_if(std::begin(*nodes), std::end(*nodes),
+                     [](const std::unique_ptr<INode>& node) { return !node; }),
+      std::end(*nodes));
+}
+
 // static
 std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
+}
+
+std::unique_ptr<Imaginary> INodeHelper::MakeImaginary() {
+  return std::make_unique<Imaginary>();
 }
 
 // static

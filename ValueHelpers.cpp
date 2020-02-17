@@ -5,6 +5,7 @@
 #include "DivOperation.h"
 #include "INode.h"
 #include "INodeHelper.h"
+#include "Imaginary.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
@@ -21,7 +22,18 @@ Variable Var(std::string name, double val) {
 }
 
 std::unique_ptr<INode> Const(double val) {
-  return std::make_unique<Constant>(val);
+  return INodeHelper::MakeConst(val);
+}
+
+std::unique_ptr<INode> iConst(double val) {
+  if (val == 1.0)
+    return INodeHelper::MakeImaginary();
+  return INodeHelper::MakeMult(INodeHelper::MakeConst(val),
+                               INodeHelper::MakeImaginary());
+}
+
+std::unique_ptr<INode> Imag() {
+  return INodeHelper::MakeImaginary();
 }
 
 //=============================================================================

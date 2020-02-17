@@ -283,6 +283,7 @@ std::unique_ptr<INode> Operation::SymCalc() const {
 
   std::vector<std::unique_ptr<INode>> calculated_operands =
       CalcOperands(operands_);
+  ProcessImaginary(&calculated_operands);
   if (!IsAllOperandsConst(calculated_operands) || !op_info_->trivial_f) {
     auto result = Clone();
     INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
@@ -351,7 +352,7 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   CheckIntegrity();
 
   SimplifyDivDiv();
-  SimplifyChain();
+  SimplifyChain(new_node);
 
   CheckIntegrity();
   bool simplified = false;
@@ -691,12 +692,17 @@ bool Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   return is_optimized;
 }
 
-void Operation::SimplifyChain() {
+void Operation::SimplifyChain(std::unique_ptr<INode>* new_node) {
   for (auto& node : operands_) {
     if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      operation->SimplifyChain();
+      std::unique_ptr<INode> new_sub_node;
+      operation->SimplifyChain(&new_sub_node);
+      if (new_sub_node)
+        node = std::move(new_sub_node);
     }
   }
+  if (operands_.size() == 1 && op_info_->operands_count == -1)
+    *new_node = std::move(operands_[0]);
 }
 
 void Operation::SimplifyDivDiv() {
@@ -754,8 +760,12 @@ PrintSize Operation::RenderOperandChain(
   PrintSize total_print_size = {};
   PrintBox operand_box{print_box};
   for (size_t i = 0; i < operands_.size(); ++i) {
+    bool with_op = i != 0;
+    if (i == operands_.size() - 1 && operands_[i]->AsNodeImpl()->AsImaginary()) {
+      with_op = false;
+    }
     auto operand_size = RenderOperand(Operand(i), canvas, operand_box, dry_run,
-                                      render_behaviour, i != 0);
+                                      render_behaviour, with_op);
     operand_box = operand_box.ShrinkLeft(operand_size.width);
     total_print_size = total_print_size.GrowWidth(operand_size, true);
   }

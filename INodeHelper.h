@@ -5,16 +5,17 @@
 #include "OpInfo.h"
 
 struct CanonicMult;
+class Canvas;
+class Constant;
+class DivOperation;
+class Imaginary;
 class INode;
 class INodeImpl;
 class Operation;
-class Constant;
-class Canvas;
 class MultOperation;
 class PlusOperation;
-class DivOperation;
-class UnMinusOperation;
 class TrigonometricOperation;
+class UnMinusOperation;
 class Variable;
 
 class INodeHelper {
@@ -55,8 +56,10 @@ class INodeHelper {
   static std::unique_ptr<INode> MakeMultIfNeeded(
       std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
+  static void RemoveEmptyOperands(std::vector<std::unique_ptr<INode>>* nodes);
 
   static std::unique_ptr<Constant> MakeConst(double value);
+  static std::unique_ptr<Imaginary> MakeImaginary();
   static std::unique_ptr<UnMinusOperation> MakeUnMinus(
       std::unique_ptr<INode> value);
   static std::unique_ptr<PlusOperation> MakeMinus(std::unique_ptr<INode> lh,

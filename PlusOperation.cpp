@@ -34,9 +34,9 @@ bool PlusOperation::HasFrontMinus() const {
   return false;
 }
 
-void PlusOperation::SimplifyChain() {
+void PlusOperation::SimplifyChain(std::unique_ptr<INode>* new_node) {
   UnfoldChain();
-  Operation::SimplifyChain();
+  Operation::SimplifyChain(new_node);
 }
 
 void PlusOperation::UnfoldChain() {

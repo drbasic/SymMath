@@ -155,6 +155,7 @@
     <ClCompile Include="DivOperation.cpp" />
     <ClCompile Include="ErrorNode.cpp" />
     <ClCompile Include="Exception.cpp" />
+    <ClCompile Include="Imaginary.cpp" />
     <ClCompile Include="INode.cpp" />
     <ClCompile Include="INodeHelper.cpp" />
     <ClCompile Include="INodeImpl.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="DivOperation.h" />
     <ClInclude Include="ErrorNode.h" />
     <ClInclude Include="Exception.h" />
+    <ClInclude Include="Imaginary.h" />
     <ClInclude Include="INode.h" />
     <ClInclude Include="INodeHelper.h" />
     <ClInclude Include="INodeImpl.h" />

@@ -33,7 +33,7 @@ class Operation : public IOperation {
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override { return std::nullopt; };
-  void SimplifyChain() override;
+  void SimplifyChain(std::unique_ptr<INode>* new_node) override;
   void SimplifyDivDiv() override;
 
  protected:
