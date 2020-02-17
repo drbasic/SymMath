@@ -24,9 +24,9 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = (a / b) / c / d / e;
+  VariablePtr t = (a / b) / c / d / e;
   y = t;
-  Variable calc = y.SymCalc();
+  VariablePtr calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
   y.Simplify();
   calc = y.SymCalc();

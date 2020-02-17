@@ -1,11 +1,13 @@
 #pragma once
 
+#include <memory>
+
 #include "INode.h"
 #include "INodeImpl.h"
 
 class VariableRef : public INodeImpl {
  public:
-  explicit VariableRef(const Variable* var);
+  explicit VariableRef(std::weak_ptr<Variable> var);
 
   // INode interface
   bool IsEqual(const INode* rh) const override;
@@ -33,5 +35,5 @@ class VariableRef : public INodeImpl {
 
  private:
   mutable PrintSize print_size_;
-  const Variable* var_ = nullptr;
+  std::weak_ptr<Variable> var_;
 };

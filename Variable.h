@@ -5,18 +5,13 @@
 
 class Variable : public INodeImpl {
  public:
-  Variable(std::string name);
-  Variable(std::unique_ptr<INode> value);
-  Variable(const Variable& var);
-
-  std::wstring Print() const;
   bool Simplify();
   std::string GetName() const;
 
   void operator=(std::unique_ptr<INode> value);
   void operator=(const Variable& var);
-  void operator=(double val);
-  operator std::unique_ptr<INode>() const;
+  // void operator=(double val);
+  // operator std::unique_ptr<INode>() const;
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
@@ -43,7 +38,13 @@ class Variable : public INodeImpl {
 
  private:
   friend class VariableRef;
+  friend class VariablePtr;
   friend class Tests;
+
+  Variable(std::string name);
+  Variable(std::unique_ptr<INode> value);
+  Variable(std::string name, std::unique_ptr<INode> value);
+  // Variable(const Variable& var);
 
   INodeImpl* Value();
   const INodeImpl* Value() const;
@@ -53,4 +54,24 @@ class Variable : public INodeImpl {
   mutable PrintSize print_size_;
   std::string name_;
   std::unique_ptr<INode> value_;
+  std::weak_ptr<Variable> weak_;
+};
+
+class VariablePtr {
+ public:
+  VariablePtr(std::shared_ptr<Variable> data);
+  VariablePtr(const VariablePtr& rh);
+  VariablePtr(std::unique_ptr<INode> value);
+  VariablePtr operator=(const VariablePtr& rh);
+  void operator=(std::unique_ptr<INode>&& value);
+  void operator=(double val);
+  operator std::unique_ptr<INode>() const;
+  // INode* operator->();
+
+  std::unique_ptr<INode> SymCalc() const;
+  std::wstring Print() const;
+  bool Simplify();
+
+ private:
+  std::shared_ptr<Variable> data_;
 };

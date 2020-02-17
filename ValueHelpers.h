@@ -6,8 +6,9 @@
 #include "Variable.h"
 
 class INode;
-Variable Var(std::string name);
-Variable Var(std::string name, double val);
+VariablePtr Var();
+VariablePtr Var(std::string name);
+VariablePtr Var(std::string name, double val);
 std::unique_ptr<INode> Const(double val);
 
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh);
@@ -38,4 +39,4 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value);
 std::unique_ptr<INode> Cos(std::unique_ptr<INode> value);
 
-std::ostream& operator<<(std::ostream& out, const Variable& v);
+std::ostream& operator<<(std::ostream& out, const VariablePtr& v);

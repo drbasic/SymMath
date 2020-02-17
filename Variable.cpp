@@ -18,22 +18,11 @@ Variable::Variable(std::string name) : name_(std::move(name)) {}
 
 Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 
-Variable::Variable(const Variable& var)
-    : value_(std::make_unique<VariableRef>(&var)) {}
+Variable::Variable(std::string name, std::unique_ptr<INode> value)
+    : name_(std::move(name)), value_(std::move(value)) {}
 
-std::wstring Variable::Print() const {
-  Canvas canvas;
-  canvas.SetDryRun(true);
-  PrintBox initial_print_box(0, 0, 1000, 1000, 0);
-  RenderBehaviour render_behaviour;
-  auto size = Render(&canvas, initial_print_box, true, render_behaviour);
-  canvas.Resize(size);
-  canvas.SetDryRun(false);
-  PrintBox print_box(0, 0, size);
-  auto size2 = Render(&canvas, print_box, false, render_behaviour);
-  assert(size == size2);
-  return canvas.ToString();
-}
+//Variable::Variable(const Variable& var)
+ //   : value_(std::make_unique<VariableRef>(&var)) {}
 
 int Variable::Priority() const {
   if (name_.empty() && value_)
@@ -92,8 +81,7 @@ void Variable::operator=(std::unique_ptr<INode> value) {
     value_ = std::move(value);
   }
 }
-
-void Variable::operator=(const Variable& var) {
+/*void Variable::operator=(const Variable& var) {
   if (this == &var)
     return;
   if (var.CheckCircular(this)) {
@@ -103,14 +91,13 @@ void Variable::operator=(const Variable& var) {
     value_ = std::make_unique<VariableRef>(&var);
   }
 }
-
-void Variable::operator=(double val) {
-  value_ = Const(val);
-}
+*/
 
 std::unique_ptr<INode> Variable::SymCalc() const {
-  if (!value_)
-    return std::make_unique<VariableRef>(this);
+  if (!value_) {
+    return std::make_unique<VariableRef>(weak_);
+  }
+
   return value_->SymCalc();
 }
 
@@ -207,11 +194,58 @@ const INodeImpl* Variable::GetVisibleNode() const {
   }
   return inner;
 }
-
+/*
 Variable::operator std::unique_ptr<INode>() const {
   if (!name_.empty())
     return std::make_unique<VariableRef>(this);
   if (!value_)
     return std::make_unique<ErrorNode>("bind to empty unnamed var");
   return value_->Clone();
+}
+*/
+VariablePtr::VariablePtr(std::shared_ptr<Variable> data)
+  : data_(std::move(data))
+{
+}
+
+VariablePtr::VariablePtr(const VariablePtr& rh)
+{
+  data_ = rh.data_;
+}
+
+VariablePtr VariablePtr::operator=(const VariablePtr& rh)
+{
+  if (this == &rh)
+    return *this;
+  data_ = rh.data_;
+  return *this;
+}
+
+void VariablePtr::operator=(std::unique_ptr<INode>&& value)
+{
+  data_->value_ = std::move(value);
+}
+
+void VariablePtr::operator=(double val)
+{
+  data_->value_ = Const(val);
+}
+
+VariablePtr::operator std::unique_ptr<INode>() const
+{
+  return data_->value_->Clone();
+}
+
+std::wstring VariablePtr::Print() const {
+  Canvas canvas;
+  canvas.SetDryRun(true);
+  PrintBox initial_print_box(0, 0, 1000, 1000, 0);
+  RenderBehaviour render_behaviour;
+  auto size = data_->Render(&canvas, initial_print_box, true, render_behaviour);
+  canvas.Resize(size);
+  canvas.SetDryRun(false);
+  PrintBox print_box(0, 0, size);
+  auto size2 = data_->Render(&canvas, print_box, false, render_behaviour);
+  assert(size == size2);
+  return canvas.ToString();
 }

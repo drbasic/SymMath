@@ -12,14 +12,16 @@
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 
-Variable Var(std::string name) {
-  return Variable(std::move(name));
+VariablePtr Var() {
+  return INodeHelper::MakeVariable();
 }
 
-Variable Var(std::string name, double val) {
-  auto result = Variable(std::move(name));
-  result = Const(val);
-  return result;
+VariablePtr Var(std::string name) {
+  return INodeHelper::MakeVariable(std::move(name));
+}
+
+VariablePtr Var(std::string name, double val) {
+  return INodeHelper::MakeVariable(std::move(name), Const(val));
 }
 
 std::unique_ptr<INode> Const(double val) {
@@ -101,7 +103,7 @@ std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
 }
 
 //=============================================================================
-std::wostream& operator<<(std::wostream& out, const Variable& v) {
+std::wostream& operator<<(std::wostream& out, const VariablePtr& v) {
   out << v.Print();
   return out;
 }

@@ -16,6 +16,7 @@ class DivOperation;
 class UnMinusOperation;
 class TrigonometricOperation;
 class Variable;
+class VariablePtr;
 
 class INodeHelper {
  public:
@@ -55,6 +56,11 @@ class INodeHelper {
   static std::unique_ptr<INode> MakeMultIfNeeded(
       std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
+
+  //===========================================================================
+  static VariablePtr MakeVariable();
+  static VariablePtr MakeVariable(std::string name);
+  static VariablePtr MakeVariable(std::string name, std::unique_ptr<INode> val);
 
   static std::unique_ptr<Constant> MakeConst(double value);
   static std::unique_ptr<UnMinusOperation> MakeUnMinus(
