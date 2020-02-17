@@ -7,7 +7,7 @@ class Variable : public INodeImpl {
  public:
   Variable(std::string name);
   Variable(std::unique_ptr<INode> value);
-  Variable(const Variable& var);
+  Variable(std::string name, std::unique_ptr<INode> value);
 
   std::wstring Print() const;
   bool Simplify();

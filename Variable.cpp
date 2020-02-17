@@ -18,8 +18,8 @@ Variable::Variable(std::string name) : name_(std::move(name)) {}
 
 Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 
-Variable::Variable(const Variable& var)
-    : value_(std::make_unique<VariableRef>(&var)) {}
+Variable::Variable(std::string name, std::unique_ptr<INode> value)
+    : name_(std::move(name)), value_(std::move(value)) {}
 
 std::wstring Variable::Print() const {
   Canvas canvas;
