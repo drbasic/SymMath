@@ -32,8 +32,10 @@ class IOperation : public INodeImpl {
   virtual const DivOperation* AsDivOperation() const { return nullptr; }
 
   virtual void UnfoldChains() = 0;
+  virtual void SimplifyUnMinus(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyChains(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyDivDiv() = 0;
+  virtual void SimplifyDivMul(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyConsts(std::unique_ptr<INode>* new_node) = 0;
   virtual void OpenBrackets(std::unique_ptr<INode>* new_node) = 0;
 };

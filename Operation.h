@@ -34,8 +34,10 @@ class Operation : public IOperation {
   // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override { return std::nullopt; };
   void UnfoldChains() override;
+  void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
   void SimplifyChains(std::unique_ptr<INode>* new_node) override;
   void SimplifyDivDiv() override;
+  void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void OpenBrackets(std::unique_ptr<INode>* new_node) override;
 
@@ -56,12 +58,11 @@ class Operation : public IOperation {
 
   friend class INodeHelper;
   friend class MultOperation;
+  friend class UnMinusOperation;
   friend class Tests;
 
   void CheckIntegrity() const;
-  bool SimplifyUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node);
-  bool SimplifyDivMul();
   bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool IsAllOperandsConst(
       const std::vector<std::unique_ptr<INode>>& operands) const;

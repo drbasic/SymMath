@@ -68,3 +68,12 @@ std::optional<CanonicMult> UnMinusOperation::GetCanonic() {
   result.nodes.push_back(&operands_[0]);
   return result;
 }
+
+void UnMinusOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyUnMinus(nullptr);
+  Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get());
+  if (!sub_un_minus)
+    return;
+
+  *new_node = std::move(sub_un_minus->operands_[0]);
+}

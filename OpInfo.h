@@ -18,7 +18,7 @@ enum class Op : int {
 struct OpInfo {
   Op op;
   int priority;
-  std::string_view name;
+  std::wstring_view name;
   using CalcF = std::unique_ptr<INode> (*)(
       const OpInfo* op,
       const std::vector<std::unique_ptr<INode>>& operands);

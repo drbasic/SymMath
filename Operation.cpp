@@ -20,6 +20,29 @@
 
 namespace {
 
+using SymplificatorFWithNewNode = void (*)(Operation* operation,
+                                           std::unique_ptr<INode>* new_node);
+void ApplySimplification(SymplificatorFWithNewNode simplificator,
+                         std::vector<std::unique_ptr<INode>>* operands) {
+  for (auto& node : *operands) {
+    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
+      std::unique_ptr<INode> new_sub_node;
+      simplificator(operation, &new_sub_node);
+      if (new_sub_node)
+        node = std::move(new_sub_node);
+    }
+  }
+}
+using SymplificatorF = void (*)(Operation* operation);
+void ApplySimplification(SymplificatorF simplificator,
+                         std::vector<std::unique_ptr<INode>>* operands) {
+  for (auto& node : *operands) {
+    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
+      simplificator(operation);
+    }
+  }
+}
+
 std::vector<std::unique_ptr<INode>> CalcOperands(
     const std::vector<std::unique_ptr<INode>>& operands) {
   std::vector<std::unique_ptr<INode>> result;
@@ -362,63 +385,48 @@ std::vector<std::unique_ptr<INode>> Operation::TakeOperands(Op op) {
 void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   CheckIntegrity();
 
+  using SimplificatorFunc =
+      void (*)(Operation * current, std::unique_ptr<INode> * new_node);
+  SimplificatorFunc simplificators[] = {
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyUnMinus(new_node);
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivDiv();
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->UnfoldChains();
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyChains(new_node);
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivMul(new_node);
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyConsts(new_node);
+      },
+  };
+
   Operation* current = this;
-
-  current->SimplifyDivDiv();
-
-  current->UnfoldChains();
-
-  current->SimplifyChains(new_node);
-  if (*new_node)
-    current = INodeHelper::AsOperation(new_node->get());
-  if (!current)
-    return;
-
-  current->SimplifyConsts(new_node);
-
-  if (*new_node)
-    current = INodeHelper::AsOperation(new_node->get());
-  if (!current)
-    return;
-
-  /*
-
-  if (SimplifyUnMinus(new_node)) {
-    if (new_node->get())
-      return true;
-    assert(false);
-  }
-  for (auto& node : operands_) {
-    std::unique_ptr<INode> new_sub_node;
-    while (node->AsNodeImpl()->SimplifyImpl(&new_sub_node)) {
-      simplified = true;
-      if (new_sub_node)
-        node = std::move(new_sub_node);
-      CheckIntegrity();
+  for (auto simplificator : simplificators) {
+    std::unique_ptr<INode> temp_node;
+    simplificator(current, &temp_node);
+    if (temp_node) {
+      *new_node = std::move(temp_node);
+      current = INodeHelper::AsOperation(new_node->get());
+      current->CheckIntegrity();
     }
   }
+
+  /*
   if (SimplifyDivExtractUnMinus(new_node)) {
     if (new_node->get())
       return true;
     simplified = true;
   }
 
-  SimplifyDivDiv();
-
-  while (SimplifyDivMul()) {
-    simplified = true;
-  }
-
-  SimplifyChains();
-
   while (SimplifySame(new_node)) {
-    if (new_node->get())
-      return true;
-    CheckIntegrity();
-    simplified = true;
-  }
-
-  if (SimplifyConsts(new_node)) {
     if (new_node->get())
       return true;
     CheckIntegrity();
@@ -446,17 +454,6 @@ void Operation::CheckIntegrity() const {
   for (const auto& operand : operands_) {
     assert(operand);
   }
-}
-
-bool Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
-  if (!INodeHelper::AsUnMinus(this))
-    return false;
-  Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get());
-  if (!sub_un_minus)
-    return false;
-
-  *new_node = std::move(sub_un_minus->operands_[0]);
-  return true;
 }
 
 bool Operation::SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node) {
@@ -494,57 +491,6 @@ bool Operation::SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node) {
         INodeHelper::MakeDiv(std::move(operands_[0]), std::move(operands_[1])));
   }
   return is_simlified;
-}
-
-bool Operation::SimplifyDivMul() {
-  if (!INodeHelper::AsDiv(this))
-    return false;
-  if (!INodeHelper::AsMult(operands_[0].get()) &&
-      !INodeHelper::AsMult(operands_[1].get()))
-    return false;
-
-  auto is_contains_div = [](const INode* node) {
-    if (auto* mult = INodeHelper::AsMult(node)) {
-      for (const auto& node : mult->operands_) {
-        if (INodeHelper::AsDiv(node.get()))
-          return true;
-      }
-    }
-    return false;
-  };
-  bool can_optimize = is_contains_div(operands_[0].get()) ||
-                      is_contains_div(operands_[1].get());
-  if (!can_optimize)
-    return false;
-
-  std::unique_ptr<Operation> new_top =
-      INodeHelper::ConvertToMul(std::move(operands_[0]));
-  std::unique_ptr<Operation> new_bottom =
-      INodeHelper::ConvertToMul(std::move(operands_[1]));
-
-  for (auto& node : new_top->operands_) {
-    if (auto* div = INodeHelper::AsDiv(node.get())) {
-      new_bottom->operands_.push_back(std::move(div->operands_[1]));
-      node = std::move(div->operands_[0]);
-    }
-  }
-  for (auto& node : new_bottom->operands_) {
-    if (auto* div = INodeHelper::AsDiv(node.get())) {
-      new_top->operands_.push_back(std::move(div->operands_[1]));
-      node = std::move(div->operands_[0]);
-    }
-  }
-
-  operands_[0] = std::move(new_top);
-  operands_[1] = std::move(new_bottom);
-
-  for (auto& operand : operands_) {
-    std::unique_ptr<INode> new_node;
-    operand->AsNodeImpl()->SimplifyImpl(&new_node);
-    if (new_node)
-      operand = std::move(new_node);
-  }
-  return false;
 }
 
 bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
@@ -613,43 +559,99 @@ bool Operation::IsAllOperandsConst(
 }
 
 void Operation::UnfoldChains() {
-  for (auto& node : operands_) {
-    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      operation->UnfoldChains();
-    }
-  }
+  ApplySimplification([](Operation* operation) { operation->UnfoldChains(); },
+                      &operands_);
+}
+
+void Operation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
+  ApplySimplification(
+      [](Operation* operation, std::unique_ptr<INode>* new_node) {
+        operation->SimplifyUnMinus(new_node);
+      },
+      &operands_);
 }
 
 void Operation::SimplifyChains(std::unique_ptr<INode>* new_node) {
-  for (auto& node : operands_) {
-    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      std::unique_ptr<INode> new_sub_node;
-      operation->SimplifyChains(&new_sub_node);
-      if (new_sub_node)
-        node = std::move(new_sub_node);
-    }
-  }
+  ApplySimplification(
+      [](Operation* operation, std::unique_ptr<INode>* new_node) {
+        operation->SimplifyChains(new_node);
+      },
+      &operands_);
   if (operands_.size() == 1 && op_info_->operands_count == -1)
     *new_node = std::move(operands_[0]);
 }
 
 void Operation::SimplifyDivDiv() {
-  for (auto& node : operands_) {
-    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      operation->SimplifyDivDiv();
+  ApplySimplification([](Operation* operation) { operation->SimplifyDivDiv(); },
+                      &operands_);
+}
+
+void Operation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
+  ApplySimplification(
+      [](Operation* operation, std::unique_ptr<INode>* new_node) {
+        operation->SimplifyDivMul(new_node);
+      },
+      &operands_);
+}
+
+/*
+if (!INodeHelper::AsDiv(this))
+  return false;
+if (!INodeHelper::AsMult(operands_[0].get()) &&
+    !INodeHelper::AsMult(operands_[1].get()))
+  return false;
+
+auto is_contains_div = [](const INode* node) {
+  if (auto* mult = INodeHelper::AsMult(node)) {
+    for (const auto& node : mult->operands_) {
+      if (INodeHelper::AsDiv(node.get()))
+        return true;
     }
+  }
+  return false;
+};
+bool can_optimize = is_contains_div(operands_[0].get()) ||
+                    is_contains_div(operands_[1].get());
+if (!can_optimize)
+  return false;
+
+std::unique_ptr<Operation> new_top =
+    INodeHelper::ConvertToMul(std::move(operands_[0]));
+std::unique_ptr<Operation> new_bottom =
+    INodeHelper::ConvertToMul(std::move(operands_[1]));
+
+for (auto& node : new_top->operands_) {
+  if (auto* div = INodeHelper::AsDiv(node.get())) {
+    new_bottom->operands_.push_back(std::move(div->operands_[1]));
+    node = std::move(div->operands_[0]);
+  }
+}
+for (auto& node : new_bottom->operands_) {
+  if (auto* div = INodeHelper::AsDiv(node.get())) {
+    new_top->operands_.push_back(std::move(div->operands_[1]));
+    node = std::move(div->operands_[0]);
   }
 }
 
+operands_[0] = std::move(new_top);
+operands_[1] = std::move(new_bottom);
+
+for (auto& operand : operands_) {
+  std::unique_ptr<INode> new_node;
+  operand->AsNodeImpl()->SimplifyImpl(&new_node);
+  if (new_node)
+    operand = std::move(new_node);
+}
+return false;
+}
+*/
+
 void Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
-  for (auto& node : operands_) {
-    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      std::unique_ptr<INode> new_sub_node;
-      operation->SimplifyConsts(&new_sub_node);
-      if (new_sub_node)
-        node = std::move(new_sub_node);
-    }
-  }
+  ApplySimplification(
+      [](Operation* operation, std::unique_ptr<INode>* new_node) {
+        operation->SimplifyConsts(new_node);
+      },
+      &operands_);
   if (IsAllOperandsConst(operands_)) {
     *new_node = SymCalc();
     return;
@@ -657,14 +659,11 @@ void Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
 }
 
 void Operation::OpenBrackets(std::unique_ptr<INode>* new_node) {
-  for (auto& node : operands_) {
-    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      std::unique_ptr<INode> new_sub_node;
-      operation->OpenBrackets(&new_sub_node);
-      if (new_sub_node)
-        node = std::move(new_sub_node);
-    }
-  }
+  ApplySimplification(
+      [](Operation* operation, std::unique_ptr<INode>* new_node) {
+        operation->OpenBrackets(new_node);
+      },
+      &operands_);
 }
 
 INodeImpl* Operation::Operand(size_t indx) {
@@ -694,10 +693,7 @@ bool Operation::ReduceFor(double val) {
 }
 
 void Operation::RemoveEmptyOperands() {
-  operands_.erase(
-      std::remove_if(std::begin(operands_), std::end(operands_),
-                     [](const std::unique_ptr<INode>& node) { return !node; }),
-      std::end(operands_));
+  INodeHelper::RemoveEmptyOperands(&operands_);
 }
 
 PrintSize Operation::RenderOperandChain(

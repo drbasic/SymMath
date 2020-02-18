@@ -23,6 +23,7 @@ class MultOperation : public Operation {
       std::vector<std::unique_ptr<INode>>* nodes) const override;
   void UnfoldChains() override;
   void SimplifyChains(std::unique_ptr<INode>* new_node) override;
+  void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void OpenBrackets(std::unique_ptr<INode>* new_node) override;
   MultOperation* AsMultOperation() override { return this; }

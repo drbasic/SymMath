@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INodeHelper.h"
 #include "Imaginary.h"
 #include "OpInfo.h"
@@ -95,21 +96,39 @@ void MultOperation::UnfoldChains() {
 }
 
 void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyChains(nullptr);
+
   bool is_positve = true;
-  size_t i = 0;
   ProcessImaginary(&operands_);
   for (auto& node : operands_) {
-    if (i++ == 0)
-      continue;
     if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
       is_positve = !is_positve;
       node = INodeHelper::Negate(std::move(node));
     }
   }
   if (!is_positve) {
-    operands_[0] = INodeHelper::Negate(std::move(operands_[0]));
+    *new_node =
+        INodeHelper::MakeUnMinus(INodeHelper::MakeMult(std::move(operands_)));
   }
-  Operation::SimplifyChains(new_node);
+}
+
+void MultOperation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyConsts(new_node);
+
+  std::vector<std::unique_ptr<INode>> new_bottom;
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    if (auto* div = INodeHelper::AsDiv(operands_[i].get())) {
+      operands_.push_back(std::move(div->operands_[0]));
+      new_bottom.push_back(std::move(div->operands_[1]));
+      operands_[i].reset();
+    }
+  }
+  if (new_bottom.empty())
+    return;
+  INodeHelper::RemoveEmptyOperands(&operands_);
+  *new_node = INodeHelper::MakeDiv(
+      INodeHelper::MakeMultIfNeeded(std::move(operands_)),
+      INodeHelper::MakeMultIfNeeded(std::move(new_bottom)));
 }
 
 void MultOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
@@ -147,9 +166,9 @@ void MultOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     return;
   }
 
-  if (mult_total == -1.0)
+  if (const_count && mult_total == -1.0)
     operands_[0] = INodeHelper::MakeUnMinus(std::move(operands_[0]));
-  else if (mult_total != 1.0)
+  else if (const_count && mult_total != 1.0)
     operands_.insert(operands_.begin(), INodeHelper::MakeConst(mult_total));
 
   if (operands_.size() == 1) {
