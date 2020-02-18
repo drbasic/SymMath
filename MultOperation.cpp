@@ -94,7 +94,6 @@ void MultOperation::UnfoldChains() {
   CheckIntegrity();
 }
 
-
 void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
   bool is_positve = true;
   size_t i = 0;
@@ -120,35 +119,43 @@ void MultOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
 
   size_t const_count = 0;
   double mult_total = 0;
-  std::unique_ptr<INode>* first_const = nullptr;
   for (auto& node : operands_) {
     Constant* constant = INodeHelper::AsConstant(node.get());
     if (!constant)
       continue;
-    ++const_count;
     // x * 0.0
     if (constant->Value() == 0.0) {
       *new_node = INodeHelper::MakeConst(0.0);
       return;
     }
-    if (const_count == 1) {
-      first_const = &node;
-      mult_total = constant->Value();
+    // x * 1
+    if (constant->Value() == 1.0) {
+      node.reset();
       continue;
     }
-    mult_total = op_info_->trivial_f(mult_total, constant->Value());
-    if (first_const)
-      first_const->reset();
+    ++const_count;
+    if (const_count == 1) {
+      mult_total = constant->Value();
+    } else {
+      mult_total = op_info_->trivial_f(mult_total, constant->Value());
+    }
     node.reset();
   }
-  if (const_count <= 1)
-    return;
   RemoveEmptyOperands();
   if (operands_.empty()) {
     *new_node = INodeHelper::MakeConst(mult_total);
     return;
   }
-  operands_.insert(operands_.begin(), INodeHelper::MakeConst(mult_total));
+
+  if (mult_total == -1.0)
+    operands_[0] = INodeHelper::MakeUnMinus(std::move(operands_[0]));
+  else if (mult_total != 1.0)
+    operands_.insert(operands_.begin(), INodeHelper::MakeConst(mult_total));
+
+  if (operands_.size() == 1) {
+    *new_node = std::move(operands_[0]);
+    return;
+  }
   CheckIntegrity();
 }
 

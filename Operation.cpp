@@ -359,7 +359,7 @@ std::vector<std::unique_ptr<INode>> Operation::TakeOperands(Op op) {
   return std::move(operands_);
 }
 
-bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
+void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   CheckIntegrity();
 
   Operation* current = this;
@@ -372,16 +372,15 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   if (*new_node)
     current = INodeHelper::AsOperation(new_node->get());
   if (!current)
-    return true;
+    return;
 
   current->SimplifyConsts(new_node);
 
   if (*new_node)
     current = INodeHelper::AsOperation(new_node->get());
   if (!current)
-    return true;
+    return;
 
-  bool simplified = false;
   /*
 
   if (SimplifyUnMinus(new_node)) {
@@ -426,7 +425,6 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
     simplified = true;
   }
   */
-  return simplified;
 }
 
 void Operation::CheckIntegrity() const {
@@ -542,12 +540,11 @@ bool Operation::SimplifyDivMul() {
 
   for (auto& operand : operands_) {
     std::unique_ptr<INode> new_node;
-    if (operand->AsNodeImpl()->SimplifyImpl(&new_node)) {
-      if (new_node)
-        operand = std::move(new_node);
-    }
+    operand->AsNodeImpl()->SimplifyImpl(&new_node);
+    if (new_node)
+      operand = std::move(new_node);
   }
-  return true;
+  return false;
 }
 
 bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
@@ -659,106 +656,6 @@ void Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   }
 }
 
-/*
-  if (op_info_->op != Op::Plus && op_info_->op != Op::Mult &&
-    op_info_->op != Op::Div)
-    return false;
-
-  size_t const_count = 0;
-  bool is_optimized = false;
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    if (!operands_[i])
-      continue;
-    Constant* constant = Operand(i)->AsConstant();
-    if (!constant)
-      continue;
-    ++const_count;
-    // x * 0.0
-    if (constant->Value() == 0.0 && op_info_->op == Op::Mult) {
-      *new_node = Const(0.0);
-      return true;
-    }
-    // x + 0
-    if (constant->Value() == 0.0 && op_info_->op == Op::Plus) {
-      is_optimized = true;
-      operands_[i].reset();
-    }
-    // 0 / x
-    if (constant->Value() == 0.0 && i == 0 && op_info_->op == Op::Div) {
-      *new_node = Const(0.0);
-      return true;
-    }
-    // x * 1
-    if (constant->Value() == 1.0 && (op_info_->op == Op::Mult)) {
-      is_optimized = true;
-      operands_[i].reset();
-    }
-    // x / 1
-    if (constant->Value() == 1.0 && i == 1 && op_info_->op == Op::Div) {
-      *new_node = std::move(operands_[0]);
-      return true;
-    }
-    // x * 34 / 17
-    if (i == 1 && op_info_->op == Op::Div) {
-      if (auto* mult = INodeHelper::AsMult(operands_[0].get())) {
-        if (mult->ReduceFor(constant->Value())) {
-          *new_node = std::move(operands_[0]);
-          return true;
-        }
-      }
-    }
-    // x / 0
-    if (constant->Value() == 1.0 && i == 1 && op_info_->op == Op::Div) {
-      *new_node = Const(std::numeric_limits<double>::infinity());
-      return true;
-    }
-  }
-  if (!is_optimized && const_count == 0)
-    return false;
-  if (const_count == 2 && op_info_->op == Op::Div) {
-    *new_node = SymCalc();
-    return true;
-  }
-  const_count = 0;
-  double accumulator = op_info_->op == Op::Mult ? 1 : 0;
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    if (!operands_[i])
-      continue;
-    Constant* constant = Operand(i)->AsConstant();
-    if (!constant)
-      continue;
-    if (op_info_->op != Op::Div) {
-      ++const_count;
-      accumulator = op_info_->trivial_f(accumulator, constant->Value());
-      operands_[i].reset();
-    }
-  }
-  RemoveEmptyOperands();
-  if (operands_.empty()) {
-    *new_node = Const(accumulator);
-    return true;
-  }
-  if (op_info_->op == Op::Mult && accumulator == -1.0) {
-    operands_[0] = INodeHelper::MakeUnMinus(std::move(operands_[0]));
-    const_count = 0;
-    is_optimized = true;
-  }
-
-  if (const_count) {
-    if (op_info_->op == Op::Mult)
-      operands_.insert(operands_.begin(), Const(accumulator));
-    else
-      operands_.push_back(Const(accumulator));
-    is_optimized = const_count > 1;
-  }
-  if (operands_.size() == 1) {
-    *new_node = std::move(operands_[0]);
-    return true;
-  }
-  return is_optimized;
-}
-*/
-
 void Operation::OpenBrackets(std::unique_ptr<INode>* new_node) {
   for (auto& node : operands_) {
     if (Operation* operation = INodeHelper::AsOperation(node.get())) {
@@ -824,6 +721,8 @@ PrintSize Operation::RenderOperandChain(
     }
     auto operand_size = RenderOperand(Operand(i), canvas, operand_box, dry_run,
                                       render_behaviour, with_op);
+    render_behaviour.TakeMinus();
+    render_behaviour.TakeBrackets();
     operand_box = operand_box.ShrinkLeft(operand_size.width);
     total_print_size = total_print_size.GrowWidth(operand_size, true);
   }

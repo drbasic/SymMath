@@ -47,8 +47,7 @@ bool Tests::TestSimplifyMultChain() {
   auto e = Var("e", 5);
   Variable s = a * b * (-c) * (-d) * (-e);
   auto* op = s.AsOperation();
-  std::unique_ptr<INode> new_node;
-  op->SimplifyChains(&new_node);
+  op->UnfoldChains();
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-120);
@@ -67,8 +66,7 @@ bool Tests::TestSimplifyPlusChain() {
   auto e = Var("e", 5);
   Variable s = a + b - c - d - e;
   auto* op = s.AsOperation();
-  std::unique_ptr<INode> new_node;
-  op->SimplifyChains(&new_node);
+  op->UnfoldChains();
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-9);
@@ -86,8 +84,7 @@ bool Tests::TestSimplifyChainRecursive() {
   auto e = Var("e", 5);
   Variable s = (a + b + c) * (a + b + c) * (a + b + c);
   auto* op = s.AsOperation();
-  std::unique_ptr<INode> new_node;
-  op->SimplifyChains(&new_node);
+  op->UnfoldChains();
   if (op->operands_.size() != 3)
     return false;
   for (auto& sub : op->operands_) {

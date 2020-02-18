@@ -24,10 +24,10 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = 1 + b + 4;
-  y = t * t;
+  Variable t = b / b;
+  y = t;
   Variable calc = y.SymCalc();
-  std::wcout << y.Print() << calc.Print() << "\n";
+  // std::wcout << y.Print() << calc.Print() << "\n";
   y.OpenBrackets();
   calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
@@ -48,4 +48,4 @@ int main() {
   y.Simplify();
   std::cout << y.Print() << "\n";
   */
- }
+}

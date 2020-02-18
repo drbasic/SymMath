@@ -29,7 +29,7 @@ class Operation : public IOperation {
   bool CheckCircular(const INodeImpl* other) const override;
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
-  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+  void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override { return std::nullopt; };

@@ -37,5 +37,5 @@ class INodeImpl : public INode {
   virtual Operation* AsOperation() { return nullptr; }
   virtual const Operation* AsOperation() const { return nullptr; }
 
-  virtual bool SimplifyImpl(std::unique_ptr<INode>* new_node) { return false; }
+  virtual void SimplifyImpl(std::unique_ptr<INode>* new_node) {}
 };

@@ -7,6 +7,7 @@
 #include "INodeHelper.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
+#include "UnMinusOperation.h"
 
 DivOperation::DivOperation(std::unique_ptr<INode> top,
                            std::unique_ptr<INode> bottom)
@@ -81,6 +82,29 @@ std::optional<CanonicMult> DivOperation::GetCanonic() {
     return result;
   }
   return std::nullopt;
+}
+
+void DivOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyConsts(new_node);
+  if (*new_node)
+    return;
+  if (Constant* top = INodeHelper::AsConstant(operands_[0].get())) {
+    if (top->Value() == 0.0) {
+      *new_node = std::move(operands_[0]);
+      return;
+    }
+  }
+
+  if (Constant* bottom = INodeHelper::AsConstant(operands_[1].get())) {
+    if (bottom->Value() == 1.0) {
+      *new_node = std::move(operands_[0]);
+      return;
+    }
+    if (bottom->Value() == -1.0) {
+      *new_node = INodeHelper::MakeUnMinus(std::move(operands_[0]));
+      return;
+    }
+  }
 }
 
 INodeImpl* DivOperation::Top() {

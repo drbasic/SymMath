@@ -10,7 +10,7 @@ class Variable : public INodeImpl {
   Variable(std::string name, std::unique_ptr<INode> value);
 
   std::wstring Print() const;
-  bool Simplify();
+  void Simplify();
   void OpenBrackets();
   std::string GetName() const;
 
@@ -40,7 +40,7 @@ class Variable : public INodeImpl {
   const Variable* AsVariable() const override { return this; }
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
-  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+  void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
   friend class VariableRef;

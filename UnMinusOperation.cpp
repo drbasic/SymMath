@@ -29,13 +29,15 @@ PrintSize UnMinusOperation::Render(Canvas* canvas,
 
   if (minus_behaviour == MinusBehaviour::Force) {
     assert(!HasFrontMinus());
-    return Operand(0)->Render(canvas, print_box, dry_run, render_behaviour);
+    return print_size_ =
+               Operand(0)->Render(canvas, print_box, dry_run, render_behaviour);
   }
 
   // - -a => a
   if (Operand(0)->HasFrontMinus()) {
     render_behaviour.SetMunus(MinusBehaviour::Ommit);
-    return Operand(0)->Render(canvas, print_box, dry_run, render_behaviour);
+    return print_size_ =
+               Operand(0)->Render(canvas, print_box, dry_run, render_behaviour);
   }
 
   // don't render this minus. a + (-b) -> a - b. Minus render from (+)
@@ -43,13 +45,13 @@ PrintSize UnMinusOperation::Render(Canvas* canvas,
   if (minus_behaviour == MinusBehaviour::Ommit) {
     assert(HasFrontMinus());
     assert(!Operand(0)->HasFrontMinus());
-    return RenderOperand(Operand(0), canvas, print_box, dry_run,
-                         render_behaviour, false);
+    return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
+                                       render_behaviour, false);
   }
 
   if (minus_behaviour == MinusBehaviour::Relax) {
-    return RenderOperand(Operand(0), canvas, print_box, dry_run,
-                         render_behaviour, true);
+    return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
+                                       render_behaviour, true);
   }
 
   assert(false);

@@ -71,6 +71,6 @@ const Operation* VariableRef::AsOperation() const {
   return var_->AsOperation();
 }
 
-bool VariableRef::SimplifyImpl(std::unique_ptr<INode>* new_node) {
-  return const_cast<Variable*>(var_)->SimplifyImpl(new_node);
+void VariableRef::SimplifyImpl(std::unique_ptr<INode>* new_node) {
+  const_cast<Variable*>(var_)->SimplifyImpl(new_node);
 }

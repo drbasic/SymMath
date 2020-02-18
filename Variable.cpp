@@ -7,8 +7,8 @@
 #include "ErrorNode.h"
 #include "Exception.h"
 #include "INodeHelper.h"
-#include "ValueHelpers.h"
 #include "Operation.h"
+#include "ValueHelpers.h"
 #include "VariableRef.h"
 
 namespace {
@@ -69,21 +69,19 @@ std::string Variable::GetName() const {
   return name_;
 }
 
-bool Variable::SimplifyImpl(std::unique_ptr<INode>* new_node) {
-  if (!Value())
-    return false;
-  return Value()->SimplifyImpl(new_node);
+void Variable::SimplifyImpl(std::unique_ptr<INode>* new_node) {
+  if (Value())
+    Value()->SimplifyImpl(new_node);
 }
 
-bool Variable::Simplify() {
-  bool simplified = false;
-  std::unique_ptr<INode> new_node;
-  while (SimplifyImpl(&new_node)) {
-    simplified = true;
-    if (new_node)
-      value_ = std::move(new_node);
+void Variable::Simplify() {
+  while (true) {
+    std::unique_ptr<INode> new_node;
+    SimplifyImpl(&new_node);
+    if (!new_node)
+      return;
+    value_ = std::move(new_node);
   }
-  return simplified;
 }
 
 void Variable::OpenBrackets() {

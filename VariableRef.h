@@ -29,7 +29,7 @@ class VariableRef : public INodeImpl {
   const Variable* AsVariable() const override;
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
-  bool SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+  void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
   mutable PrintSize print_size_;

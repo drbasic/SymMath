@@ -79,13 +79,11 @@ void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     node.reset();
   }
   RemoveEmptyOperands();
-  if (const_count == 0)
-    return;
   if (operands_.empty()) {
     *new_node = INodeHelper::MakeConst(total_summ);
     return;
   }
-  if (total_summ != 0.0)
+  if (const_count > 1 && total_summ != 0.0)
     operands_.push_back(INodeHelper::MakeConst(total_summ));
   if (operands_.size() == 1) {
     *new_node = std::move(operands_[0]);
