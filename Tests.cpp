@@ -48,7 +48,7 @@ bool Tests::TestSimplifyMultChain() {
   Variable s = a * b * (-c) * (-d) * (-e);
   auto* op = s.AsOperation();
   std::unique_ptr<INode> new_node;
-  op->SimplifyChain(&new_node);
+  op->SimplifyChains(&new_node);
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-120);
@@ -68,7 +68,7 @@ bool Tests::TestSimplifyPlusChain() {
   Variable s = a + b - c - d - e;
   auto* op = s.AsOperation();
   std::unique_ptr<INode> new_node;
-  op->SimplifyChain(&new_node);
+  op->SimplifyChains(&new_node);
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-9);
@@ -87,7 +87,7 @@ bool Tests::TestSimplifyChainRecursive() {
   Variable s = (a + b + c) * (a + b + c) * (a + b + c);
   auto* op = s.AsOperation();
   std::unique_ptr<INode> new_node;
-  op->SimplifyChain(&new_node);
+  op->SimplifyChains(&new_node);
   if (op->operands_.size() != 3)
     return false;
   for (auto& sub : op->operands_) {
@@ -146,7 +146,7 @@ bool Tests::TestOpenBrackets() {
   auto e = Var("e", 5);
   Variable s = (a + b) * (b + c + d) * (a + b) * e;
   std::unique_ptr<INode> new_node;
-  s.AsOperation()->SimplifyChain(&new_node);
+  s.AsOperation()->SimplifyChains(&new_node);
   s.OpenBrackets();
   auto* plus = INodeHelper::AsPlus(s.AsOperation());
   if (!plus)

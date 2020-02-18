@@ -14,10 +14,11 @@ namespace {
 
 bool NextPermutation(
     std::vector<std::pair<size_t, size_t>>* permutation_indexes) {
-  for (std::pair<size_t, size_t>& index : *permutation_indexes) {
-    ++index.first;
-    if (index.first >= index.second)
-      index.first = 0;
+  for (auto ii = std::rbegin(*permutation_indexes);
+       ii != std::rend(*permutation_indexes); ++ii) {
+    ++ii->first;
+    if (ii->first >= ii->second)
+      ii->first = 0;
     else
       return true;
   }
@@ -50,7 +51,7 @@ PrintSize MultOperation::Render(Canvas* canvas,
 }
 
 bool MultOperation::HasFrontMinus() const {
-  return false;
+  return operands_[0]->AsNodeImpl()->HasFrontMinus();
 }
 
 std::optional<CanonicMult> MultOperation::GetCanonic() {
@@ -84,8 +85,17 @@ void MultOperation::ProcessImaginary(
     nodes->push_back(INodeHelper::MakeImaginary());
 }
 
-void MultOperation::SimplifyChain(std::unique_ptr<INode>* new_node) {
-  UnfoldChain();
+void MultOperation::UnfoldChains() {
+  Operation::UnfoldChains();
+
+  std::vector<std::unique_ptr<INode>> new_nodes;
+  INodeHelper::ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
+  operands_.swap(new_nodes);
+  CheckIntegrity();
+}
+
+
+void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
   bool is_positve = true;
   size_t i = 0;
   ProcessImaginary(&operands_);
@@ -100,7 +110,46 @@ void MultOperation::SimplifyChain(std::unique_ptr<INode>* new_node) {
   if (!is_positve) {
     operands_[0] = INodeHelper::Negate(std::move(operands_[0]));
   }
-  Operation::SimplifyChain(new_node);
+  Operation::SimplifyChains(new_node);
+}
+
+void MultOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyConsts(new_node);
+  if (*new_node)
+    return;
+
+  size_t const_count = 0;
+  double mult_total = 0;
+  std::unique_ptr<INode>* first_const = nullptr;
+  for (auto& node : operands_) {
+    Constant* constant = INodeHelper::AsConstant(node.get());
+    if (!constant)
+      continue;
+    ++const_count;
+    // x * 0.0
+    if (constant->Value() == 0.0) {
+      *new_node = INodeHelper::MakeConst(0.0);
+      return;
+    }
+    if (const_count == 1) {
+      first_const = &node;
+      mult_total = constant->Value();
+      continue;
+    }
+    mult_total = op_info_->trivial_f(mult_total, constant->Value());
+    if (first_const)
+      first_const->reset();
+    node.reset();
+  }
+  if (const_count <= 1)
+    return;
+  RemoveEmptyOperands();
+  if (operands_.empty()) {
+    *new_node = INodeHelper::MakeConst(mult_total);
+    return;
+  }
+  operands_.insert(operands_.begin(), INodeHelper::MakeConst(mult_total));
+  CheckIntegrity();
 }
 
 void MultOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
@@ -134,11 +183,4 @@ void MultOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
     new_plus_nodes.push_back(std::move(mult));
   } while (NextPermutation(&permutation_indexes));
   *new_node = INodeHelper::MakePlus(std::move(new_plus_nodes));
-}
-
-void MultOperation::UnfoldChain() {
-  std::vector<std::unique_ptr<INode>> new_nodes;
-  INodeHelper::ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
-  operands_.swap(new_nodes);
-  CheckIntegrity();
 }

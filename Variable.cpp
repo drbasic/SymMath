@@ -93,6 +93,7 @@ void Variable::OpenBrackets() {
   if (!op)
     return;
   std::unique_ptr<INode> new_node;
+  op->UnfoldChains();
   op->OpenBrackets(&new_node);
   if (new_node)
     value_ = std::move(new_node);

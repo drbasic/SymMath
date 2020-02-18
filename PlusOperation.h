@@ -18,10 +18,12 @@ class PlusOperation : public Operation {
   bool HasFrontMinus() const override;
 
   // IOperation implementation
-  void SimplifyChain(std::unique_ptr<INode>* new_node) override;
+  void UnfoldChains() override;
+  void SimplifyChains(std::unique_ptr<INode>* new_node) override;
+  void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   PlusOperation* AsPlusOperation() override { return this; }
   const PlusOperation* AsPlusOperation() const override { return this; }
 
  private:
-  void UnfoldChain();
+
 };

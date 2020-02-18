@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include "Constant.h"
 #include "INodeHelper.h"
 #include "OpInfo.h"
 #include "UnMinusOperation.h"
@@ -34,14 +35,62 @@ bool PlusOperation::HasFrontMinus() const {
   return false;
 }
 
-void PlusOperation::SimplifyChain(std::unique_ptr<INode>* new_node) {
-  UnfoldChain();
-  Operation::SimplifyChain(new_node);
-}
+void PlusOperation::UnfoldChains() {
+  Operation::UnfoldChains();
 
-void PlusOperation::UnfoldChain() {
   std::vector<std::unique_ptr<INode>> new_nodes;
   INodeHelper::ExctractNodesWithOp(Op::Plus, &operands_, &new_nodes);
   operands_.swap(new_nodes);
   CheckIntegrity();
 }
+
+
+void PlusOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
+  //UnfoldChain();
+
+  Operation::SimplifyChains(new_node);
+}
+
+void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyConsts(new_node);
+  if (*new_node)
+    return;
+
+  size_t const_count = 0;
+  double total_summ = 0;
+  std::unique_ptr<INode>* first_const = nullptr;
+  for (auto& node : operands_) {
+    Constant* constant = INodeHelper::AsConstant(node.get());
+    if (!constant)
+      continue;
+    if (constant->Value() == 0.0) {
+      node.reset();
+      continue;
+    }
+    ++const_count;
+    if (const_count == 1) {
+      first_const = &node;
+      total_summ = constant->Value();
+      continue;
+    }
+    total_summ = op_info_->trivial_f(total_summ, constant->Value());
+    if (first_const)
+      first_const->reset();
+    node.reset();
+  }
+  RemoveEmptyOperands();
+  if (const_count == 0)
+    return;
+  if (operands_.empty()) {
+    *new_node = INodeHelper::MakeConst(total_summ);
+    return;
+  }
+  if (total_summ != 0.0)
+    operands_.push_back(INodeHelper::MakeConst(total_summ));
+  if (operands_.size() == 1) {
+    *new_node = std::move(operands_[0]);
+    return;
+  }
+  CheckIntegrity();
+}
+
