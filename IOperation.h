@@ -33,4 +33,5 @@ class IOperation : public INodeImpl {
 
   virtual void SimplifyChain(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyDivDiv() = 0;
+  virtual void OpenBrackets(std::unique_ptr<INode>* new_node) = 0;
 };

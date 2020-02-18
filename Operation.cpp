@@ -290,9 +290,20 @@ std::unique_ptr<INode> Operation::SymCalc() const {
     return result;
   }
 
-  if (calculated_operands.size() == 1) {
+  if (calculated_operands.size() == 1 && op_info_->operands_count == 1) {
     double result = op_info_->trivial_f(
         calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(), 0.0);
+    return INodeHelper::MakeConst(result);
+  }
+
+  if (calculated_operands.size() == 1 && op_info_->operands_count == -1) {
+    return std::move(calculated_operands[0]);
+  }
+
+  if (calculated_operands.size() == 2 && op_info_->operands_count == 2) {
+    double result = op_info_->trivial_f(
+        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
+        calculated_operands[1]->AsNodeImpl()->AsConstant()->Value());
     return INodeHelper::MakeConst(result);
   }
 
@@ -353,6 +364,8 @@ bool Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
 
   SimplifyDivDiv();
   SimplifyChain(new_node);
+  if (*new_node)
+    return true;
 
   CheckIntegrity();
   bool simplified = false;
@@ -713,6 +726,17 @@ void Operation::SimplifyDivDiv() {
   }
 }
 
+void Operation::OpenBrackets(std::unique_ptr<INode>* new_node) {
+  for (auto& node : operands_) {
+    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
+      std::unique_ptr<INode> new_sub_node;
+      operation->OpenBrackets(&new_sub_node);
+      if (new_sub_node)
+        node = std::move(new_sub_node);
+    }
+  }
+}
+
 INodeImpl* Operation::Operand(size_t indx) {
   return operands_[indx]->AsNodeImpl();
 }
@@ -761,7 +785,8 @@ PrintSize Operation::RenderOperandChain(
   PrintBox operand_box{print_box};
   for (size_t i = 0; i < operands_.size(); ++i) {
     bool with_op = i != 0;
-    if (i == operands_.size() - 1 && operands_[i]->AsNodeImpl()->AsImaginary()) {
+    if (i == operands_.size() - 1 &&
+        operands_[i]->AsNodeImpl()->AsImaginary()) {
       with_op = false;
     }
     auto operand_size = RenderOperand(Operand(i), canvas, operand_box, dry_run,

@@ -3,10 +3,11 @@
 #include <iostream>
 #include <string_view>
 
+#include "DivOperation.h"
 #include "INode.h"
 #include "INodeHelper.h"
 #include "Operation.h"
-#include "DivOperation.h"
+#include "PlusOperation.h"
 #include "ValueHelpers.h"
 
 namespace {
@@ -20,6 +21,8 @@ const TestInfo kTests[] = {
     {&Tests::TestSimplifyMultChain, "TestSimplifyMultChain"},
     {&Tests::TestSimplifyChainRecursive, "TestSimplifyChainRecursive"},
     {&Tests::TestSimplifyDivDiv, "TestSimplifyDivDiv"},
+    {&Tests::TestSimplifyImaginary, "TestSimplifyImaginary"},
+    {&Tests::TestOpenBrackets, "TestOpenBrackets"},
 };
 }  // namespace
 
@@ -105,7 +108,7 @@ bool Tests::TestSimplifyDivDiv() {
   auto c = Var("c", 3);
   auto d = Var("d", 4);
   auto e = Var("e", 5);
-  Variable s = (a / b) / c  /d / e;
+  Variable s = (a / b) / c / d / e;
   auto* op = s.AsOperation();
   op->SimplifyDivDiv();
   auto* div = INodeHelper::AsDiv(op);
@@ -116,6 +119,41 @@ bool Tests::TestSimplifyDivDiv() {
   if (div->Bottom()->AsOperation()->operands_.size() != 4)
     return false;
   auto expected_result = Const(2);
+  auto result = s.SymCalc();
+  if (!result->IsEqual(expected_result.get()))
+    return false;
+  return true;
+}
+
+// static
+bool Tests::TestSimplifyImaginary() {
+  auto a = Var("a", 100);
+  auto b = Var("b", 2);
+  Variable s = Imag() * Imag() + a;
+  auto expected_result = Const(-1 + 100);
+  auto result = s.SymCalc();
+  if (!result->IsEqual(expected_result.get()))
+    return false;
+  return true;
+}
+
+// static
+bool Tests::TestOpenBrackets() {
+  auto a = Var("a", 1);
+  auto b = Var("b", 2);
+  auto c = Var("c", 3);
+  auto d = Var("d", 4);
+  auto e = Var("e", 5);
+  Variable s = (a + b) * (b + c + d) * (a + b) * e;
+  std::unique_ptr<INode> new_node;
+  s.AsOperation()->SimplifyChain(&new_node);
+  s.OpenBrackets();
+  auto* plus = INodeHelper::AsPlus(s.AsOperation());
+  if (!plus)
+    return false;
+  if (plus->operands_.size() != 12)
+    return false;
+  auto expected_result = Const(405);
   auto result = s.SymCalc();
   if (!result->IsEqual(expected_result.get()))
     return false;

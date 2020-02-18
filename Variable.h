@@ -11,6 +11,7 @@ class Variable : public INodeImpl {
 
   std::wstring Print() const;
   bool Simplify();
+  void OpenBrackets();
   std::string GetName() const;
 
   void operator=(std::unique_ptr<INode> value);

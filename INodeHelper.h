@@ -57,6 +57,8 @@ class INodeHelper {
       std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
   static void RemoveEmptyOperands(std::vector<std::unique_ptr<INode>>* nodes);
+  static bool HasAnyPlusOperation(
+      const std::vector<std::unique_ptr<INode>>& nodes);
 
   static std::unique_ptr<Constant> MakeConst(double value);
   static std::unique_ptr<Imaginary> MakeImaginary();
@@ -66,6 +68,8 @@ class INodeHelper {
                                                   std::unique_ptr<INode> rh);
   static std::unique_ptr<PlusOperation> MakePlus(std::unique_ptr<INode> lh,
                                                  std::unique_ptr<INode> rh);
+  static std::unique_ptr<PlusOperation> MakePlus(
+      std::vector<std::unique_ptr<INode>> operands);
   static std::unique_ptr<MultOperation> MakeMult(std::unique_ptr<INode> lh,
                                                  std::unique_ptr<INode> rh);
   static std::unique_ptr<MultOperation> MakeMult(

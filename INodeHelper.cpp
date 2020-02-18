@@ -1,7 +1,7 @@
 #include "INodeHelper.h"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 #include "Constant.h"
 #include "DivOperation.h"
@@ -204,6 +204,16 @@ void INodeHelper::RemoveEmptyOperands(
 }
 
 // static
+bool INodeHelper::HasAnyPlusOperation(
+    const std::vector<std::unique_ptr<INode>>& nodes) {
+  for (const auto& node : nodes) {
+    if (const auto* plus_op = AsPlus(node.get()))
+      return true;
+  }
+  return false;
+}
+
+// static
 std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
 }
@@ -231,6 +241,12 @@ std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
     std::unique_ptr<INode> lh,
     std::unique_ptr<INode> rh) {
   return std::make_unique<PlusOperation>(std::move(lh), std::move(rh));
+}
+
+// static
+std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
+    std::vector<std::unique_ptr<INode>> operands) {
+  return std::make_unique<PlusOperation>(std::move(operands));
 }
 
 // static

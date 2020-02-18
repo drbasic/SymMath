@@ -6,7 +6,9 @@
 
 #include "ErrorNode.h"
 #include "Exception.h"
+#include "INodeHelper.h"
 #include "ValueHelpers.h"
+#include "Operation.h"
 #include "VariableRef.h"
 
 namespace {
@@ -82,6 +84,18 @@ bool Variable::Simplify() {
       value_ = std::move(new_node);
   }
   return simplified;
+}
+
+void Variable::OpenBrackets() {
+  if (!value_)
+    return;
+  auto* op = INodeHelper::AsOperation(value_.get());
+  if (!op)
+    return;
+  std::unique_ptr<INode> new_node;
+  op->OpenBrackets(&new_node);
+  if (new_node)
+    value_ = std::move(new_node);
 }
 
 void Variable::operator=(std::unique_ptr<INode> value) {

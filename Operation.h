@@ -35,6 +35,7 @@ class Operation : public IOperation {
   std::optional<CanonicMult> GetCanonic() override { return std::nullopt; };
   void SimplifyChain(std::unique_ptr<INode>* new_node) override;
   void SimplifyDivDiv() override;
+  void OpenBrackets(std::unique_ptr<INode>* new_node) override;
 
  protected:
   INodeImpl* Operand(size_t indx);
@@ -52,6 +53,7 @@ class Operation : public IOperation {
                           bool with_op) const;
 
   friend class INodeHelper;
+  friend class MultOperation;
   friend class Tests;
 
   void CheckIntegrity() const;

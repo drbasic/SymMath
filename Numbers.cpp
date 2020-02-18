@@ -24,10 +24,12 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = Imag() * Imag() + 10* Imag() + (10 + a) * Imag();
-  y = t;
+  Variable t = 10 + iConst(5);
+  y = t * t * Sin(a - b);
   Variable calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
+  y.Simplify();
+  y.OpenBrackets();
   y.Simplify();
   calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
@@ -45,4 +47,4 @@ int main() {
   y.Simplify();
   std::cout << y.Print() << "\n";
   */
-}
+ }

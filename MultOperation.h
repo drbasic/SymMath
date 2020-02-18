@@ -22,6 +22,7 @@ class MultOperation : public Operation {
   void ProcessImaginary(
       std::vector<std::unique_ptr<INode>>* nodes) const override;
   void SimplifyChain(std::unique_ptr<INode>* new_node) override;
+  void OpenBrackets(std::unique_ptr<INode>* new_node) override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
 
