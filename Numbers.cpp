@@ -24,7 +24,7 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = (-a / b) * (-(b / a)) * (-c);
+  Variable t = a/b * c/d;
   y = t;
   Variable calc = y.SymCalc();
   // std::wcout << y.Print() << calc.Print() << "\n";

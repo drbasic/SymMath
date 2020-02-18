@@ -22,6 +22,7 @@ class MultOperation : public Operation {
   void ProcessImaginary(
       std::vector<std::unique_ptr<INode>>* nodes) const override;
   void UnfoldChains() override;
+  void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
   void SimplifyChains(std::unique_ptr<INode>* new_node) override;
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;

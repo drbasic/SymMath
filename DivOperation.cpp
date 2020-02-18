@@ -84,6 +84,21 @@ std::optional<CanonicMult> DivOperation::GetCanonic() {
   return std::nullopt;
 }
 
+void DivOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyUnMinus(nullptr);
+  bool is_positve = true;
+  for (auto& node : operands_) {
+    if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
+      is_positve = !is_positve;
+      node = INodeHelper::Negate(std::move(node));
+    }
+  }
+  if (!is_positve) {
+    *new_node = INodeHelper::MakeUnMinus(
+        INodeHelper::MakeDiv(std::move(operands_[0]), std::move(operands_[1])));
+  }
+}
+
 void DivOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyConsts(new_node);
   if (*new_node)
@@ -94,7 +109,6 @@ void DivOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
       return;
     }
   }
-
   if (Constant* bottom = INodeHelper::AsConstant(operands_[1].get())) {
     if (bottom->Value() == 1.0) {
       *new_node = std::move(operands_[0]);
@@ -130,10 +144,7 @@ bool DivOperation::HasFrontMinus() const {
 }
 
 void DivOperation::SimplifyDivDiv() {
-  if (auto* top_op = Top()->AsOperation())
-    top_op->SimplifyDivDiv();
-  if (auto* bottom_op = Bottom()->AsOperation())
-    bottom_op->SimplifyDivDiv();
+  Operation::SimplifyDivDiv();
 
   auto* top = INodeHelper::AsDiv(Top());
   auto* bottom = INodeHelper::AsDiv(Bottom());

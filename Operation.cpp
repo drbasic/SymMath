@@ -371,7 +371,6 @@ bool Operation::IsEqual(const INode* rh) const {
     }
     return true;
   }
-
   return IsNodesTransitiveEqual(operands_, rh_op->operands_);
 }
 
@@ -387,7 +386,7 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
 
   using SimplificatorFunc =
       void (*)(Operation * current, std::unique_ptr<INode> * new_node);
-  SimplificatorFunc simplificators[] = {
+  constexpr SimplificatorFunc simplificators[] = {
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyUnMinus(new_node);
       },
@@ -402,6 +401,9 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyDivMul(new_node);
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivDiv();
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyConsts(new_node);

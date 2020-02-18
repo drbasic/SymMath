@@ -95,11 +95,9 @@ void MultOperation::UnfoldChains() {
   CheckIntegrity();
 }
 
-void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyChains(nullptr);
-
+void MultOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyUnMinus(nullptr);
   bool is_positve = true;
-  ProcessImaginary(&operands_);
   for (auto& node : operands_) {
     if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
       is_positve = !is_positve;
@@ -110,6 +108,11 @@ void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
     *new_node =
         INodeHelper::MakeUnMinus(INodeHelper::MakeMult(std::move(operands_)));
   }
+}
+
+void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyChains(nullptr);
+  ProcessImaginary(&operands_);
 }
 
 void MultOperation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
