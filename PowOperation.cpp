@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cassert>
 
+#include "Constant.h"
 #include "INodeHelper.h"
+#include "MultOperation.h"
 #include "OpInfo.h"
 
 PowOperation::PowOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh)
@@ -54,6 +56,15 @@ PrintSize PowOperation::Render(Canvas* canvas,
   auto total_size = pow_print_size_.GrowDown(base_print_size_, true);
   total_size.width = pow_print_size_.width + base_print_size_.width;
   return print_size_ = total_size;
+}
+
+std::optional<CanonicPow> PowOperation::GetCanonicPow() {
+  auto* exp_const = INodeHelper::AsConstant(operands_[1].get());
+  if (!exp_const)
+    return std::nullopt;
+  CanonicPow result = INodeHelper::GetCanonicPow(operands_[0]);
+  result.exp *= exp_const->Value();
+  return result;
 }
 
 INodeImpl* PowOperation::Base() {

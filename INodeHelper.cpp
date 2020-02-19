@@ -100,6 +100,18 @@ CanonicMult INodeHelper::GetCanonic(std::unique_ptr<INode>& node) {
 }
 
 // static
+CanonicPow INodeHelper::GetCanonicPow(std::unique_ptr<INode>& node) {
+  if (auto* operation = AsOperation(node.get())) {
+    auto inner_canonic = operation->GetCanonicPow();
+    if (inner_canonic)
+      return *inner_canonic;
+  }
+  CanonicPow result;
+  result.base_nodes.push_back(&node);
+  return result;
+}
+
+// static
 CanonicMult INodeHelper::MergeCanonic(const CanonicMult& lh,
                                       const CanonicMult& rh) {
   CanonicMult result;

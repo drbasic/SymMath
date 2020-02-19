@@ -17,6 +17,7 @@ class PowOperation : public Operation {
   bool HasFrontMinus() const override { return false; };
 
   // IOperation implementation
+  std::optional<CanonicPow> GetCanonicPow() override;
   PowOperation* AsPowOperation() override { return this; }
   const PowOperation* AsPowOperation() const override { return this; }
 

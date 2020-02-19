@@ -19,6 +19,7 @@ class MultOperation : public Operation {
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override;
+  std::optional<CanonicPow> GetCanonicPow() override;
   void ProcessImaginary(
       std::vector<std::unique_ptr<INode>>* nodes) const override;
   void UnfoldChains() override;
@@ -26,9 +27,12 @@ class MultOperation : public Operation {
   void SimplifyChains(std::unique_ptr<INode>* new_node) override;
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
+  void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
   void OpenBrackets(std::unique_ptr<INode>* new_node) override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
 
  private:
+   void SimplifyTheSameMult(std::unique_ptr<INode>* new_node);
+   void SimplifyTheSamePow(std::unique_ptr<INode>* new_node);
 };

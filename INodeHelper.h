@@ -5,6 +5,8 @@
 #include "OpInfo.h"
 
 struct CanonicMult;
+struct CanonicPow;
+
 class Canvas;
 class Constant;
 class DivOperation;
@@ -40,6 +42,7 @@ class INodeHelper {
   static const DivOperation* AsDiv(const INode* lh);
 
   static CanonicMult GetCanonic(std::unique_ptr<INode>& node);
+  static CanonicPow GetCanonicPow(std::unique_ptr<INode>& node);
   static CanonicMult MergeCanonic(const CanonicMult& lh, const CanonicMult& rh);
 
   static void ExctractNodesWithOp(Op op,

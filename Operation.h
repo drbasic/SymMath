@@ -25,14 +25,15 @@ class Operation : public IOperation {
   // INodeImpl interface
   PrintSize LastPrintSize() const override;
   int Priority() const override;
-  bool HasFrontMinus() const override { return false; };
+  bool HasFrontMinus() const override { return false; }
   bool CheckCircular(const INodeImpl* other) const override;
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
   void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
-  std::optional<CanonicMult> GetCanonic() override { return std::nullopt; };
+  std::optional<CanonicMult> GetCanonic() override { return std::nullopt; }
+  std::optional<CanonicPow> GetCanonicPow() override { return std::nullopt; }
   void UnfoldChains() override;
   void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
   void SimplifyChains(std::unique_ptr<INode>* new_node) override;

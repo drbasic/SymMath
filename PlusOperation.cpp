@@ -93,7 +93,6 @@ void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
 void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyTheSame(nullptr);
 
-  bool is_optimized = false;
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
@@ -103,7 +102,6 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
       continue;
     }
 
-    bool is_operand_optimized = false;
     for (size_t j = i + 1; j < operands_.size(); ++j) {
       if (!operands_[j])
         continue;
@@ -125,6 +123,6 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
     *new_node = std::move(operands_[0]);
   }
   if (operands_.size() == 0) {
-    *new_node = std::move(INodeHelper::MakeConst(0.0));
+    *new_node = INodeHelper::MakeConst(0.0);
   }
 }

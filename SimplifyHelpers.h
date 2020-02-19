@@ -5,6 +5,7 @@
 
 class INode;
 struct CanonicMult;
+struct CanonicPow;
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
                             const std::vector<const INode*>& rhs);
@@ -25,3 +26,14 @@ bool MergeCanonicToNodes(const CanonicMult& lh,
                          const CanonicMult& rh,
                          std::unique_ptr<INode>* lh_node,
                          std::unique_ptr<INode>* rh_node);
+
+bool MergeCanonicToNodesMult(const CanonicMult& lh,
+                             const CanonicMult& rh,
+                             std::unique_ptr<INode>* lh_node,
+                             std::unique_ptr<INode>* rh_node);
+
+bool MergeCanonicToPow( CanonicPow lh,
+                        CanonicPow rh,
+                       std::unique_ptr<INode>* node_1,
+                       std::unique_ptr<INode>* node_2,
+                       std::unique_ptr<INode>* node_3);

@@ -16,9 +16,15 @@ struct CanonicMult {
   std::vector<std::unique_ptr<INode>*> nodes;
 };
 
+struct CanonicPow {
+  double exp = 1;
+  std::vector<std::unique_ptr<INode>*> base_nodes;
+};
+
 class IOperation : public INodeImpl {
  public:
   virtual std::optional<CanonicMult> GetCanonic() = 0;
+  virtual std::optional<CanonicPow> GetCanonicPow() = 0;
 
   virtual void ProcessImaginary(
       std::vector<std::unique_ptr<INode>>* nodes) const {};

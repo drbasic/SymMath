@@ -8,6 +8,7 @@
 #include "INodeHelper.h"
 #include "IOperation.h"
 #include "MultOperation.h"
+#include "PowOperation.h"
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
                             const std::vector<const INode*>& rhs) {
@@ -213,5 +214,92 @@ bool MergeCanonicToNodes(const CanonicMult& lh,
   }
   *lh_node = INodeHelper::MakeMult(dividend, divider, std::move(lh.nodes));
   rh_node->reset();
+  return true;
+}
+
+bool MergeCanonicToNodesMult(const CanonicMult& lh,
+                             const CanonicMult& rh,
+                             std::unique_ptr<INode>* lh_node,
+                             std::unique_ptr<INode>* rh_node) {
+  bool is_tr_equal = IsNodesTransitiveEqual(lh.nodes, rh.nodes);
+  if (!is_tr_equal)
+    return false;
+
+  double dividend = lh.a * rh.a;
+  double divider = lh.b * rh.b;
+  if (dividend == 0.0) {
+    lh_node->reset();
+    rh_node->reset();
+    return true;
+  }
+
+  std::vector<std::unique_ptr<INode>> base_nodes;
+  for (auto node : lh.nodes)
+    base_nodes.push_back(std::move(*node));
+
+  auto base = INodeHelper::MakeMultIfNeeded(std::move(base_nodes));
+  auto pow = INodeHelper::MakePow(std::move(base), INodeHelper::MakeConst(2));
+  if (dividend == divider) {
+    *lh_node = std::move(pow);
+    rh_node->reset();
+  } else {
+    *lh_node = INodeHelper::MakeConst(dividend / divider);
+    *rh_node = std::move(pow);
+  }
+
+  return true;
+}
+
+bool MergeCanonicToPow(CanonicPow lh,
+                       CanonicPow rh,
+                       std::unique_ptr<INode>* node_1,
+                       std::unique_ptr<INode>* node_2,
+                       std::unique_ptr<INode>* node_3) {
+  std::vector<std::unique_ptr<INode>> merged_nodes;
+
+  for (auto& lh_node : lh.base_nodes) {
+    if (!lh_node)
+      continue;
+    for (auto& rh_node : rh.base_nodes) {
+      if (!rh_node)
+        continue;
+      if (lh_node->get()->IsEqual(rh_node->get())) {
+        merged_nodes.push_back(std::move(*lh_node));
+        lh_node = nullptr;
+        rh_node = nullptr;
+        break;
+      }
+    }
+  }
+  if (merged_nodes.empty())
+    return false;
+
+  auto pow_node_maker =
+      [](const CanonicPow& canonic) -> std::unique_ptr<INode> {
+    std::vector<std::unique_ptr<INode>> lh_remains_nodes;
+    for (auto& node : canonic.base_nodes) {
+      if (!node)
+        continue;
+      lh_remains_nodes.push_back(std::move(*node));
+    }
+    if (!lh_remains_nodes.empty()) {
+      auto base = INodeHelper::MakeMultIfNeeded(std::move(lh_remains_nodes));
+      return INodeHelper::MakePow(std::move(base),
+                                  INodeHelper::MakeConst(canonic.exp));
+    }
+    return nullptr;
+  };
+
+  auto base = INodeHelper::MakeMultIfNeeded(std::move(merged_nodes));
+  // Need make temporary nodes before assign to outer nodes.
+  auto new_node_1 = INodeHelper::MakePow(
+      std::move(base), INodeHelper::MakeConst(lh.exp + rh.exp));
+  auto new_node_2 = pow_node_maker(lh);
+  auto new_node_3 = pow_node_maker(rh);
+
+  *node_1 = std::move(new_node_1);
+  *node_2 = std::move(new_node_2);
+  *node_3 = std::move(new_node_3);
+
   return true;
 }
