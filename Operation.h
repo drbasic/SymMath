@@ -62,16 +62,11 @@ class Operation : public IOperation {
   friend class Tests;
 
   void CheckIntegrity() const;
-  bool SimplifyDivExtractUnMinus(std::unique_ptr<INode>* new_node);
   bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool IsAllOperandsConst(
       const std::vector<std::unique_ptr<INode>>& operands) const;
 
   bool ReduceFor(double val);
-
-  std::vector<std::unique_ptr<INode>> TakeOperands(Op op);
-
-  void RemoveEmptyOperands();
 
   const OpInfo* op_info_;
   mutable PrintSize print_size_;

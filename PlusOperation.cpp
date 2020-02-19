@@ -78,7 +78,7 @@ void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
       first_const->reset();
     node.reset();
   }
-  RemoveEmptyOperands();
+  INodeHelper::RemoveEmptyOperands(&operands_);
   if (operands_.empty()) {
     *new_node = INodeHelper::MakeConst(total_summ);
     return;

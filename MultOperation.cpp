@@ -163,7 +163,7 @@ void MultOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     }
     node.reset();
   }
-  RemoveEmptyOperands();
+  INodeHelper::RemoveEmptyOperands(&operands_);
   if (operands_.empty()) {
     *new_node = INodeHelper::MakeConst(mult_total);
     return;
