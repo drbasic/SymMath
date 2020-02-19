@@ -11,9 +11,10 @@ class DivOperation;
 class Imaginary;
 class INode;
 class INodeImpl;
-class Operation;
 class MultOperation;
+class Operation;
 class PlusOperation;
+class PowOperation;
 class TrigonometricOperation;
 class UnMinusOperation;
 class Variable;
@@ -79,6 +80,8 @@ class INodeHelper {
       double divider,
       std::vector<std::unique_ptr<INode>*> nodes);
   static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
+                                               std::unique_ptr<INode> rh);
+  static std::unique_ptr<PowOperation> MakePow(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,

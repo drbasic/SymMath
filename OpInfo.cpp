@@ -11,6 +11,8 @@ constexpr OpInfo kOps[] = {
     {Op::Plus, 10, L" + ", [](double lh, double rh) { return lh + rh; }, true},
     {Op::Mult, 20, L" ∙ ", [](double lh, double rh) { return lh * rh; }, true},
     {Op::Div, 20, L"/", [](double lh, double rh) { return lh / rh; }, false, 2},
+    {Op::Pow, 30, L"^", [](double lh, double rh) { return std::pow(lh, rh); },
+     false, 2},
     {Op::Sin, 1000, L"sin", [](double lh, double rh) { return sin(lh); }, false,
      1},
     {Op::Cos, 1000, L"cos", [](double lh, double rh) { return cos(lh); }, false,

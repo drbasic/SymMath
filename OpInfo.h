@@ -11,6 +11,7 @@ enum class Op : int {
   Plus,
   Mult,
   Div,
+  Pow,
   Sin,
   Cos,
 };

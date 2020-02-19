@@ -60,6 +60,7 @@ class Operation : public IOperation {
   friend class INodeHelper;
   friend class MultOperation;
   friend class PlusOperation;
+  friend class PowOperation;
   friend class UnMinusOperation;
   friend class Tests;
 

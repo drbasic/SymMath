@@ -164,6 +164,7 @@
     <ClCompile Include="Operations.cpp" />
     <ClCompile Include="OpInfo.cpp" />
     <ClCompile Include="PlusOperation.cpp" />
+    <ClCompile Include="PowOperation.cpp" />
     <ClCompile Include="RenderBehaviour.cpp" />
     <ClCompile Include="SimplifyHelpers.cpp" />
     <ClCompile Include="Tests.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="Operations.h" />
     <ClInclude Include="OpInfo.h" />
     <ClInclude Include="PlusOperation.h" />
+    <ClInclude Include="PowOperation.h" />
     <ClInclude Include="RenderBehaviour.h" />
     <ClInclude Include="SimplifyHelpers.h" />
     <ClInclude Include="Tests.h" />

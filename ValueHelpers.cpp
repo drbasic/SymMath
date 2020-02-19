@@ -10,6 +10,7 @@
 #include "OpInfo.h"
 #include "Operation.h"
 #include "PlusOperation.h"
+#include "PowOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 
@@ -92,7 +93,21 @@ std::unique_ptr<INode> operator/(double lh, std::unique_ptr<INode> rh) {
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
   return INodeHelper::MakeDiv(std::move(lh), std::make_unique<Constant>(rh));
 }
+//=============================================================================
+std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
+                                 std::unique_ptr<INode> rh) {
+  return INodeHelper::MakePow(std::move(lh), std::move(rh));
+}
 
+std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh,
+                           std::unique_ptr<INode> rh) {
+  return INodeHelper::MakePow(std::move(lh), std::move(rh));
+}
+
+std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh, double exp) {
+  return INodeHelper::MakePow(std::move(lh), INodeHelper::MakeConst(exp));
+}
+//=============================================================================
 std::unique_ptr<INode> AddBrackets(std::unique_ptr<INode> value) {
   return std::make_unique<Brackets>(BracketType::Round, std::move(value));
 }
@@ -101,7 +116,7 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
                                    std::unique_ptr<INode> value) {
   return std::make_unique<Brackets>(bracket_type, std::move(value));
 }
-
+//=============================================================================
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {
   return INodeHelper::MakeTrigonometric(Op::Sin, std::move(value));
 }

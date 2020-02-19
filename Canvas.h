@@ -31,6 +31,7 @@ struct PrintBox {
 
   static PrintBox Infinite();
 
+  PrintBox ShrinkTop(size_t delta_height) const;
   PrintBox ShrinkLeft(size_t delta_width) const;
 
   size_t x = 0;

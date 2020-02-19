@@ -54,6 +54,14 @@ PrintBox PrintBox ::Infinite() {
   return PrintBox(0, 0, 1000, 10000, 0);
 }
 
+PrintBox PrintBox::ShrinkTop(size_t delta_height) const {
+  PrintBox result(*this);
+  assert(result.height >= delta_height);
+  result.y += delta_height;
+  result.height -= delta_height;
+  return result;
+}
+
 PrintBox PrintBox::ShrinkLeft(size_t delta_width) const {
   PrintBox result(*this);
   assert(result.width >= delta_width);

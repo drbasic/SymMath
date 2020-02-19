@@ -11,6 +11,7 @@
 #include "OpInfo.h"
 #include "Operation.h"
 #include "PlusOperation.h"
+#include "PowOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
@@ -304,6 +305,12 @@ std::unique_ptr<INode> INodeHelper::MakeMult(
 std::unique_ptr<DivOperation> INodeHelper::MakeDiv(std::unique_ptr<INode> lh,
                                                    std::unique_ptr<INode> rh) {
   return std::make_unique<DivOperation>(std::move(lh), std::move(rh));
+}
+
+// static
+std::unique_ptr<PowOperation> INodeHelper::MakePow(std::unique_ptr<INode> lh,
+                                                   std::unique_ptr<INode> rh) {
+  return std::make_unique<PowOperation>(std::move(lh), std::move(rh));
 }
 
 // static

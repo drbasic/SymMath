@@ -24,16 +24,16 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = a + b - 10;
-  y = t * t + 2* b + Sin(a) + Sin(b) - Sin(a);
+  Variable t = Pow(a + b/2, 3) + b * x + c;
+  y = t;
   Variable calc = a.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
   y.OpenBrackets();
   // calc = y.SymCalc();
-  std::wcout << y.Print() << calc.Print() << "\n";
+  // std::wcout << y.Print() << calc.Print() << "\n";
   y.Simplify();
   // calc = y.SymCalc();
-  std::wcout << y.Print() << calc.Print() << "\n";
+  // std::wcout << y.Print() << calc.Print() << "\n";
 
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);
