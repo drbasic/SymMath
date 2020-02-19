@@ -62,7 +62,7 @@ std::optional<CanonicMult> MultOperation::GetCanonic() {
     if (constant)
       result.a = op_info_->trivial_f(result.a, constant->Value());
     else
-      INodeHelper::MergeCanonic(&op, &result);
+      result.nodes.push_back(&op);
   }
   return result;
 }
@@ -116,19 +116,17 @@ void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
 }
 
 void MultOperation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyConsts(new_node);
+  //Operation::SimplifyConsts(new_node);
 
   std::vector<std::unique_ptr<INode>> new_bottom;
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    if (auto* div = INodeHelper::AsDiv(operands_[i].get())) {
-      operands_.push_back(std::move(div->operands_[0]));
+  for (auto& node : operands_) {
+    if (auto* div = INodeHelper::AsDiv(node.get())) {
       new_bottom.push_back(std::move(div->operands_[1]));
-      operands_[i].reset();
+      node = std::move(div->operands_[0]);
     }
   }
   if (new_bottom.empty())
     return;
-  INodeHelper::RemoveEmptyOperands(&operands_);
   *new_node = INodeHelper::MakeDiv(
       INodeHelper::MakeMultIfNeeded(std::move(operands_)),
       INodeHelper::MakeMultIfNeeded(std::move(new_bottom)));

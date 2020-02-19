@@ -39,6 +39,7 @@ class Operation : public IOperation {
   void SimplifyDivDiv() override;
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
+  void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
   void OpenBrackets(std::unique_ptr<INode>* new_node) override;
 
  protected:
@@ -58,11 +59,11 @@ class Operation : public IOperation {
 
   friend class INodeHelper;
   friend class MultOperation;
+  friend class PlusOperation;
   friend class UnMinusOperation;
   friend class Tests;
 
   void CheckIntegrity() const;
-  bool SimplifySame(std::unique_ptr<INode>* new_node);
   bool IsAllOperandsConst(
       const std::vector<std::unique_ptr<INode>>& operands) const;
 

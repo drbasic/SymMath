@@ -75,10 +75,9 @@ PrintSize DivOperation::Render(Canvas* canvas,
 }
 
 std::optional<CanonicMult> DivOperation::GetCanonic() {
-  if (Constant* rh = Bottom()->AsConstant()) {
-    CanonicMult result;
-    result.b = rh->Value();
-    INodeHelper::MergeCanonic(&operands_[0], &result);
+  if (Constant* bottom_const = Bottom()->AsConstant()) {
+    CanonicMult result = INodeHelper::GetCanonic(operands_[0]);
+    result.b *= bottom_const->Value();
     return result;
   }
   return std::nullopt;
@@ -86,6 +85,7 @@ std::optional<CanonicMult> DivOperation::GetCanonic() {
 
 void DivOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyUnMinus(nullptr);
+
   bool is_positve = true;
   for (auto& node : operands_) {
     if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
@@ -99,10 +99,45 @@ void DivOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   }
 }
 
+void DivOperation::SimplifyDivDiv() {
+  Operation::SimplifyDivDiv();
+
+  auto* top = INodeHelper::AsDiv(Top());
+  auto* bottom = INodeHelper::AsDiv(Bottom());
+  if (!top && !bottom) {
+    return;
+  }
+
+  std::vector<std::unique_ptr<INode>> new_top;
+  std::vector<std::unique_ptr<INode>> new_bottom;
+  if (top) {
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(top->operands_[0]),
+                                     &new_top);
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(top->operands_[1]),
+                                     &new_bottom);
+  } else {
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(operands_[0]),
+                                     &new_top);
+  }
+  if (bottom) {
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[1]),
+                                     &new_top);
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[0]),
+                                     &new_bottom);
+  } else {
+    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(operands_[1]),
+                                     &new_bottom);
+  }
+
+  operands_[0] = INodeHelper::MakeMultIfNeeded(std::move(new_top));
+  operands_[1] = INodeHelper::MakeMultIfNeeded(std::move(new_bottom));
+}
+
 void DivOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyConsts(new_node);
   if (*new_node)
     return;
+
   if (Constant* top = INodeHelper::AsConstant(operands_[0].get())) {
     if (top->Value() == 0.0) {
       *new_node = std::move(operands_[0]);
@@ -141,38 +176,4 @@ bool DivOperation::HasFrontMinus() const {
   bool lh_minus = Top()->HasFrontMinus();
   bool rh_minus = Bottom()->HasFrontMinus();
   return lh_minus ^ rh_minus;
-}
-
-void DivOperation::SimplifyDivDiv() {
-  Operation::SimplifyDivDiv();
-
-  auto* top = INodeHelper::AsDiv(Top());
-  auto* bottom = INodeHelper::AsDiv(Bottom());
-  if (!top && !bottom) {
-    return;
-  }
-
-  std::vector<std::unique_ptr<INode>> new_top;
-  std::vector<std::unique_ptr<INode>> new_bottom;
-  if (top) {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(top->operands_[0]),
-                                     &new_top);
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(top->operands_[1]),
-                                     &new_bottom);
-  } else {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(operands_[0]),
-                                     &new_top);
-  }
-  if (bottom) {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[1]),
-                                     &new_top);
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[0]),
-                                     &new_bottom);
-  } else {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(operands_[1]),
-                                     &new_bottom);
-  }
-
-  operands_[0] = INodeHelper::MakeMultIfNeeded(std::move(new_top));
-  operands_[1] = INodeHelper::MakeMultIfNeeded(std::move(new_bottom));
 }

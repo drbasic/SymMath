@@ -15,6 +15,7 @@
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "SimplifyHelpers.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 
@@ -51,225 +52,6 @@ std::vector<std::unique_ptr<INode>> CalcOperands(
     result.push_back(operand->SymCalc());
   }
   return result;
-}
-
-bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
-                            const std::vector<const INode*>& rhs) {
-  if (lhs.size() != rhs.size())
-    return false;
-
-  std::vector<bool> used;
-  used.resize(rhs.size());
-  for (size_t i = 0; i < lhs.size(); ++i) {
-    bool equal_found = false;
-    for (size_t j = 0; j < rhs.size(); ++j) {
-      if (used[j])
-        continue;
-      if (!INodeHelper::IsNodesEqual(lhs[i], rhs[i]))
-        continue;
-      used[j] = true;
-      equal_found = true;
-      break;
-    }
-    if (!equal_found)
-      return false;
-  }
-  return true;
-}
-
-bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>*>& lhs,
-                            const std::vector<std::unique_ptr<INode>*>& rhs) {
-  auto transform = [](const std::vector<std::unique_ptr<INode>*>& nodes)
-      -> std::vector<const INode*> {
-    std::vector<const INode*> result;
-    result.resize(nodes.size());
-    for (size_t i = 0; i < nodes.size(); ++i) {
-      result[i] = nodes[i]->get();
-    }
-    return result;
-  };
-  return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
-}
-
-bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
-                            const std::vector<std::unique_ptr<INode>>& rhs) {
-  auto transform = [](const std::vector<std::unique_ptr<INode>>& nodes)
-      -> std::vector<const INode*> {
-    std::vector<const INode*> result;
-    result.resize(nodes.size());
-    for (size_t i = 0; i < nodes.size(); ++i) {
-      result[i] = nodes[i].get();
-    }
-    return result;
-  };
-  return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
-}
-
-std::vector<std::unique_ptr<INode>*> GetNodesPointers(
-    std::vector<std::unique_ptr<INode>>& nodes,
-    size_t skip) {
-  std::vector<std::unique_ptr<INode>*> result;
-  for (size_t i = 0; i < nodes.size(); ++i) {
-    if (i == skip)
-      continue;
-    if (nodes[i].get())
-      result.push_back(&nodes[i]);
-  }
-  return result;
-}
-
-std::vector<std::unique_ptr<INode>*> GetNodesPointersWithoutConstant(
-    const std::vector<std::unique_ptr<INode>*>& src,
-    double* constant) {
-  std::vector<std::unique_ptr<INode>*> result;
-  for (auto node : src) {
-    if (auto c = INodeHelper::AsConstant(node->get()))
-      *constant += c->Value();
-    else
-      result.push_back(node);
-  }
-  return result;
-}
-
-bool TakeTransitiveEqualNodesTheSame(
-    const std::vector<std::unique_ptr<INode>*>& lhs,
-    const std::vector<std::unique_ptr<INode>*>& rhs) {
-  std::vector<bool> used;
-  used.resize(rhs.size());
-  for (size_t i = 0; i < lhs.size(); ++i) {
-    bool equal_found = false;
-    for (size_t j = 0; j < rhs.size(); ++j) {
-      if (used[j])
-        continue;
-      if (!INodeHelper::IsNodesEqual(lhs[i]->get(), rhs[i]->get()))
-        continue;
-      used[j] = true;
-      equal_found = true;
-      break;
-    }
-    if (!equal_found)
-      return false;
-  }
-  for (size_t i = 0; i < used.size(); ++i) {
-    if (used[i])
-      rhs[i]->reset();
-  }
-  return true;
-}
-
-std::unique_ptr<INode> MakeMult(double dividend,
-                                double divider,
-                                std::vector<std::unique_ptr<INode>*> nodes) {
-  if (dividend == divider && nodes.size() == 1) {
-    return std::move(*nodes[0]);
-  }
-  if (dividend == divider) {
-    std::vector<std::unique_ptr<INode>> operands;
-    for (auto& node : nodes) {
-      operands.push_back(std::move(*node));
-    }
-    return INodeHelper::MakeMult(std::move(operands));
-  }
-
-  std::unique_ptr<INode> result;
-  if (dividend != 1.0 || nodes.size() > 1) {
-    std::vector<std::unique_ptr<INode>> operands;
-    operands.reserve(nodes.size() + (dividend != 1.0 ? 1 : 0));
-    if (dividend != 1.0)
-      operands.push_back(Const(dividend));
-    for (auto& node : nodes) {
-      operands.push_back(std::move(*node));
-    }
-    result = INodeHelper::MakeMult(std::move(operands));
-  } else {
-    result = std::move(*nodes[0]);
-  }
-  if (divider == 1.0)
-    return result;
-  result = INodeHelper::MakeDiv(std::move(result), Const(divider));
-  return result;
-}
-
-double TakeTransitiveEqualNodesCount(
-    const std::vector<std::unique_ptr<INode>*>& lhs,
-    const std::vector<std::unique_ptr<INode>*>& rhs) {
-  std::vector<double> used;
-  used.resize(rhs.size());
-  for (size_t i = 0; i < lhs.size(); ++i) {
-    bool equal_found = false;
-    CanonicMult canonic_lh = INodeHelper::GetCanonic(lhs[i]);
-
-    for (size_t j = 0; j < rhs.size(); ++j) {
-      if (used[j])
-        continue;
-      CanonicMult canonic_rh = INodeHelper::GetCanonic(rhs[j]);
-      bool eq = IsNodesTransitiveEqual(canonic_lh.nodes, canonic_rh.nodes);
-      if (!eq)
-        continue;
-      used[j] = (canonic_rh.a * canonic_lh.b) / (canonic_lh.a * canonic_rh.b);
-      equal_found = true;
-      break;
-    }
-    if (!equal_found)
-      return 0;
-  }
-
-  std::map<double, size_t> popular;
-  for (size_t i = 0; i < used.size(); ++i) {
-    if (used[i] != 0.0)
-      popular[used[i]]++;
-  }
-
-  auto it =
-      std::max_element(std::begin(popular), std::end(popular),
-                       [](auto lh, auto rh) { return lh.second < rh.second; });
-  double counter = it->first;
-  for (size_t i = 0; i < used.size(); ++i) {
-    if (used[i] == 0.0)
-      continue;
-    if (used[i] == counter) {
-      rhs[i]->reset();
-    } else {
-      CanonicMult canonic_rh = INodeHelper::GetCanonic(rhs[i]);
-      double dividend = (canonic_rh.a - counter) * canonic_rh.b;
-      double divider = canonic_rh.a;
-      *rhs[i] = MakeMult(dividend, divider, {rhs[i]});
-    }
-  }
-  return counter;
-}
-
-double TakeTransitiveEqualNodes(const std::vector<std::unique_ptr<INode>*>& lhs,
-                                const std::vector<std::unique_ptr<INode>*>& rhs,
-                                double* remains) {
-  if (TakeTransitiveEqualNodesTheSame(lhs, rhs)) {
-    remains = 0;
-    return 1;
-  }
-  std::vector<std::unique_ptr<INode>*> without_consts =
-      GetNodesPointersWithoutConstant(lhs, remains);
-  double count = TakeTransitiveEqualNodesCount(without_consts, rhs);
-  *remains *= -count;
-  return count;
-}
-
-double TryExctractSum(const CanonicMult& canonic,
-                      std::vector<std::unique_ptr<INode>*> free_operands,
-                      double* remains) {
-  if (canonic.nodes.size() != 1)
-    return 0.0;
-  Operation* canonic_op = INodeHelper::AsOperation(canonic.nodes[0]->get());
-  if (!canonic_op)
-    return 0.0;
-
-  if (INodeHelper::GetOperands(canonic_op).size() > free_operands.size())
-    return 0.0;
-
-  double count = TakeTransitiveEqualNodes(
-      GetNodesPointers(INodeHelper::GetOperands(canonic_op),
-                       std::numeric_limits<size_t>::max()),
-      free_operands, remains);
-  return count;
 }
 
 }  // namespace
@@ -401,6 +183,12 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
         current->SimplifyDivDiv();
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
+        //current->SimplifyConsts(new_node);
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->SimplifyTheSame(new_node);
+      },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyConsts(new_node);
       },
   };
@@ -415,15 +203,6 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
       current->CheckIntegrity();
     }
   }
-
-  /*
-  while (SimplifySame(new_node)) {
-    if (new_node->get())
-      return true;
-    CheckIntegrity();
-    simplified = true;
-  }
-  */
 }
 
 void Operation::CheckIntegrity() const {
@@ -445,61 +224,6 @@ void Operation::CheckIntegrity() const {
   for (const auto& operand : operands_) {
     assert(operand);
   }
-}
-
-bool Operation::SimplifySame(std::unique_ptr<INode>* new_node) {
-  if (op_info_->op != Op::Plus)
-    return false;
-  bool is_optimized = false;
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    if (!operands_[i])
-      continue;
-    CanonicMult conanic_1 = INodeHelper::GetCanonic(&operands_[i]);
-    if (conanic_1.nodes.empty())
-      continue;
-    bool is_operand_optimized = false;
-    for (size_t j = i + 1; j < operands_.size(); ++j) {
-      if (!operands_[j])
-        continue;
-      CanonicMult conanic_2 = INodeHelper::GetCanonic(&operands_[j]);
-      if (conanic_2.nodes.empty())
-        continue;
-      if (!IsNodesTransitiveEqual(conanic_1.nodes, conanic_2.nodes))
-        continue;
-      double dividend = op_info_->trivial_f(conanic_1.a * conanic_2.b,
-                                            conanic_2.a * conanic_1.b);
-      double divider = (conanic_1.b * conanic_2.b);
-      operands_[i] = MakeMult(dividend, divider, conanic_1.nodes);
-      operands_[j].reset();
-      is_optimized = true;
-      is_operand_optimized = true;
-      break;
-    }
-    if (is_operand_optimized)
-      continue;
-    double remains = 0;
-    double count =
-        TryExctractSum(conanic_1, GetNodesPointers(operands_, i), &remains);
-    if (count != 0.0) {
-      double k =
-          op_info_->trivial_f(conanic_1.a, count * conanic_1.b) / conanic_1.b;
-      std::vector<std::unique_ptr<INode>> operands;
-      operands.push_back(Const(k));
-      for (auto& node : conanic_1.nodes) {
-        operands.push_back(std::move(*node));
-      }
-      operands_[i] = INodeHelper::MakeMult(std::move(operands));
-      if (remains)
-        operands_.push_back(Const(remains));
-      is_optimized = true;
-    }
-  }
-  if (is_optimized)
-    INodeHelper::RemoveEmptyOperands(&operands_);
-  if (operands_.size() == 1) {
-    *new_node = std::move(operands_[0]);
-  }
-  return is_optimized;
 }
 
 bool Operation::IsAllOperandsConst(
@@ -558,6 +282,14 @@ void Operation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     *new_node = SymCalc();
     return;
   }
+}
+
+void Operation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
+  ApplySimplification(
+      [](Operation* operation, std::unique_ptr<INode>* new_node) {
+        operation->SimplifyTheSame(new_node);
+      },
+      &operands_);
 }
 
 void Operation::OpenBrackets(std::unique_ptr<INode>* new_node) {

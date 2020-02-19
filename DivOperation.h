@@ -19,10 +19,10 @@ class DivOperation : public Operation {
   // IOperation implementation
   std::optional<CanonicMult> GetCanonic() override;
   void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
+  void SimplifyDivDiv() override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   DivOperation* AsDivOperation() override { return this; }
   const DivOperation* AsDivOperation() const override { return this; }
-  void SimplifyDivDiv() override;
 
  private:
   friend class Tests;

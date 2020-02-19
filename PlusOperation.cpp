@@ -5,7 +5,9 @@
 
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "MultOperation.h"
 #include "OpInfo.h"
+#include "SimplifyHelpers.h"
 #include "UnMinusOperation.h"
 
 PlusOperation::PlusOperation(std::unique_ptr<INode> lh,
@@ -44,11 +46,8 @@ void PlusOperation::UnfoldChains() {
   CheckIntegrity();
 }
 
-
 void PlusOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
-  //UnfoldChain();
-
-  Operation::SimplifyChains(new_node);
+  Operation::SimplifyChains(nullptr);
 }
 
 void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
@@ -89,6 +88,43 @@ void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
     *new_node = std::move(operands_[0]);
     return;
   }
-  CheckIntegrity();
 }
 
+void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyTheSame(nullptr);
+
+  bool is_optimized = false;
+  for (size_t i = 0; i < operands_.size(); ++i) {
+    if (!operands_[i])
+      continue;
+    CanonicMult canonic_1 = INodeHelper::GetCanonic(operands_[i]);
+    if (canonic_1.nodes.empty()) {
+      // skip constants.
+      continue;
+    }
+
+    bool is_operand_optimized = false;
+    for (size_t j = i + 1; j < operands_.size(); ++j) {
+      if (!operands_[j])
+        continue;
+      CanonicMult canonic_2 = INodeHelper::GetCanonic(operands_[j]);
+      if (canonic_2.nodes.empty())
+        continue;
+
+      bool is_combined = MergeCanonicToNodes(canonic_1, canonic_2,
+                                             &operands_[i], &operands_[j]);
+      if (!operands_[i])
+        break;
+      if (is_combined) {
+        canonic_1 = INodeHelper::GetCanonic(operands_[i]);
+      }
+    }
+  }
+  INodeHelper::RemoveEmptyOperands(&operands_);
+  if (operands_.size() == 1) {
+    *new_node = std::move(operands_[0]);
+  }
+  if (operands_.size() == 0) {
+    *new_node = std::move(INodeHelper::MakeConst(0.0));
+  }
+}

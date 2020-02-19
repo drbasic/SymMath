@@ -87,27 +87,29 @@ const DivOperation* INodeHelper::AsDiv(const INode* lh) {
 }
 
 // static
-CanonicMult INodeHelper::GetCanonic(std::unique_ptr<INode>* node) {
-  if (auto* operation = AsOperation(node->get())) {
+CanonicMult INodeHelper::GetCanonic(std::unique_ptr<INode>& node) {
+  if (auto* operation = AsOperation(node.get())) {
     auto inner_canonic = operation->GetCanonic();
     if (inner_canonic)
       return *inner_canonic;
   }
   CanonicMult result;
-  result.nodes.push_back(node);
+  result.nodes.push_back(&node);
   return result;
 }
 
 // static
-void INodeHelper::MergeCanonic(std::unique_ptr<INode>* node,
-                               CanonicMult* output) {
-  auto node_canonic = GetCanonic(node);
-  output->a *= node_canonic.a;
-  output->b *= node_canonic.b;
-  output->nodes.reserve(output->nodes.size() + node_canonic.nodes.size());
-  for (auto* n : node_canonic.nodes) {
-    output->nodes.push_back(n);
-  }
+CanonicMult INodeHelper::MergeCanonic(const CanonicMult& lh,
+                                      const CanonicMult& rh) {
+  CanonicMult result;
+  result.a = lh.a * rh.a;
+  result.b = lh.b * rh.b;
+  result.nodes.reserve(lh.nodes.size() + rh.nodes.size());
+  for (auto node : lh.nodes)
+    result.nodes.push_back(node);
+  for (auto node : rh.nodes)
+    result.nodes.push_back(node);
+  return result;
 }
 
 void INodeHelper::ExctractNodesWithOp(
@@ -260,6 +262,42 @@ std::unique_ptr<MultOperation> INodeHelper::MakeMult(
 std::unique_ptr<MultOperation> INodeHelper::MakeMult(
     std::vector<std::unique_ptr<INode>> operands) {
   return std::make_unique<MultOperation>(std::move(operands));
+}
+
+// static
+std::unique_ptr<INode> INodeHelper::MakeMult(
+    double dividend,
+    double divider,
+    std::vector<std::unique_ptr<INode>*> nodes) {
+  if (dividend == divider && nodes.size() == 1) {
+    return std::move(*nodes[0]);
+  }
+  if (dividend == divider) {
+    std::vector<std::unique_ptr<INode>> operands;
+    for (auto& node : nodes) {
+      operands.push_back(std::move(*node));
+    }
+    return INodeHelper::MakeMult(std::move(operands));
+  }
+
+  std::unique_ptr<INode> result;
+  if (dividend != 1.0 || nodes.size() > 1) {
+    std::vector<std::unique_ptr<INode>> operands;
+    operands.reserve(nodes.size() + (dividend != 1.0 ? 1 : 0));
+    if (dividend != 1.0)
+      operands.push_back(INodeHelper::MakeConst(dividend));
+    for (auto& node : nodes) {
+      operands.push_back(std::move(*node));
+    }
+    result = INodeHelper::MakeMult(std::move(operands));
+  } else {
+    result = std::move(*nodes[0]);
+  }
+  if (divider == 1.0)
+    return result;
+  result =
+      INodeHelper::MakeDiv(std::move(result), INodeHelper::MakeConst(divider));
+  return result;
 }
 
 // static

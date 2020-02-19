@@ -38,8 +38,8 @@ class INodeHelper {
   static DivOperation* AsDiv(INode* lh);
   static const DivOperation* AsDiv(const INode* lh);
 
-  static CanonicMult GetCanonic(std::unique_ptr<INode>* node);
-  static void MergeCanonic(std::unique_ptr<INode>* node, CanonicMult* output);
+  static CanonicMult GetCanonic(std::unique_ptr<INode>& node);
+  static CanonicMult MergeCanonic(const CanonicMult& lh, const CanonicMult& rh);
 
   static void ExctractNodesWithOp(Op op,
                                   std::vector<std::unique_ptr<INode>>* src,
@@ -74,6 +74,10 @@ class INodeHelper {
                                                  std::unique_ptr<INode> rh);
   static std::unique_ptr<MultOperation> MakeMult(
       std::vector<std::unique_ptr<INode>> operands);
+  static std::unique_ptr<INode> MakeMult(
+      double dividend,
+      double divider,
+      std::vector<std::unique_ptr<INode>*> nodes);
   static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
