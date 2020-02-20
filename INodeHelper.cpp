@@ -107,7 +107,7 @@ CanonicPow INodeHelper::GetCanonicPow(std::unique_ptr<INode>& node) {
       return *inner_canonic;
   }
   CanonicPow result;
-  result.base_nodes.push_back(&node);
+  result.Add(1, &node);
   return result;
 }
 
@@ -187,7 +187,8 @@ std::unique_ptr<INode> INodeHelper::Negate(std::unique_ptr<INode> node) {
 // static
 std::unique_ptr<INode> INodeHelper::MakeMultIfNeeded(
     std::vector<std::unique_ptr<INode>> nodes) {
-  assert(!nodes.empty());
+  if (nodes.size() == 0)
+    return MakeConst(1.0);
   if (nodes.size() == 1)
     return std::move(nodes[0]);
   return MakeMult(std::move(nodes));
@@ -320,9 +321,18 @@ std::unique_ptr<DivOperation> INodeHelper::MakeDiv(std::unique_ptr<INode> lh,
 }
 
 // static
-std::unique_ptr<PowOperation> INodeHelper::MakePow(std::unique_ptr<INode> lh,
-                                                   std::unique_ptr<INode> rh) {
-  return std::make_unique<PowOperation>(std::move(lh), std::move(rh));
+std::unique_ptr<PowOperation> INodeHelper::MakePow(std::unique_ptr<INode> base,
+                                                   std::unique_ptr<INode> exp) {
+  return std::make_unique<PowOperation>(std::move(base), std::move(exp));
+}
+
+std::unique_ptr<INode> INodeHelper::MakePowIfNeeded(std::unique_ptr<INode> base,
+                                                    double exp) {
+  if (exp == 0.0)
+    return nullptr;
+  if (exp == 1.0)
+    return base;
+  return MakePow(std::move(base), INodeHelper::MakeConst(exp));
 }
 
 // static

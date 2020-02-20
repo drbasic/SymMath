@@ -71,8 +71,9 @@ std::optional<CanonicMult> MultOperation::GetCanonic() {
 std::optional<CanonicPow> MultOperation::GetCanonicPow() {
   CanonicPow result;
   result.base_nodes.reserve(operands_.size());
-  for (auto& node : operands_)
-    result.base_nodes.push_back(&node);
+  for (auto& node : operands_) {
+    result.Merge(INodeHelper::GetCanonicPow(node));
+  }
   return result;
 }
 
@@ -282,13 +283,20 @@ void MultOperation::SimplifyTheSamePow(std::unique_ptr<INode>* new_node) {
       if (canonic_2.base_nodes.empty())
         continue;
 
-      std::unique_ptr<INode> new_sub_node;
-      bool is_combined =
-          MergeCanonicToPow(canonic_1, std::move(canonic_2), &operands_[i],
-                            &operands_[j], &new_sub_node);
+      std::vector<std::unique_ptr<INode>> new_sub_nodes;
+      bool is_combined = MergeCanonicToPow(canonic_1, std::move(canonic_2),
+                                           &new_sub_nodes, nullptr);
       if (is_combined) {
-        if (new_sub_node)
-          operands_.push_back(std::move(new_sub_node));
+        operands_[i].reset();
+        operands_[j].reset();
+        for (size_t k = 0; k < new_sub_nodes.size(); ++k) {
+          if (k == 0)
+            operands_[i] = std::move(new_sub_nodes[k]);
+          else if (k == 1)
+            operands_[j] = std::move(new_sub_nodes[k]);
+          else
+            operands_.push_back(std::move(new_sub_nodes[k]));
+        }
         canonic_1 = INodeHelper::GetCanonicPow(operands_[i]);
       }
     }

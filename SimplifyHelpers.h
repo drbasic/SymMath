@@ -32,8 +32,7 @@ bool MergeCanonicToNodesMult(const CanonicMult& lh,
                              std::unique_ptr<INode>* lh_node,
                              std::unique_ptr<INode>* rh_node);
 
-bool MergeCanonicToPow( CanonicPow lh,
-                        CanonicPow rh,
-                       std::unique_ptr<INode>* node_1,
-                       std::unique_ptr<INode>* node_2,
-                       std::unique_ptr<INode>* node_3);
+bool MergeCanonicToPow(CanonicPow lh,
+                       CanonicPow rh,
+                       std::vector<std::unique_ptr<INode>>* top,
+                       std::vector<std::unique_ptr<INode>>* bottom);

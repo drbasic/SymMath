@@ -1,3 +1,7 @@
 /Debug
 *.user
 *.db
+*.ipch
+*.suo
+*.sln
+v16

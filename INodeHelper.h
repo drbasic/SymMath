@@ -86,6 +86,8 @@ class INodeHelper {
                                                std::unique_ptr<INode> rh);
   static std::unique_ptr<PowOperation> MakePow(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
+  static std::unique_ptr<INode> MakePowIfNeeded(std::unique_ptr<INode> lh,
+                                                double exp);
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);

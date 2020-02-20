@@ -252,21 +252,27 @@ bool MergeCanonicToNodesMult(const CanonicMult& lh,
 
 bool MergeCanonicToPow(CanonicPow lh,
                        CanonicPow rh,
-                       std::unique_ptr<INode>* node_1,
-                       std::unique_ptr<INode>* node_2,
-                       std::unique_ptr<INode>* node_3) {
-  std::vector<std::unique_ptr<INode>> merged_nodes;
+                       std::vector<std::unique_ptr<INode>>* top,
+                       std::vector<std::unique_ptr<INode>>* bottom) {
+  struct NodeAndExp {
+    NodeAndExp(double exp, std::unique_ptr<INode> node)
+        : exp(exp), node(std::move(node)) {}
+    double exp;
+    std::unique_ptr<INode> node;
+  };
+  std::vector<NodeAndExp> merged_nodes;
 
-  for (auto& lh_node : lh.base_nodes) {
-    if (!lh_node)
+  for (auto& lh_node_info : lh.base_nodes) {
+    if (!lh_node_info.node)
       continue;
-    for (auto& rh_node : rh.base_nodes) {
-      if (!rh_node)
+    for (auto& rh_node_info : rh.base_nodes) {
+      if (!rh_node_info.node)
         continue;
-      if (lh_node->get()->IsEqual(rh_node->get())) {
-        merged_nodes.push_back(std::move(*lh_node));
-        lh_node = nullptr;
-        rh_node = nullptr;
+      if (lh_node_info.node->get()->IsEqual(rh_node_info.node->get())) {
+        merged_nodes.emplace_back(lh_node_info.exp + rh_node_info.exp,
+                                  std::move(*lh_node_info.node));
+        lh_node_info.node = nullptr;
+        rh_node_info.node = nullptr;
         break;
       }
     }
@@ -274,32 +280,26 @@ bool MergeCanonicToPow(CanonicPow lh,
   if (merged_nodes.empty())
     return false;
 
-  auto pow_node_maker =
-      [](const CanonicPow& canonic) -> std::unique_ptr<INode> {
-    std::vector<std::unique_ptr<INode>> lh_remains_nodes;
-    for (auto& node : canonic.base_nodes) {
-      if (!node)
+  auto pow_node_maker = [](const CanonicPow& canonic,
+                           std::vector<NodeAndExp>* new_pows) {
+    for (auto& node_info : canonic.base_nodes) {
+      if (!node_info.node)
         continue;
-      lh_remains_nodes.push_back(std::move(*node));
+      new_pows->emplace_back(node_info.exp, std::move(*node_info.node));
     }
-    if (!lh_remains_nodes.empty()) {
-      auto base = INodeHelper::MakeMultIfNeeded(std::move(lh_remains_nodes));
-      return INodeHelper::MakePow(std::move(base),
-                                  INodeHelper::MakeConst(canonic.exp));
-    }
-    return nullptr;
   };
 
-  auto base = INodeHelper::MakeMultIfNeeded(std::move(merged_nodes));
-  // Need make temporary nodes before assign to outer nodes.
-  auto new_node_1 = INodeHelper::MakePow(
-      std::move(base), INodeHelper::MakeConst(lh.exp + rh.exp));
-  auto new_node_2 = pow_node_maker(lh);
-  auto new_node_3 = pow_node_maker(rh);
-
-  *node_1 = std::move(new_node_1);
-  *node_2 = std::move(new_node_2);
-  *node_3 = std::move(new_node_3);
+  pow_node_maker(lh, &merged_nodes);
+  pow_node_maker(rh, &merged_nodes);
+  for (auto& node_and_exp : merged_nodes) {
+    bool to_bottom = bottom && node_and_exp.exp < 0;
+    if (to_bottom)
+      node_and_exp.exp *= -1.0;
+    auto new_node = INodeHelper::MakePowIfNeeded(std::move(node_and_exp.node),
+                                                 node_and_exp.exp);
+    if (new_node)
+      (to_bottom ? bottom : top)->push_back(std::move(new_node));
+  }
 
   return true;
 }

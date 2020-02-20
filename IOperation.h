@@ -17,8 +17,14 @@ struct CanonicMult {
 };
 
 struct CanonicPow {
-  double exp = 1;
-  std::vector<std::unique_ptr<INode>*> base_nodes;
+  void Merge(CanonicPow rh);
+  void Add(double exp, std::unique_ptr<INode>* node);
+
+  struct NodeInfo {
+    double exp = 1;
+    std::unique_ptr<INode>* node = nullptr;
+  };
+  std::vector<NodeInfo> base_nodes;
 };
 
 class IOperation : public INodeImpl {
