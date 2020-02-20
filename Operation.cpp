@@ -183,7 +183,7 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
         current->SimplifyDivDiv();
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
-        //current->SimplifyConsts(new_node);
+        // current->SimplifyConsts(new_node);
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyTheSame(new_node);
@@ -300,30 +300,28 @@ void Operation::OpenBrackets(std::unique_ptr<INode>* new_node) {
       &operands_);
 }
 
+Op Operation::op() const {
+  return op_info_->op;
+}
+
+size_t Operation::OperandsCount() const {
+  return operands_.size();
+}
+
+std::unique_ptr<INode> Operation::TakeOperand(size_t indx) {
+  return std::move(operands_[indx]);
+}
+
+std::vector<std::unique_ptr<INode>> Operation::TakeAllOperands() {
+  return std::move(operands_);
+}
+
 INodeImpl* Operation::Operand(size_t indx) {
   return operands_[indx]->AsNodeImpl();
 }
 
 const INodeImpl* Operation::Operand(size_t indx) const {
   return operands_[indx]->AsNodeImpl();
-}
-
-bool Operation::ReduceFor(double val) {
-  assert(op_info_->op == Op::Mult);
-  assert(val != 0.0);
-
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    Constant* constant = Operand(i)->AsConstant();
-    if (!constant)
-      continue;
-    double d = constant->Value() / val;
-    double intpart;
-    if (modf(d, &intpart) != 0.0)
-      continue;
-    operands_[i] = Const(d);
-    return true;
-  }
-  return false;
 }
 
 PrintSize Operation::RenderOperandChain(

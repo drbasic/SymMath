@@ -24,7 +24,7 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = a * b * c * Pow(a + Pow(b,2), 2) /( Pow(a * b * d, 3)*(b*b +a));
+  Variable t = 1.5 * a + a;
   y = t;
   Variable calc = a.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";

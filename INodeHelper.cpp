@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include "Brackets.h"
 #include "Constant.h"
 #include "DivOperation.h"
 #include "INode.h"
@@ -15,11 +16,6 @@
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
-
-// static
-bool INodeHelper::IsNodesEqual(const INode* lh, const INode* rh) {
-  return lh->IsEqual(rh);
-}
 
 // static
 Constant* INodeHelper::AsConstant(INode* lh) {
@@ -54,11 +50,6 @@ const MultOperation* INodeHelper::AsMult(const INode* lh) {
 }
 
 // static
-std::vector<std::unique_ptr<INode>>& INodeHelper::GetOperands(Operation* op) {
-  return op->operands_;
-}
-
-// static
 bool INodeHelper::IsUnMinus(const INode* lh) {
   auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsUnMinusOperation() != nullptr : false;
@@ -88,9 +79,9 @@ const DivOperation* INodeHelper::AsDiv(const INode* lh) {
 }
 
 // static
-CanonicMult INodeHelper::GetCanonic(std::unique_ptr<INode>& node) {
+CanonicMult INodeHelper::GetCanonicMult(std::unique_ptr<INode>& node) {
   if (auto* operation = AsOperation(node.get())) {
-    auto inner_canonic = operation->GetCanonic();
+    auto inner_canonic = operation->GetCanonicMult();
     if (inner_canonic)
       return *inner_canonic;
   }
@@ -125,61 +116,10 @@ CanonicMult INodeHelper::MergeCanonic(const CanonicMult& lh,
   return result;
 }
 
-void INodeHelper::ExctractNodesWithOp(
-    Op op,
-    std::vector<std::unique_ptr<INode>>* src,
-    std::vector<std::unique_ptr<INode>>* nodes) {
-  for (auto& node : *src) {
-    ExctractNodesWithOp(op, std::move(node), nodes);
-  }
-}
-
-void INodeHelper::ExctractNodesWithOp(
-    Op op,
-    std::unique_ptr<INode> src,
-    std::vector<std::unique_ptr<INode>>* nodes) {
-  std::vector<std::unique_ptr<INode>> positive_nodes;
-  std::vector<std::unique_ptr<INode>> negative_nodes;
-  INodeHelper::ExctractNodesWithOp(op, std::move(src), &positive_nodes,
-                                   &negative_nodes);
-  nodes->reserve(nodes->size() + positive_nodes.size() + negative_nodes.size());
-  for (auto& node : positive_nodes) {
-    nodes->push_back(std::move(node));
-  }
-  for (auto& node : negative_nodes) {
-    nodes->push_back(INodeHelper::Negate(std::move(node)));
-  }
-}
-
-// static
-void INodeHelper::ExctractNodesWithOp(
-    Op op,
-    std::unique_ptr<INode> src,
-    std::vector<std::unique_ptr<INode>>* positive_nodes,
-    std::vector<std::unique_ptr<INode>>* negative_nodes) {
-  Operation* operation = AsOperation(src.get());
-  if (!operation) {
-    positive_nodes->push_back(std::move(src));
-    return;
-  }
-  if (operation->op_info_->op == Op::UnMinus) {
-    ExctractNodesWithOp(op, std::move(operation->operands_[0]), negative_nodes,
-                        positive_nodes);
-    return;
-  }
-  if (operation->op_info_->op != op) {
-    positive_nodes->push_back(std::move(src));
-    return;
-  }
-  for (auto& node : operation->operands_) {
-    ExctractNodesWithOp(op, std::move(node), positive_nodes, negative_nodes);
-  }
-}
-
 // static
 std::unique_ptr<INode> INodeHelper::Negate(std::unique_ptr<INode> node) {
   if (auto* un_minus = AsUnMinus(node.get())) {
-    return std::move(un_minus->operands_[0]);
+    return un_minus->TakeOperand(0);
   }
   return MakeUnMinus(std::move(node));
 }
@@ -341,4 +281,10 @@ std::unique_ptr<TrigonometricOperation> INodeHelper::MakeTrigonometric(
     std::unique_ptr<INode> value) {
   return std::make_unique<TrigonometricOperation>(GetOpInfo(op),
                                                   std::move(value));
+}
+
+std::unique_ptr<Brackets> INodeHelper::MakeBrackets(
+    BracketType bracket_type,
+    std::unique_ptr<INode> value) {
+  return std::make_unique<Brackets>(bracket_type, std::move(value));
 }

@@ -32,7 +32,7 @@ class Operation : public IOperation {
   void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
-  std::optional<CanonicMult> GetCanonic() override { return std::nullopt; }
+  std::optional<CanonicMult> GetCanonicMult() override { return std::nullopt; }
   std::optional<CanonicPow> GetCanonicPow() override { return std::nullopt; }
   void UnfoldChains() override;
   void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
@@ -42,6 +42,11 @@ class Operation : public IOperation {
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
   void OpenBrackets(std::unique_ptr<INode>* new_node) override;
+
+  Op op() const;
+  size_t OperandsCount() const;
+  std::unique_ptr<INode> TakeOperand(size_t indx);
+  std::vector<std::unique_ptr<INode>> TakeAllOperands();
 
  protected:
   INodeImpl* Operand(size_t indx);
@@ -58,18 +63,11 @@ class Operation : public IOperation {
                           RenderBehaviour render_behaviour,
                           bool with_op) const;
 
-  friend class INodeHelper;
-  friend class MultOperation;
-  friend class PlusOperation;
-  friend class PowOperation;
-  friend class UnMinusOperation;
   friend class Tests;
 
   void CheckIntegrity() const;
   bool IsAllOperandsConst(
       const std::vector<std::unique_ptr<INode>>& operands) const;
-
-  bool ReduceFor(double val);
 
   const OpInfo* op_info_;
   mutable PrintSize print_size_;

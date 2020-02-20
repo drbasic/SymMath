@@ -29,7 +29,7 @@ struct CanonicPow {
 
 class IOperation : public INodeImpl {
  public:
-  virtual std::optional<CanonicMult> GetCanonic() = 0;
+  virtual std::optional<CanonicMult> GetCanonicMult() = 0;
   virtual std::optional<CanonicPow> GetCanonicPow() = 0;
 
   virtual void ProcessImaginary(

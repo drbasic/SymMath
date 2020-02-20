@@ -75,9 +75,9 @@ PrintSize DivOperation::Render(Canvas* canvas,
   return print_size_ = prefix_size.GrowWidth(lh_size, true);
 }
 
-std::optional<CanonicMult> DivOperation::GetCanonic() {
+std::optional<CanonicMult> DivOperation::GetCanonicMult() {
   if (Constant* bottom_const = Bottom()->AsConstant()) {
-    CanonicMult result = INodeHelper::GetCanonic(operands_[0]);
+    CanonicMult result = INodeHelper::GetCanonicMult(operands_[0]);
     result.b *= bottom_const->Value();
     return result;
   }
@@ -121,22 +121,16 @@ void DivOperation::SimplifyDivDiv() {
   std::vector<std::unique_ptr<INode>> new_top;
   std::vector<std::unique_ptr<INode>> new_bottom;
   if (top) {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(top->operands_[0]),
-                                     &new_top);
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(top->operands_[1]),
-                                     &new_bottom);
+    ExctractNodesWithOp(Op::Mult, std::move(top->operands_[0]), &new_top);
+    ExctractNodesWithOp(Op::Mult, std::move(top->operands_[1]), &new_bottom);
   } else {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(operands_[0]),
-                                     &new_top);
+    ExctractNodesWithOp(Op::Mult, std::move(operands_[0]), &new_top);
   }
   if (bottom) {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[1]),
-                                     &new_top);
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[0]),
-                                     &new_bottom);
+    ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[1]), &new_top);
+    ExctractNodesWithOp(Op::Mult, std::move(bottom->operands_[0]), &new_bottom);
   } else {
-    INodeHelper::ExctractNodesWithOp(Op::Mult, std::move(operands_[1]),
-                                     &new_bottom);
+    ExctractNodesWithOp(Op::Mult, std::move(operands_[1]), &new_bottom);
   }
 
   operands_[0] = INodeHelper::MakeMultIfNeeded(std::move(new_top));

@@ -4,9 +4,12 @@
 
 #include "OpInfo.h"
 
+enum class BracketType;
+
 struct CanonicMult;
 struct CanonicPow;
 
+class Brackets;
 class Canvas;
 class Constant;
 class DivOperation;
@@ -23,10 +26,6 @@ class Variable;
 
 class INodeHelper {
  public:
-  static bool IsNodesEqual(const INode* lh, const INode* rh);
-
-  static std::vector<std::unique_ptr<INode>>& GetOperands(Operation* op);
-
   static bool IsUnMinus(const INode* lh);
   static Constant* AsConstant(INode* lh);
   static const Constant* AsConstant(const INode* lh);
@@ -41,24 +40,11 @@ class INodeHelper {
   static DivOperation* AsDiv(INode* lh);
   static const DivOperation* AsDiv(const INode* lh);
 
-  static CanonicMult GetCanonic(std::unique_ptr<INode>& node);
+  static CanonicMult GetCanonicMult(std::unique_ptr<INode>& node);
   static CanonicPow GetCanonicPow(std::unique_ptr<INode>& node);
   static CanonicMult MergeCanonic(const CanonicMult& lh, const CanonicMult& rh);
 
-  static void ExctractNodesWithOp(Op op,
-                                  std::vector<std::unique_ptr<INode>>* src,
-                                  std::vector<std::unique_ptr<INode>>* nodes);
-  static void ExctractNodesWithOp(Op op,
-                                  std::unique_ptr<INode> src,
-                                  std::vector<std::unique_ptr<INode>>* nodes);
-  static void ExctractNodesWithOp(
-      Op op,
-      std::unique_ptr<INode> src,
-      std::vector<std::unique_ptr<INode>>* positive_nodes,
-      std::vector<std::unique_ptr<INode>>* negative_nodes);
   static std::unique_ptr<INode> Negate(std::unique_ptr<INode> node);
-  static std::unique_ptr<INode> MakeMultIfNeeded(
-      std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
   static void RemoveEmptyOperands(std::vector<std::unique_ptr<INode>>* nodes);
   static bool HasAnyPlusOperation(
@@ -82,6 +68,8 @@ class INodeHelper {
       double dividend,
       double divider,
       std::vector<std::unique_ptr<INode>*> nodes);
+  static std::unique_ptr<INode> MakeMultIfNeeded(
+      std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
   static std::unique_ptr<PowOperation> MakePow(std::unique_ptr<INode> lh,
@@ -91,4 +79,6 @@ class INodeHelper {
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);
+  static std::unique_ptr<Brackets> MakeBrackets(BracketType bracket_type,
+                                                std::unique_ptr<INode> value);
 };

@@ -18,7 +18,7 @@ class UnMinusOperation : public Operation {
   bool HasFrontMinus() const override;
 
   // IOperation implementation
-  std::optional<CanonicMult> GetCanonic() override;
+  std::optional<CanonicMult> GetCanonicMult() override;
   void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
   UnMinusOperation* AsUnMinusOperation() override { return this; }
   const UnMinusOperation* AsUnMinusOperation() const override { return this; }

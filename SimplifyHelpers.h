@@ -3,9 +3,10 @@
 #include <memory>
 #include <vector>
 
-class INode;
+enum class Op;
 struct CanonicMult;
 struct CanonicPow;
+class INode;
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
                             const std::vector<const INode*>& rhs);
@@ -14,23 +15,26 @@ bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>*>& lhs,
 bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
                             const std::vector<std::unique_ptr<INode>>& rhs);
 
-std::vector<std::unique_ptr<INode>*> GetNodesPointers(
-    std::vector<std::unique_ptr<INode>>& nodes,
-    size_t skip);
+void ExctractNodesWithOp(Op op,
+                         std::vector<std::unique_ptr<INode>>* src,
+                         std::vector<std::unique_ptr<INode>>* nodes);
+void ExctractNodesWithOp(Op op,
+                         std::unique_ptr<INode> src,
+                         std::vector<std::unique_ptr<INode>>* nodes);
+void ExctractNodesWithOp(Op op,
+                         std::unique_ptr<INode> src,
+                         std::vector<std::unique_ptr<INode>>* positive_nodes,
+                         std::vector<std::unique_ptr<INode>>* negative_nodes);
 
-double TryExctractSum(const CanonicMult& canonic,
-                      std::vector<std::unique_ptr<INode>*> free_operands,
-                      double* remains);
+bool MergeCanonicToPlus(const CanonicMult& lh,
+                        const CanonicMult& rh,
+                        std::unique_ptr<INode>* lh_node,
+                        std::unique_ptr<INode>* rh_node);
 
-bool MergeCanonicToNodes(const CanonicMult& lh,
-                         const CanonicMult& rh,
-                         std::unique_ptr<INode>* lh_node,
-                         std::unique_ptr<INode>* rh_node);
-
-bool MergeCanonicToNodesMult(const CanonicMult& lh,
-                             const CanonicMult& rh,
-                             std::unique_ptr<INode>* lh_node,
-                             std::unique_ptr<INode>* rh_node);
+bool MergeCanonicToMult(const CanonicMult& lh,
+                        const CanonicMult& rh,
+                        std::unique_ptr<INode>* lh_node,
+                        std::unique_ptr<INode>* rh_node);
 
 bool MergeCanonicToPow(CanonicPow lh,
                        CanonicPow rh,

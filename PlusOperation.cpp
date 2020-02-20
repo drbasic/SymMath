@@ -22,7 +22,7 @@ std::unique_ptr<INode> PlusOperation::Clone() const {
   new_nodes.reserve(operands_.size());
   for (const auto& op : operands_)
     new_nodes.push_back(op->Clone());
-  return std::make_unique<PlusOperation>(std::move(new_nodes));
+  return INodeHelper::MakePlus(std::move(new_nodes));
 }
 
 PrintSize PlusOperation::Render(Canvas* canvas,
@@ -41,7 +41,7 @@ void PlusOperation::UnfoldChains() {
   Operation::UnfoldChains();
 
   std::vector<std::unique_ptr<INode>> new_nodes;
-  INodeHelper::ExctractNodesWithOp(Op::Plus, &operands_, &new_nodes);
+  ExctractNodesWithOp(Op::Plus, &operands_, &new_nodes);
   operands_.swap(new_nodes);
   CheckIntegrity();
 }
@@ -96,7 +96,7 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    CanonicMult canonic_1 = INodeHelper::GetCanonic(operands_[i]);
+    CanonicMult canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
     if (canonic_1.nodes.empty()) {
       // skip constants.
       continue;
@@ -105,16 +105,16 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
     for (size_t j = i + 1; j < operands_.size(); ++j) {
       if (!operands_[j])
         continue;
-      CanonicMult canonic_2 = INodeHelper::GetCanonic(operands_[j]);
+      CanonicMult canonic_2 = INodeHelper::GetCanonicMult(operands_[j]);
       if (canonic_2.nodes.empty())
         continue;
 
-      bool is_combined = MergeCanonicToNodes(canonic_1, canonic_2,
-                                             &operands_[i], &operands_[j]);
+      bool is_combined = MergeCanonicToPlus(canonic_1, canonic_2, &operands_[i],
+                                            &operands_[j]);
       if (!operands_[i])
         break;
       if (is_combined) {
-        canonic_1 = INodeHelper::GetCanonic(operands_[i]);
+        canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
       }
     }
   }

@@ -10,7 +10,7 @@ UnMinusOperation::UnMinusOperation(std::unique_ptr<INode> value)
     : Operation(GetOpInfo(Op::UnMinus), std::move(value)) {}
 
 std::unique_ptr<INode> UnMinusOperation::Clone() const {
-  return std::make_unique<UnMinusOperation>(operands_[0]->Clone());
+  return INodeHelper::MakeUnMinus(operands_[0]->Clone());
 }
 
 std::unique_ptr<INode> UnMinusOperation::SymCalc() const {
@@ -18,7 +18,7 @@ std::unique_ptr<INode> UnMinusOperation::SymCalc() const {
   if (Constant* as_const = val->AsNodeImpl()->AsConstant()) {
     return INodeHelper::MakeConst(op_info_->trivial_f(as_const->Value(), 0.0));
   }
-  return std::make_unique<UnMinusOperation>(std::move(val));
+  return INodeHelper::MakeUnMinus(std::move(val));
 }
 
 PrintSize UnMinusOperation::Render(Canvas* canvas,
@@ -62,8 +62,8 @@ bool UnMinusOperation::HasFrontMinus() const {
   return !Operand(0)->HasFrontMinus();
 }
 
-std::optional<CanonicMult> UnMinusOperation::GetCanonic() {
-  CanonicMult result = INodeHelper::GetCanonic(operands_[0]);
+std::optional<CanonicMult> UnMinusOperation::GetCanonicMult() {
+  CanonicMult result = INodeHelper::GetCanonicMult(operands_[0]);
   result.a *= -1.0;
   return result;
 }
@@ -74,5 +74,5 @@ void UnMinusOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get());
   if (!sub_un_minus)
     return;
-  *new_node = std::move(sub_un_minus->operands_[0]);
+  *new_node = sub_un_minus->TakeOperand(0);
 }

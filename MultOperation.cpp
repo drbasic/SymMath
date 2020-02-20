@@ -41,7 +41,7 @@ std::unique_ptr<INode> MultOperation::Clone() const {
   new_nodes.reserve(operands_.size());
   for (const auto& op : operands_)
     new_nodes.push_back(op->Clone());
-  return std::make_unique<MultOperation>(std::move(new_nodes));
+  return INodeHelper::MakeMult(std::move(new_nodes));
 }
 
 PrintSize MultOperation::Render(Canvas* canvas,
@@ -56,7 +56,7 @@ bool MultOperation::HasFrontMinus() const {
   return operands_[0]->AsNodeImpl()->HasFrontMinus();
 }
 
-std::optional<CanonicMult> MultOperation::GetCanonic() {
+std::optional<CanonicMult> MultOperation::GetCanonicMult() {
   CanonicMult result;
   for (auto& op : operands_) {
     Constant* constant = op->AsNodeImpl()->AsConstant();
@@ -100,7 +100,7 @@ void MultOperation::UnfoldChains() {
   Operation::UnfoldChains();
 
   std::vector<std::unique_ptr<INode>> new_nodes;
-  INodeHelper::ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
+  ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
   operands_.swap(new_nodes);
   CheckIntegrity();
 }
@@ -131,8 +131,8 @@ void MultOperation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
   std::vector<std::unique_ptr<INode>> new_bottom;
   for (auto& node : operands_) {
     if (auto* div = INodeHelper::AsDiv(node.get())) {
-      new_bottom.push_back(std::move(div->operands_[1]));
-      node = std::move(div->operands_[0]);
+      new_bottom.push_back(div->TakeOperand(1));
+      node = div->TakeOperand(0);
     }
   }
   if (new_bottom.empty())
@@ -208,8 +208,8 @@ void MultOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
   std::vector<std::pair<size_t, size_t>> permutation_indexes;
   for (auto& node : operands_) {
     if (auto* plus = INodeHelper::AsPlus(node.get())) {
-      permutation_indexes.emplace_back(0, plus->operands_.size());
-      plus_nodes.push_back(std::move(plus->operands_));
+      permutation_indexes.emplace_back(0, plus->OperandsCount());
+      plus_nodes.push_back(plus->TakeAllOperands());
     } else {
       ordinal_nodes.push_back(std::move(node));
     }
@@ -235,7 +235,7 @@ void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
-    CanonicMult canonic_1 = INodeHelper::GetCanonic(operands_[i]);
+    CanonicMult canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
     if (canonic_1.nodes.empty()) {
       // skip constants.
       continue;
@@ -244,16 +244,16 @@ void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
     for (size_t j = i + 1; j < operands_.size(); ++j) {
       if (!operands_[j])
         continue;
-      CanonicMult canonic_2 = INodeHelper::GetCanonic(operands_[j]);
+      CanonicMult canonic_2 = INodeHelper::GetCanonicMult(operands_[j]);
       if (canonic_2.nodes.empty())
         continue;
 
-      bool is_combined = MergeCanonicToNodesMult(canonic_1, canonic_2,
-                                                 &operands_[i], &operands_[j]);
+      bool is_combined = MergeCanonicToMult(canonic_1, canonic_2, &operands_[i],
+                                            &operands_[j]);
       if (!operands_[i])
         break;
       if (is_combined) {
-        canonic_1 = INodeHelper::GetCanonic(operands_[i]);
+        canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
       }
     }
   }

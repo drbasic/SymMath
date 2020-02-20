@@ -17,7 +17,7 @@ class DivOperation : public Operation {
   bool HasFrontMinus() const override;
 
   // IOperation implementation
-  std::optional<CanonicMult> GetCanonic() override;
+  std::optional<CanonicMult> GetCanonicMult() override;
   std::optional<CanonicPow> GetCanonicPow() override;
   void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
   void SimplifyDivDiv() override;

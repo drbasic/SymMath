@@ -48,11 +48,11 @@ std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh,
 }
 
 std::unique_ptr<INode> operator-(double lh, std::unique_ptr<INode> rh) {
-  return INodeHelper::MakeMinus(std::make_unique<Constant>(lh), std::move(rh));
+  return INodeHelper::MakeMinus(INodeHelper::MakeConst(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh, double rh) {
-  return INodeHelper::MakeMinus(std::move(lh), std::make_unique<Constant>(rh));
+  return INodeHelper::MakeMinus(std::move(lh), INodeHelper::MakeConst(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh,
@@ -61,11 +61,11 @@ std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh,
 }
 
 std::unique_ptr<INode> operator+(double lh, std::unique_ptr<INode> rh) {
-  return INodeHelper::MakePlus(std::make_unique<Constant>(lh), std::move(rh));
+  return INodeHelper::MakePlus(INodeHelper::MakeConst(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator+(std::unique_ptr<INode> lh, double rh) {
-  return INodeHelper::MakePlus(std::move(lh), std::make_unique<Constant>(rh));
+  return INodeHelper::MakePlus(std::move(lh), INodeHelper::MakeConst(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh,
@@ -74,11 +74,11 @@ std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh,
 }
 
 std::unique_ptr<INode> operator*(double lh, std::unique_ptr<INode> rh) {
-  return INodeHelper::MakeMult(std::make_unique<Constant>(lh), std::move(rh));
+  return INodeHelper::MakeMult(INodeHelper::MakeConst(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator*(std::unique_ptr<INode> lh, double rh) {
-  return INodeHelper::MakeMult(std::move(lh), std::make_unique<Constant>(rh));
+  return INodeHelper::MakeMult(std::move(lh), INodeHelper::MakeConst(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh,
@@ -87,11 +87,11 @@ std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh,
 }
 
 std::unique_ptr<INode> operator/(double lh, std::unique_ptr<INode> rh) {
-  return INodeHelper::MakeDiv(std::make_unique<Constant>(lh), std::move(rh));
+  return INodeHelper::MakeDiv(INodeHelper::MakeConst(lh), std::move(rh));
 }
 
 std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
-  return INodeHelper::MakeDiv(std::move(lh), std::make_unique<Constant>(rh));
+  return INodeHelper::MakeDiv(std::move(lh), INodeHelper::MakeConst(rh));
 }
 //=============================================================================
 std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
@@ -109,12 +109,12 @@ std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh, double exp) {
 }
 //=============================================================================
 std::unique_ptr<INode> AddBrackets(std::unique_ptr<INode> value) {
-  return std::make_unique<Brackets>(BracketType::Round, std::move(value));
+  return INodeHelper::MakeBrackets(BracketType::Round, std::move(value));
 }
 
 std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
                                    std::unique_ptr<INode> value) {
-  return std::make_unique<Brackets>(bracket_type, std::move(value));
+  return INodeHelper::MakeBrackets(bracket_type, std::move(value));
 }
 //=============================================================================
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {

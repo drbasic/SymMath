@@ -18,7 +18,7 @@ class MultOperation : public Operation {
   bool HasFrontMinus() const override;
 
   // IOperation implementation
-  std::optional<CanonicMult> GetCanonic() override;
+  std::optional<CanonicMult> GetCanonicMult() override;
   std::optional<CanonicPow> GetCanonicPow() override;
   void ProcessImaginary(
       std::vector<std::unique_ptr<INode>>* nodes) const override;
