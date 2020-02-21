@@ -83,16 +83,20 @@ int Operation::Priority() const {
 }
 
 std::unique_ptr<INode> Operation::SymCalc() const {
-  if (op_info_->calc_f)
-    return op_info_->calc_f(op_info_, operands_);
-
   std::vector<std::unique_ptr<INode>> calculated_operands =
       CalcOperands(operands_);
 
   ProcessImaginary(&calculated_operands);
 
+  if (op_info_->calc_f) {
+    std::unique_ptr<INode> result =
+        op_info_->calc_f(op_info_, &calculated_operands);
+    if (result)
+      return result;
+  }
+
   if (!IsAllOperandsConst(calculated_operands) || !op_info_->trivial_f) {
-    auto result = Clone();
+    auto result = INodeHelper::MakeEmpty(op_info_->op);
     INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
     return result;
   }
@@ -200,6 +204,8 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
     if (temp_node) {
       *new_node = std::move(temp_node);
       current = INodeHelper::AsOperation(new_node->get());
+      if (!current)
+        break;
       current->CheckIntegrity();
     }
   }
@@ -394,7 +400,8 @@ PrintSize Operation::RenderOperand(const INodeImpl* node,
 
   PrintSize total_operand_size;
   if (with_op) {
-    auto op_size = canvas->PrintAt(print_box, op_to_print->name, dry_run);
+    auto op_size = canvas->PrintAt(print_box, op_to_print->name,
+                                   render_behaviour.GetSubSuper(), dry_run);
     total_operand_size = total_operand_size.GrowWidth(op_size, true);
     print_box = print_box.ShrinkLeft(op_size.width);
   }

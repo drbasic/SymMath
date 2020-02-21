@@ -14,7 +14,7 @@ class PowOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
-  bool HasFrontMinus() const override { return false; };
+  bool HasFrontMinus() const override { return false; }
 
   // IOperation implementation
   std::optional<CanonicPow> GetCanonicPow() override;

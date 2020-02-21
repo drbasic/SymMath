@@ -12,6 +12,10 @@ bool VariableRef::HasFrontMinus() const {
   return var_->HasFrontMinus();
 }
 
+ValueType VariableRef::GetValueType() const {
+  return var_->GetValueType();
+}
+
 bool VariableRef::CheckCircular(const INodeImpl* other) const {
   return var_->CheckCircular(other);
 }
@@ -32,15 +36,13 @@ PrintSize VariableRef::Render(Canvas* canvas,
                               PrintBox print_box,
                               bool dry_run,
                               RenderBehaviour render_behaviour) const {
-  if (var_->name_.empty())
-    return var_->Render(canvas, print_box, dry_run, render_behaviour);
-  return print_size_ = canvas->PrintAt(print_box, var_->name_, dry_run);
+  if (!var_->name_.empty())
+    render_behaviour.SetVariable(VariableBehaviour::NameOnly);
+  return var_->Render(canvas, print_box, dry_run, render_behaviour);
 }
 
 PrintSize VariableRef::LastPrintSize() const {
-  if (var_->name_.empty())
-    return var_->LastPrintSize();
-  return print_size_;
+  return var_->LastPrintSize();
 }
 
 Constant* VariableRef::AsConstant() {
@@ -55,7 +57,7 @@ const ErrorNode* VariableRef::AsError() const {
   return var_->AsError();
 }
 
- Variable* VariableRef::AsVariable() {
+Variable* VariableRef::AsVariable() {
   return const_cast<Variable*>(var_)->AsVariable();
 }
 

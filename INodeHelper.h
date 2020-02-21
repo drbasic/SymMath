@@ -5,6 +5,7 @@
 #include "OpInfo.h"
 
 enum class BracketType;
+enum class ValueType;
 
 struct CanonicMult;
 struct CanonicPow;
@@ -23,6 +24,7 @@ class PowOperation;
 class TrigonometricOperation;
 class UnMinusOperation;
 class Variable;
+class Vector;
 
 class INodeHelper {
  public:
@@ -49,7 +51,13 @@ class INodeHelper {
   static void RemoveEmptyOperands(std::vector<std::unique_ptr<INode>>* nodes);
   static bool HasAnyPlusOperation(
       const std::vector<std::unique_ptr<INode>>& nodes);
+  static bool HasAnyValueType(
+      const std::vector<std::unique_ptr<INode>>& operands,
+      ValueType value_type);
 
+  static std::unique_ptr<Operation> MakeEmpty(Op op);
+  static std::unique_ptr<INode> MakeError();
+  static std::unique_ptr<INode> MakeError(std::string err);
   static std::unique_ptr<Constant> MakeConst(double value);
   static std::unique_ptr<Imaginary> MakeImaginary();
   static std::unique_ptr<UnMinusOperation> MakeUnMinus(
@@ -81,4 +89,11 @@ class INodeHelper {
       std::unique_ptr<INode> value);
   static std::unique_ptr<Brackets> MakeBrackets(BracketType bracket_type,
                                                 std::unique_ptr<INode> value);
+  static std::unique_ptr<Vector> MakeVector(std::unique_ptr<INode> a,
+                                            std::unique_ptr<INode> b);
+  static std::unique_ptr<Vector> MakeVector(std::unique_ptr<INode> a,
+                                            std::unique_ptr<INode> b,
+                                            std::unique_ptr<INode> c);
+  static std::unique_ptr<Vector> MakeVector(
+      std::vector<std::unique_ptr<INode>> values);
 };

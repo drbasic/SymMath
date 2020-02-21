@@ -19,7 +19,8 @@ PrintSize Imaginary::Render(Canvas* canvas,
                             PrintBox print_box,
                             bool dry_run,
                             RenderBehaviour render_behaviour) const {
-  return print_size_ = canvas->PrintAt(print_box, "i", dry_run);
+  return print_size_ = canvas->PrintAt(print_box, "i",
+                                       render_behaviour.GetSubSuper(), dry_run);
 }
 
 PrintSize Imaginary::LastPrintSize() const {

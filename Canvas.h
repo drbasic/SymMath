@@ -6,6 +6,7 @@
 #include <vector>
 
 enum class BracketType;
+enum class SubSuperBehaviour;
 
 struct PrintSize {
   bool operator==(const PrintSize& rh) const;
@@ -48,9 +49,11 @@ class Canvas {
 
   PrintSize PrintAt(const PrintBox& print_box,
                     std::string_view str,
+                    SubSuperBehaviour sub_super_behaviour,
                     bool dry_run);
   PrintSize PrintAt(const PrintBox& print_box,
                     std::wstring_view str,
+                    SubSuperBehaviour sub_super_behaviour,
                     bool dry_run);
 
   PrintSize RenderBrackets(PrintBox print_box,

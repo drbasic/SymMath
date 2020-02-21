@@ -11,6 +11,7 @@
 #include "PlusOperation.h"
 #include "SimplifyHelpers.h"
 #include "UnMinusOperation.h"
+#include "Vector.h"
 
 namespace {
 
@@ -27,7 +28,78 @@ bool NextPermutation(
   return false;
 }
 
+std::unique_ptr<INode> DoMultScalarScalar(std::unique_ptr<INode> lh,
+                                          std::unique_ptr<INode> rh) {
+  auto result = INodeHelper::MakeMult(std::move(lh), std::move(rh));
+  result->UnfoldChains();
+  return result->SymCalc();
+}
+
+std::unique_ptr<INode> DoMultScalarVector(std::unique_ptr<INode> lh,
+                                          std::unique_ptr<Vector> rh) {
+  std::vector<std::unique_ptr<INode>> values;
+  values.reserve(rh->Size());
+  for (size_t i = 0; i < rh->Size(); ++i) {
+    auto value = INodeHelper::MakeMult(lh->Clone(), rh->TakeValue(i));
+    value->UnfoldChains();
+    values.push_back(value->SymCalc());
+  }
+  return INodeHelper::MakeVector(std::move(values));
+}
+
+std::unique_ptr<INode> DoMultVectorVector(std::unique_ptr<Vector> lh,
+                                          std::unique_ptr<Vector> rh) {
+  if (lh->Size() != rh->Size()) {
+    return INodeHelper::MakeError("Vector sizes not match " +
+                                  std::to_string(lh->Size()) +
+                                  " != " + std::to_string(rh->Size()));
+  }
+
+  std::vector<std::unique_ptr<INode>> values;
+  values.reserve(rh->Size());
+  for (size_t i = 0; i < rh->Size(); ++i) {
+    auto value = INodeHelper::MakeMult(lh->TakeValue(i), rh->TakeValue(i));
+    value->UnfoldChains();
+    values.push_back(value->SymCalc());
+  }
+  return INodeHelper::MakePlus(std::move(values))->SymCalc();
+}
+
 }  // namespace
+
+std::unique_ptr<INode> MultCalc(const OpInfo* op,
+                                std::vector<std::unique_ptr<INode>>* operands) {
+  if (!INodeHelper::HasAnyValueType(*operands, ValueType::Vector))
+    return nullptr;
+  if (operands->size() < 2)
+    return nullptr;
+  std::unique_ptr<INode> lh = std::move((*operands)[0]);
+  for (size_t i = 1; i < operands->size(); ++i) {
+    std::unique_ptr<INode> rh = std::move((*operands)[i]);
+    if (lh->AsNodeImpl()->GetValueType() > rh->AsNodeImpl()->GetValueType()) {
+      std::swap(lh, rh);
+    }
+
+    if (lh->AsNodeImpl()->GetValueType() == ValueType::Scalar &&
+        rh->AsNodeImpl()->GetValueType() == ValueType::Scalar) {
+      lh = DoMultScalarScalar(std::move(lh), std::move(rh));
+    } else if (lh->AsNodeImpl()->GetValueType() == ValueType::Scalar &&
+               rh->AsNodeImpl()->GetValueType() == ValueType::Vector) {
+      std::unique_ptr<Vector> rh_vector(rh.release()->AsNodeImpl()->AsVector());
+      assert(rh_vector);
+      lh = DoMultScalarVector(std::move(lh), std::move(rh_vector));
+    } else if (lh->AsNodeImpl()->GetValueType() == ValueType::Vector &&
+               rh->AsNodeImpl()->GetValueType() == ValueType::Vector) {
+      std::unique_ptr<Vector> lh_vector(lh.release()->AsNodeImpl()->AsVector());
+      std::unique_ptr<Vector> rh_vector(rh.release()->AsNodeImpl()->AsVector());
+      assert(rh_vector);
+      lh = DoMultVectorVector(std::move(lh_vector), std::move(rh_vector));
+    } else {
+      assert(false);
+    }
+  }
+  return lh;
+}
 
 MultOperation::MultOperation(std::unique_ptr<INode> lh,
                              std::unique_ptr<INode> rh)
@@ -200,6 +272,13 @@ void MultOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
 
 void MultOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
   Operation::OpenBrackets(nullptr);
+
+  OpenPlusBrackets(new_node);
+  if (*new_node)
+    return;
+}
+
+void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {
   if (!INodeHelper::HasAnyPlusOperation(operands_))
     return;
 

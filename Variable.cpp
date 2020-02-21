@@ -51,6 +51,12 @@ bool Variable::HasFrontMinus() const {
   return false;
 }
 
+ValueType Variable::GetValueType() const {
+  if (value_)
+    return value_->AsNodeImpl()->GetValueType();
+  return ValueType::Scalar;
+}
+
 bool Variable::CheckCircular(const INodeImpl* other) const {
   return this == other || (Value() && Value()->CheckCircular(other));
 }
@@ -136,23 +142,32 @@ PrintSize Variable::Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
                            RenderBehaviour render_behaviour) const {
-  if (name_.empty()) {
-    if (value_) {
-      return print_size_ =
-                 Value()->Render(canvas, print_box, dry_run, render_behaviour);
-    }
+  bool print_name =
+      (render_behaviour.GetVariable() != VariableBehaviour::ValueOnly);
+  print_name =
+      print_name &&
+      ((render_behaviour.GetVariable() == VariableBehaviour::NameOnly) ||
+       (!name_.empty()));
+  bool print_value =
+      (render_behaviour.GetVariable() != VariableBehaviour::NameOnly);
+  print_value =
+      print_value &&
+      ((render_behaviour.GetVariable() == VariableBehaviour::ValueOnly) ||
+       (value_));
+
+  if (print_value && !print_name) {
+    return print_size_ =
+               RenderValue(canvas, print_box, dry_run, render_behaviour);
   }
 
-  std::string var_printable_name =
-      (!name_.empty() ? name_ : std::string(kAnonimous)) + " = ";
-
-  auto lh_size = canvas->PrintAt(print_box, var_printable_name, dry_run);
-  print_box = print_box.ShrinkLeft(lh_size.width);
-  auto rh_size =
-      value_ ? Value()->Render(canvas, print_box, dry_run, render_behaviour)
-             : canvas->PrintAt(print_box, kNull, dry_run);
-
-  return print_size_ = lh_size.GrowWidth(rh_size, true);
+  print_size_ =
+      RenderName(canvas, print_box, dry_run, render_behaviour, print_value);
+  print_box = print_box.ShrinkLeft(print_size_.width);
+  if (print_value) {
+    auto value_size = RenderValue(canvas, print_box, dry_run, render_behaviour);
+    print_size_ = print_size_.GrowWidth(value_size, true);
+  }
+  return print_size_;
 }
 
 PrintSize Variable::LastPrintSize() const {
@@ -187,6 +202,39 @@ const Operation* Variable::AsOperation() const {
   if (auto vn = GetVisibleNode())
     return (vn != this) ? vn->AsOperation() : nullptr;
   return nullptr;
+}
+
+PrintSize Variable::RenderName(Canvas* canvas,
+                               PrintBox print_box,
+                               bool dry_run,
+                               RenderBehaviour render_behaviour,
+                               bool equal_sign) const {
+  std::string printable_name = !name_.empty() ? name_ : std::string(kAnonimous);
+  auto name_size = canvas->PrintAt(
+      print_box, equal_sign ? printable_name + " = " : printable_name,
+      render_behaviour.GetSubSuper(), dry_run);
+
+  ValueType value_type =
+      value_ ? value_->AsNodeImpl()->GetValueType() : ValueType::Scalar;
+  if (value_type != ValueType::Vector)
+    return name_size;
+
+  print_box.base_line -= name_size.height - name_size.base_line;
+  std::string vector_sign(printable_name.size(), L'_');
+  auto value_type_size = canvas->PrintAt(
+      print_box, vector_sign, render_behaviour.GetSubSuper(), dry_run);
+  return value_type_size.GrowDown(name_size, true);
+}
+
+PrintSize Variable::RenderValue(Canvas* canvas,
+                                PrintBox print_box,
+                                bool dry_run,
+                                RenderBehaviour render_behaviour) const {
+  auto rh_size =
+      value_ ? Value()->Render(canvas, print_box, dry_run, render_behaviour)
+             : canvas->PrintAt(print_box, kNull, render_behaviour.GetSubSuper(),
+                               dry_run);
+  return rh_size;
 }
 
 INodeImpl* Variable::Value() {

@@ -11,6 +11,11 @@ Variable Var(std::string name, double val);
 std::unique_ptr<INode> Const(double val);
 std::unique_ptr<INode> iConst(double val);
 std::unique_ptr<INode> Imag();
+std::unique_ptr<INode> Vector2(std::unique_ptr<INode> a,
+                               std::unique_ptr<INode> b);
+std::unique_ptr<INode> Vector3(std::unique_ptr<INode> a,
+                               std::unique_ptr<INode> b,
+                               std::unique_ptr<INode> c);
 
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh);
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh,

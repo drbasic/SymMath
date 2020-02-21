@@ -21,6 +21,7 @@ class Brackets : public INodeImpl {
                                   PrintBox print_box,
                                   bool dry_run,
                                   RenderBehaviour render_behaviour);
+
   // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;

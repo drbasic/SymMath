@@ -6,6 +6,8 @@ class UnMinusOperation : public Operation {
  public:
   UnMinusOperation(std::unique_ptr<INode> value);
 
+  static std::unique_ptr<Operation> MakeEmpty();
+
   // INode implementation
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc() const override;

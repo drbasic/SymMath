@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "Brackets.h"
+#include "RenderBehaviour.h"
 
 namespace {
 
@@ -23,6 +24,30 @@ const wchar_t kRoundBrackets[BracketsParts::Last + 1] = L"()╭╮│╰╯│�
 const wchar_t kSquareBrackets[BracketsParts::Last + 1] = L"[]┌┐│└┘││";
 const wchar_t kFigureBrackets[BracketsParts::Last + 1] = L"{}╭╮│╰╯╮╭";
 const wchar_t kDivider = L'─';
+
+const wchar_t kN[] =
+    L"0123456789+-∙=()";  // ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz";
+const wchar_t kU[] =
+    L"⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻·⁼⁽⁾";  //ᴬᴮCᴰᴱᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿᵀᵁᵂᵃᵇᶜᵈᵉⁱᵏᵐⁿᵖᵗᵘᵛⁱⁿʰʳʷʸˡˢˣ";
+const wchar_t kD[] = L"₀₁₂₃₄₅₆₇₈₉₊₋․₌₍₎";  //ₐₑₒₓₔᵢᵣᵤᵥ";
+
+wchar_t GetSubScript(wchar_t sym) {
+  assert(std::size(kN) == std::size(kU));
+  for (size_t i = 0; i < std::size(kN); ++i) {
+    if (kN[i] == sym)
+      return kU[i];
+  }
+  return sym;
+}
+
+wchar_t GetSuperScript(wchar_t sym) {
+  assert(std::size(kN) == std::size(kD));
+  for (size_t i = 0; i < std::size(kN); ++i) {
+    if (kN[i] == sym)
+      return kD[i];
+  }
+  return sym;
+}
 }  // namespace
 
 //=============================================================================
@@ -128,20 +153,32 @@ const std::wstring& Canvas::ToString() const {
 
 PrintSize Canvas::PrintAt(const PrintBox& print_box,
                           std::string_view str,
+                          SubSuperBehaviour sub_super_behaviour,
                           bool dry_run) {
-  return PrintAt(print_box, std::wstring(str.begin(), str.end()), dry_run);
+  return PrintAt(print_box, std::wstring(str.begin(), str.end()),
+                 sub_super_behaviour, dry_run);
 }
 
 PrintSize Canvas::PrintAt(const PrintBox& print_box,
                           std::wstring_view str,
+                          SubSuperBehaviour sub_super_behaviour,
                           bool dry_run) {
   if (!dry_run) {
     assert(print_size_ != PrintSize{});
     assert(print_box.x + str.size() <= print_size_.width);
     size_t indx = GetIndex(print_box.x, print_box.base_line);
+    auto data_start = std::begin(data_) + indx;
     for (size_t i = 0; i < str.size(); ++i)
-      assert(data_[indx + i] == ' ');
-    std::copy(std::begin(str), std::end(str), std::begin(data_) + indx);
+      assert(data_start[i] == ' ');
+    if (sub_super_behaviour == SubSuperBehaviour::Normal) {
+      std::copy(std::begin(str), std::end(str), data_start);
+    } else {
+      for (size_t i = 0; i < str.size(); ++i) {
+        data_start[i] = sub_super_behaviour == SubSuperBehaviour::Subscript
+                            ? GetSubScript(str[i])
+                            : GetSuperScript(str[i]);
+      }
+    }
   }
   return {str.size(), 1, 0};
 }
@@ -228,7 +265,8 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
 PrintSize Canvas::RenderDivider(const PrintBox& print_box,
                                 size_t width,
                                 bool dry_run) {
-  return PrintAt(print_box, std::wstring(width, kDivider), dry_run);
+  return PrintAt(print_box, std::wstring(width, kDivider),
+                 SubSuperBehaviour::Normal, dry_run);
 }
 
 void Canvas::SetDryRun(bool dry_run) {

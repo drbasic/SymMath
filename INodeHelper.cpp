@@ -6,6 +6,7 @@
 #include "Brackets.h"
 #include "Constant.h"
 #include "DivOperation.h"
+#include "ErrorNode.h"
 #include "INode.h"
 #include "Imaginary.h"
 #include "MultOperation.h"
@@ -16,6 +17,7 @@
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
+#include "Vector.h"
 
 // static
 Constant* INodeHelper::AsConstant(INode* lh) {
@@ -170,6 +172,55 @@ bool INodeHelper::HasAnyPlusOperation(
 }
 
 // static
+bool INodeHelper::HasAnyValueType(
+    const std::vector<std::unique_ptr<INode>>& operands,
+    ValueType value_type) {
+  for (auto& operand : operands) {
+    if (operand->AsNodeImpl()->GetValueType() == value_type)
+      return true;
+  }
+  return false;
+}
+
+// static
+std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
+  switch (op) {
+    case Op::UnMinus:
+      return MakeUnMinus(MakeError());
+      break;
+    case Op::Minus:
+      assert(false);
+      break;
+    case Op::Plus:
+      return MakePlus(MakeError(), MakeError());
+      break;
+    case Op::Mult:
+      return MakeMult(MakeError(), MakeError());
+      break;
+    case Op::Div:
+      return MakeMult(MakeError(), MakeError());
+      break;
+    case Op::Pow:
+      return MakePow(MakeError(), MakeError());
+      break;
+    case Op::Sin:
+    case Op::Cos:
+      return MakeTrigonometric(op, MakeError());
+      break;
+  }
+  assert(false);
+  return nullptr;
+}
+
+std::unique_ptr<INode> INodeHelper::MakeError() {
+  return std::make_unique<ErrorNode>(std::string());
+}
+
+std::unique_ptr<INode> INodeHelper::MakeError(std::string err) {
+  return std::make_unique<ErrorNode>(std::move(err));
+}
+
+// static
 std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
 }
@@ -287,4 +338,20 @@ std::unique_ptr<Brackets> INodeHelper::MakeBrackets(
     BracketType bracket_type,
     std::unique_ptr<INode> value) {
   return std::make_unique<Brackets>(bracket_type, std::move(value));
+}
+
+std::unique_ptr<Vector> INodeHelper::MakeVector(std::unique_ptr<INode> a,
+                                                std::unique_ptr<INode> b) {
+  return std::make_unique<Vector>(std::move(a), std::move(b));
+}
+
+std::unique_ptr<Vector> INodeHelper::MakeVector(std::unique_ptr<INode> a,
+                                                std::unique_ptr<INode> b,
+                                                std::unique_ptr<INode> c) {
+  return std::make_unique<Vector>(std::move(a), std::move(b), std::move(c));
+}
+
+std::unique_ptr<Vector> INodeHelper::MakeVector(
+    std::vector<std::unique_ptr<INode>> values) {
+  return std::make_unique<Vector>(std::move(values));
 }

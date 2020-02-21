@@ -20,6 +20,7 @@ class VariableRef : public INodeImpl {
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
+  ValueType GetValueType() const override;
   bool CheckCircular(const INodeImpl* other) const override;
 
   Constant* AsConstant() override;
@@ -32,6 +33,5 @@ class VariableRef : public INodeImpl {
   void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
-  mutable PrintSize print_size_;
   const Variable* var_ = nullptr;
 };

@@ -13,6 +13,7 @@
 #include "PowOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
+#include "Vector.h"
 
 Variable Var(std::string name) {
   return Variable(std::move(name));
@@ -35,6 +36,17 @@ std::unique_ptr<INode> iConst(double val) {
 
 std::unique_ptr<INode> Imag() {
   return INodeHelper::MakeImaginary();
+}
+
+std::unique_ptr<INode> Vector2(std::unique_ptr<INode> a,
+                               std::unique_ptr<INode> b) {
+  return INodeHelper::MakeVector(std::move(a), std::move(b));
+}
+
+std::unique_ptr<INode> Vector3(std::unique_ptr<INode> a,
+                               std::unique_ptr<INode> b,
+                               std::unique_ptr<INode> c) {
+  return INodeHelper::MakeVector(std::move(a), std::move(b), std::move(c));
 }
 
 //=============================================================================

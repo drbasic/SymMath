@@ -25,3 +25,11 @@ void RenderBehaviour::SetBrackets(BracketsBehaviour brackets_behaviour) {
          brackets_behaviour == BracketsBehaviour::Ommit);
   brackets_behaviour_ = brackets_behaviour;
 }
+
+void RenderBehaviour::SetSubSuper(SubSuperBehaviour sub_super_behaviour) {
+  sub_super_behaviour_ = sub_super_behaviour;
+}
+
+void RenderBehaviour::SetVariable(VariableBehaviour variable_behaviour) {
+  variable_behaviour_ = variable_behaviour;
+}

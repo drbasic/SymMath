@@ -1,6 +1,7 @@
 #include "SimplifyHelpers.h"
 
 #include <algorithm>
+#include <cmath>
 #include <map>
 
 #include "Constant.h"
@@ -9,6 +10,35 @@
 #include "IOperation.h"
 #include "MultOperation.h"
 #include "PowOperation.h"
+
+namespace {
+bool ReduceFullMultiplicity(double top,
+                            double bottom,
+                            double* new_top,
+                            double* new_bottom) {
+  bool result = false;
+  if (bottom < 0) {
+    result = true;
+    *new_top = top = -top;
+    *new_bottom = bottom = -bottom;
+  }
+
+  double quotient = top / bottom;
+  double intpart;
+  if (std::modf(quotient, &intpart) == 0.0) {
+    *new_top = quotient;
+    *new_bottom = 1.0;
+    return true;
+  }
+  quotient = bottom / top;
+  if (std::modf(quotient, &intpart) == 0.0) {
+    *new_top = 1.0;
+    *new_bottom = quotient;
+    return true;
+  }
+  return result;
+}
+}  // namespace
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
                             const std::vector<const INode*>& rhs) {
@@ -177,6 +207,7 @@ bool MergeCanonicToPow(CanonicPow lh,
   for (auto& lh_node_info : lh.base_nodes) {
     if (!lh_node_info.node)
       continue;
+    auto* lh_const = INodeHelper::AsConstant(lh_node_info.node->get());
     for (auto& rh_node_info : rh.base_nodes) {
       if (!rh_node_info.node)
         continue;
@@ -186,6 +217,26 @@ bool MergeCanonicToPow(CanonicPow lh,
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
         break;
+      }
+      if (!lh_const)
+        continue;
+      auto* rh_const = INodeHelper::AsConstant(rh_node_info.node->get());
+      if (!rh_const)
+        continue;
+      double new_lh = 0;
+      double new_rh = 0;
+      if (ReduceFullMultiplicity(lh_const->Value(), rh_const->Value(), &new_lh,
+                                 &new_rh)) {
+        if (new_lh != 1.0) {
+          merged_nodes.emplace_back(lh_node_info.exp,
+                                    INodeHelper::MakeConst(new_lh));
+        }
+        if (new_rh != 1.0) {
+          merged_nodes.emplace_back(rh_node_info.exp,
+                                    INodeHelper::MakeConst(new_rh));
+        }
+        lh_node_info.node = nullptr;
+        rh_node_info.node = nullptr;
       }
     }
   }

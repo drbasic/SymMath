@@ -2,6 +2,9 @@
 
 #include "Operation.h"
 
+std::unique_ptr<INode> MultCalc(const OpInfo* op,
+                                std::vector<std::unique_ptr<INode>>* operands);
+
 class MultOperation : public Operation {
  public:
   MultOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
@@ -33,6 +36,8 @@ class MultOperation : public Operation {
   const MultOperation* AsMultOperation() const override { return this; }
 
  private:
-   void SimplifyTheSameMult(std::unique_ptr<INode>* new_node);
-   void SimplifyTheSamePow(std::unique_ptr<INode>* new_node);
+  void SimplifyTheSameMult(std::unique_ptr<INode>* new_node);
+  void SimplifyTheSamePow(std::unique_ptr<INode>* new_node);
+
+  void OpenPlusBrackets(std::unique_ptr<INode>* new_node);
 };

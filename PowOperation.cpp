@@ -25,9 +25,12 @@ PrintSize PowOperation::Render(Canvas* canvas,
                                bool dry_run,
                                RenderBehaviour render_behaviour) const {
   auto base_render_behaviour = render_behaviour;
-  auto exp_render_behaviour = render_behaviour;
   if (Base()->Priority() < Priority())
     base_render_behaviour.SetBrackets(BracketsBehaviour::Force);
+  auto exp_render_behaviour = render_behaviour;
+  exp_render_behaviour.SetBrackets(BracketsBehaviour::Ommit);
+  exp_render_behaviour.SetSubSuper(SubSuperBehaviour::Superscript);
+
   base_print_size_ = dry_run
                          ? RenderOperand(Base(), canvas, PrintBox::Infinite(),
                                          dry_run, base_render_behaviour, false)

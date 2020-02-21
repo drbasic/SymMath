@@ -32,6 +32,7 @@ class Variable : public INodeImpl {
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override;
+  ValueType GetValueType() const override;
   bool CheckCircular(const INodeImpl* other) const override;
   Constant* AsConstant() override;
   const Constant* AsConstant() const override;
@@ -45,12 +46,22 @@ class Variable : public INodeImpl {
  private:
   friend class VariableRef;
   friend class Tests;
+  PrintSize RenderName(Canvas* canvas,
+                       PrintBox print_box,
+                       bool dry_run,
+                       RenderBehaviour render_behaviour,
+                       bool equal_sign) const;
+  PrintSize RenderValue(Canvas* canvas,
+                        PrintBox print_box,
+                        bool dry_run,
+                        RenderBehaviour render_behaviour) const;
 
   INodeImpl* Value();
   const INodeImpl* Value() const;
   INodeImpl* GetVisibleNode();
   const INodeImpl* GetVisibleNode() const;
 
+  // mutable PrintSize name_size_;
   mutable PrintSize print_size_;
   std::string name_;
   std::unique_ptr<INode> value_;

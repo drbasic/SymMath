@@ -33,7 +33,8 @@ PrintSize DivOperation::Render(Canvas* canvas,
   PrintSize prefix_size = {};
   if (has_front_minus) {
     auto un_minus_size =
-        canvas->PrintAt(print_box, GetOpInfo(Op::UnMinus)->name, dry_run);
+        canvas->PrintAt(print_box, GetOpInfo(Op::UnMinus)->name,
+                        render_behaviour.GetSubSuper(), dry_run);
     print_box = print_box.ShrinkLeft(un_minus_size.width + 1);
     prefix_size = un_minus_size.GrowWidth({1, 1, 0}, true);
   }
