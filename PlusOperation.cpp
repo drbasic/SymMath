@@ -93,32 +93,41 @@ void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
 void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyTheSame(nullptr);
 
-  for (size_t i = 0; i < operands_.size(); ++i) {
-    if (!operands_[i])
-      continue;
-    CanonicMult canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
-    if (canonic_1.nodes.empty()) {
-      // skip constants.
-      continue;
-    }
-
-    for (size_t j = i + 1; j < operands_.size(); ++j) {
-      if (!operands_[j])
-        continue;
-      CanonicMult canonic_2 = INodeHelper::GetCanonicMult(operands_[j]);
-      if (canonic_2.nodes.empty())
-        continue;
-
-      bool is_combined = MergeCanonicToPlus(canonic_1, canonic_2, &operands_[i],
-                                            &operands_[j]);
+  bool need_try = true;
+  while (need_try) {
+    need_try = false;
+    for (size_t i = 0; i < operands_.size(); ++i) {
       if (!operands_[i])
-        break;
-      if (is_combined) {
-        canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
+        continue;
+      CanonicMult canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
+      if (canonic_1.nodes.empty()) {
+        // skip constants.
+        continue;
+      }
+
+      for (size_t j = i + 1; j < operands_.size(); ++j) {
+        if (!operands_[j])
+          continue;
+        CanonicMult canonic_2 = INodeHelper::GetCanonicMult(operands_[j]);
+        if (canonic_2.nodes.empty())
+          continue;
+
+        bool is_combined = MergeCanonicToPlus(canonic_1, canonic_2,
+                                              &operands_[i], &operands_[j]);
+        if (!operands_[i])
+          break;
+        if (is_combined) {
+          need_try = true;
+          canonic_1 = INodeHelper::GetCanonicMult(operands_[i]);
+        }
       }
     }
+    INodeHelper::RemoveEmptyOperands(&operands_);
+    SimplifyConsts(new_node);
+    if (*new_node)
+      return;
   }
-  INodeHelper::RemoveEmptyOperands(&operands_);
+
   if (operands_.size() == 1) {
     *new_node = std::move(operands_[0]);
   }

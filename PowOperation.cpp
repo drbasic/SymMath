@@ -8,6 +8,10 @@
 #include "MultOperation.h"
 #include "OpInfo.h"
 
+namespace {
+constexpr size_t kMaxPowUnfold = 10;
+}
+
 PowOperation::PowOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh)
     : Operation(GetOpInfo(Op::Pow), std::move(lh), std::move(rh)) {}
 
@@ -66,6 +70,26 @@ std::optional<CanonicPow> PowOperation::GetCanonicPow() {
   for (auto& node_info : result.base_nodes)
     node_info.exp *= exp_const->Value();
   return result;
+}
+
+void PowOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
+  Operation::OpenBrackets(nullptr);
+
+  auto* as_const = INodeHelper::AsConstant(Exp());
+  if (!as_const || as_const->Value() > kMaxPowUnfold)
+    return;
+  auto exp = as_const->Value();
+
+  operands_.resize(1);
+  operands_.reserve(exp);
+  for (size_t i = 1; i < exp; ++i) {
+    operands_.push_back(operands_[0]->Clone());
+  }
+  auto mult = INodeHelper::MakeMultIfNeeded(std::move(operands_));
+  auto as_op = INodeHelper::AsOperation(mult.get());
+  as_op->OpenBrackets(new_node);
+  if (!*new_node)
+    *new_node = std::move(mult);
 }
 
 INodeImpl* PowOperation::Base() {

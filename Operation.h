@@ -49,6 +49,8 @@ class Operation : public IOperation {
   std::vector<std::unique_ptr<INode>> TakeAllOperands();
 
  protected:
+  friend class Tests;
+
   INodeImpl* Operand(size_t indx);
   const INodeImpl* Operand(size_t indx) const;
 
@@ -62,8 +64,6 @@ class Operation : public IOperation {
                           bool dry_run,
                           RenderBehaviour render_behaviour,
                           bool with_op) const;
-
-  friend class Tests;
 
   void CheckIntegrity() const;
   bool IsAllOperandsConst(

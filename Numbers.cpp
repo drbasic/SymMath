@@ -24,11 +24,11 @@ int main() {
   auto x = Var("x");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = 1.5 * a + a;
-  y = t;
+  Variable t = a*b*c;
+  y = Pow(t, 5)  / (a*a);
   Variable calc = a.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
-  //y.OpenBrackets();
+  // y.OpenBrackets();
   // calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
   y.Simplify();
@@ -36,7 +36,10 @@ int main() {
   y.OpenBrackets();
   // calc = y.SymCalc();
   std::wcout << y.Print() << calc.Print() << "\n";
-
+  y.Simplify();
+  std::wcout << y.Print() << calc.Print() << "\n";
+   //y.Simplify();
+  //std::wcout << y.Print() << calc.Print() << "\n";
   /*
   Variable x2 = (a + 2 * b + 3 * c + 4);
   // Variable x22 = x / 2;

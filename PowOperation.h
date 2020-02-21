@@ -18,6 +18,7 @@ class PowOperation : public Operation {
 
   // IOperation implementation
   std::optional<CanonicPow> GetCanonicPow() override;
+  void OpenBrackets(std::unique_ptr<INode>* new_node) override;
   PowOperation* AsPowOperation() override { return this; }
   const PowOperation* AsPowOperation() const override { return this; }
 
