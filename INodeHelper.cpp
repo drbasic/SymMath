@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "Brackets.h"
+#include "CompareOperation.h"
 #include "Constant.h"
 #include "DivOperation.h"
 #include "ErrorNode.h"
@@ -229,6 +230,9 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::Cos:
       return MakeTrigonometric(op, MakeError());
       break;
+    case Op::Equal:
+      return MakeCompare(op, MakeError(), MakeError());
+      break;
   }
   assert(false);
   return nullptr;
@@ -269,13 +273,13 @@ std::unique_ptr<PlusOperation> INodeHelper::MakeMinus(
 std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
     std::unique_ptr<INode> lh,
     std::unique_ptr<INode> rh) {
-  auto* lh_plus =AsPlus(lh.get());
-  auto* rh_plus= AsPlus(rh.get());
+  auto* lh_plus = AsPlus(lh.get());
+  auto* rh_plus = AsPlus(rh.get());
   if (lh_plus && rh_plus) {
     auto lh_operands = lh_plus->TakeAllOperands();
     auto rh_operands = rh_plus->TakeAllOperands();
     lh_operands.reserve(lh_operands.size() + rh_operands.size());
-    for(auto& node: rh_operands)
+    for (auto& node : rh_operands)
       lh_operands.push_back(std::move(node));
     return MakePlus(std::move(lh_operands));
   }
@@ -384,6 +388,13 @@ std::unique_ptr<TrigonometricOperation> INodeHelper::MakeTrigonometric(
     std::unique_ptr<INode> value) {
   return std::make_unique<TrigonometricOperation>(GetOpInfo(op),
                                                   std::move(value));
+}
+
+std::unique_ptr<CompareOperation> INodeHelper::MakeCompare(
+    Op op,
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<INode> rh) {
+  return std::make_unique<CompareOperation>(op, std::move(lh), std::move(rh));
 }
 
 std::unique_ptr<Brackets> INodeHelper::MakeBrackets(

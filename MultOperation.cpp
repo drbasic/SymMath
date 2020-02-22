@@ -147,8 +147,6 @@ void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
 }
 
 void MultOperation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
-  // Operation::SimplifyConsts(new_node);
-
   std::vector<std::unique_ptr<INode>> new_bottom;
   for (auto& node : operands_) {
     if (auto* div = INodeHelper::AsDiv(node.get())) {

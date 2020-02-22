@@ -1,6 +1,7 @@
 #include "ValueHelpers.h"
 
 #include "Brackets.h"
+#include "CompareOperation.h"
 #include "Constant.h"
 #include "DivOperation.h"
 #include "INode.h"
@@ -50,6 +51,11 @@ std::unique_ptr<INode> Vector3(std::unique_ptr<INode> a,
   return INodeHelper::MakeVector(std::move(a), std::move(b), std::move(c));
 }
 
+//=============================================================================
+std::unique_ptr<INode> operator==(std::unique_ptr<INode> lh,
+                                  std::unique_ptr<INode> rh) {
+  return INodeHelper::MakeCompare(Op::Equal, std::move(lh), std::move(rh));
+}
 //=============================================================================
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh) {
   return INodeHelper::MakeUnMinus(std::move(lh));

@@ -67,6 +67,8 @@ int main() {
   std::wcout << sv_bca.Print(true) << "\n";
   Variable sv_cab = c * VectorMult(a, b);
   std::wcout << sv_cab.Print(true) << "\n";
+  Variable cmp = Vector3(sv_abc == sv_bca, sv_bca == sv_cab, sv_cab == sv_abc);
+  std::wcout << cmp.Print(true) << "\n";
 
   Variable abc("abc");
   abc = VectorMult(a, VectorMult(b, c));
@@ -84,7 +86,7 @@ int main() {
   bac_cab = bac - cab;
   std::wcout << bac_cab.Print(true) << "\n";
 
-  Variable abc_bac_cab("abc-bac-cab");
-  abc_bac_cab = abc - (bac - cab);
+  //Variable abc_bac_cab("abc-bac-cab");
+  Variable abc_bac_cab = abc == (bac - cab);
   std::wcout << abc_bac_cab.Print(true) << "\n";
 }

@@ -17,6 +17,9 @@ std::unique_ptr<INode> Vector3(std::unique_ptr<INode> a,
                                std::unique_ptr<INode> b,
                                std::unique_ptr<INode> c);
 
+std::unique_ptr<INode> operator==(std::unique_ptr<INode> lh,
+                                  std::unique_ptr<INode> rh);
+
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh);
 std::unique_ptr<INode> operator-(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh);

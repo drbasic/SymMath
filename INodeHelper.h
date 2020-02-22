@@ -12,6 +12,7 @@ struct CanonicPow;
 
 class Brackets;
 class Canvas;
+class CompareOperation;
 class Constant;
 class DivOperation;
 class Imaginary;
@@ -96,6 +97,8 @@ class INodeHelper {
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);
+  static std::unique_ptr<CompareOperation>
+  MakeCompare(Op op, std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
   static std::unique_ptr<Brackets> MakeBrackets(BracketType bracket_type,
                                                 std::unique_ptr<INode> value);
   static std::unique_ptr<Vector> MakeVector(std::unique_ptr<INode> a,

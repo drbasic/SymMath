@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="Brackets.cpp" />
     <ClCompile Include="Canvas.cpp" />
+    <ClCompile Include="CompareOperation.cpp" />
     <ClCompile Include="Constant.cpp" />
     <ClCompile Include="DivOperation.cpp" />
     <ClCompile Include="ErrorNode.cpp" />
@@ -182,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="Brackets.h" />
     <ClInclude Include="Canvas.h" />
+    <ClInclude Include="CompareOperation.h" />
     <ClInclude Include="Constant.h" />
     <ClInclude Include="DivOperation.h" />
     <ClInclude Include="ErrorNode.h" />
