@@ -180,7 +180,7 @@ bool MergeCanonicToMult(const CanonicMult& lh,
     base_nodes.push_back(std::move(*node));
 
   auto base = INodeHelper::MakeMultIfNeeded(std::move(base_nodes));
-  auto pow = INodeHelper::MakePow(std::move(base), INodeHelper::MakeConst(2));
+  auto pow = INodeHelper::MakePow(std::move(base), INodeHelper::MakeConst(2.0));
   if (dividend == divider) {
     *lh_node = std::move(pow);
     rh_node->reset();

@@ -8,7 +8,6 @@ class UnMinusOperation : public Operation {
 
   // INode implementation
   std::unique_ptr<INode> Clone() const override;
-  //std::unique_ptr<INode> SymCalc() const override;
 
   // INodeImpl interface
   PrintSize Render(Canvas* canvas,

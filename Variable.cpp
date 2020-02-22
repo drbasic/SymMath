@@ -247,7 +247,7 @@ PrintSize Variable::RenderName(Canvas* canvas,
     return name_size;
 
   print_box.base_line -= name_size.height - name_size.base_line;
-  print_box.ShrinkLeft((printable_name.size() - 1) / 2);
+  print_box = print_box.ShrinkLeft((printable_name.size() - 1) / 2);
   std::wstring vector_sign(L"→");
   auto value_type_size = canvas->PrintAt(
       print_box, vector_sign, render_behaviour.GetSubSuper(), dry_run);

@@ -11,23 +11,10 @@
 #include "Tests.h"
 #include "ValueHelpers.h"
 
-int main() {
-  _setmode(_fileno(stdout), _O_U16TEXT);
-  // Tests::Run();
-
+void BacMinusCab() {
   auto a = Var("a");
   auto b = Var("b");
   auto c = Var("c");
-  auto d = Var("d");
-  auto e = Var("e");
-  auto y = Var("y");
-  auto x = Var("x");
-  auto v1 = Var("v1");
-  auto v2 = Var("v2");
-  auto v3 = Var("v3");
-  auto pi = Var("PI");
-  pi = 3.1415926;
-  Variable t = Vector3(a, b, c);  /// * Vector2(a, b);
 
   auto a1 = Var("a1");
   auto a2 = Var("a2");
@@ -46,6 +33,9 @@ int main() {
   c = Vector3(c1, c2, c3);
   std::wcout << c.Print() << "\n";
 
+  Variable s_ab = a * b;
+  std::wcout << s_ab.Print(true) << "\n";
+
   Variable v_aa = VectorMult(a, a);
   std::wcout << v_aa.Print(true) << "\n";
 
@@ -58,9 +48,6 @@ int main() {
   Variable vv = v_ab + v_ba;
   std::wcout << vv.Print(true) << "\n";
 
-  Variable s_ab = a * b;
-  std::wcout << s_ab.Print(true) << "\n";
-
   Variable sv_abc = a * VectorMult(b, c);
   std::wcout << sv_abc.Print(true) << "\n";
   Variable sv_bca = b * VectorMult(c, a);
@@ -70,23 +57,43 @@ int main() {
   Variable cmp = Vector3(sv_abc == sv_bca, sv_bca == sv_cab, sv_cab == sv_abc);
   std::wcout << cmp.Print(true) << "\n";
 
-  Variable abc("abc");
-  abc = VectorMult(a, VectorMult(b, c));
+  Variable abc = VectorMult(a, VectorMult(b, c));
   std::wcout << abc.Print(true) << "\n";
 
-  Variable bac("bac");
-  bac = (b * (a * c));
-  std::wcout << bac.Print(true) << "\n";
+  Variable bac = (b * (a * c));
+  //std::wcout << bac.Print(true) << "\n";
 
-  Variable cab("cab");
-  cab = (c * (a * b));
-  std::wcout << cab.Print(true) << "\n";
+  Variable cab = (c * (a * b));
+  //std::wcout << cab.Print(true) << "\n";
 
-  Variable bac_cab("bac-cab");
-  bac_cab = bac - cab;
+  Variable bac_cab = bac - cab;
   std::wcout << bac_cab.Print(true) << "\n";
 
-  //Variable abc_bac_cab("abc-bac-cab");
+  // Variable abc_bac_cab("abc-bac-cab");
   Variable abc_bac_cab = abc == (bac - cab);
   std::wcout << abc_bac_cab.Print(true) << "\n";
+}
+
+int main() {
+  _setmode(_fileno(stdout), _O_U16TEXT);
+  // Tests::Run();
+
+  BacMinusCab();
+
+  auto a = Var("a");
+  auto b = Var("b");
+  auto c = Var("c");
+  auto d = Var("d");
+  auto e = Var("e");
+  auto y = Var("y");
+  auto x = Var("x");
+  auto v1 = Var("v1");
+  auto v2 = Var("v2");
+  auto v3 = Var("v3");
+  auto pi = Var("PI");
+  pi = 3.1415926;
+  Variable t = -a;
+
+  a = 1;
+  std::wcout << t.Print(true) << "\n";
 }

@@ -20,7 +20,7 @@ std::unique_ptr<INode> CompareEqual(
       operand = std::move(new_sub_node);
   }
   bool is_equal = (*operands)[0]->IsEqual((*operands)[1].get());
-  return INodeHelper::MakeConst(is_equal ? 1.0 : 0.0);
+  return INodeHelper::MakeConst(is_equal);
 }
 
 CompareOperation::CompareOperation(Op op,

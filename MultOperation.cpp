@@ -105,7 +105,7 @@ void MultOperation::ProcessImaginary(
     if (!node->AsNodeImpl()->AsImaginary())
       continue;
     if (has_imaginary) {
-      node = INodeHelper::MakeConst(-1);
+      node = INodeHelper::MakeConst(-1.0);
       has_imaginary = false;
     } else {
       node.reset();

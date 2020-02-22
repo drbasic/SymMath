@@ -1,13 +1,14 @@
 #pragma once
+
 #include <memory>
-#include <string>
-#include <vector>
+#include <optional>
 
 #include "INodeImpl.h"
 
 class Constant : public INodeImpl {
  public:
   Constant(double val);
+  Constant(bool val);
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
@@ -30,5 +31,6 @@ class Constant : public INodeImpl {
 
  private:
   mutable PrintSize print_size_;
+  std::optional<bool> bool_value_;
   double value_ = 0;
 };

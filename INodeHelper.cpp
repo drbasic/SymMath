@@ -251,6 +251,12 @@ std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
 }
 
+// static
+std::unique_ptr<Constant> INodeHelper::MakeConst(bool value) {
+  return std::make_unique<Constant>(value);
+}
+
+// static
 std::unique_ptr<Imaginary> INodeHelper::MakeImaginary() {
   return std::make_unique<Imaginary>();
 }
