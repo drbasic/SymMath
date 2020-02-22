@@ -269,6 +269,26 @@ std::unique_ptr<PlusOperation> INodeHelper::MakeMinus(
 std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
     std::unique_ptr<INode> lh,
     std::unique_ptr<INode> rh) {
+  auto* lh_plus =AsPlus(lh.get());
+  auto* rh_plus= AsPlus(rh.get());
+  if (lh_plus && rh_plus) {
+    auto lh_operands = lh_plus->TakeAllOperands();
+    auto rh_operands = rh_plus->TakeAllOperands();
+    lh_operands.reserve(lh_operands.size() + rh_operands.size());
+    for(auto& node: rh_operands)
+      lh_operands.push_back(std::move(node));
+    return MakePlus(std::move(lh_operands));
+  }
+  if (lh_plus) {
+    auto lh_operands = lh_plus->TakeAllOperands();
+    lh_operands.push_back(std::move(rh));
+    return MakePlus(std::move(lh_operands));
+  }
+  if (rh_plus) {
+    auto rh_operands = rh_plus->TakeAllOperands();
+    rh_operands.insert(rh_operands.begin(), std::move(lh));
+    return MakePlus(std::move(rh_operands));
+  }
   return std::make_unique<PlusOperation>(std::move(lh), std::move(rh));
 }
 
@@ -276,6 +296,16 @@ std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
 std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
     std::vector<std::unique_ptr<INode>> operands) {
   return std::make_unique<PlusOperation>(std::move(operands));
+}
+
+// static
+std::unique_ptr<INode> INodeHelper::MakePlusIfNeeded(
+    std::vector<std::unique_ptr<INode>> nodes) {
+  assert(nodes.size() > 0);
+  if (nodes.size() == 1)
+    return std::move(nodes[0]);
+
+  return MakePlus(std::move(nodes));
 }
 
 // static

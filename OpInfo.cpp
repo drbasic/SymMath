@@ -6,10 +6,12 @@
 
 namespace {
 constexpr OpInfo kOps[] = {
-    {Op::UnMinus, 11, L"-", [](double lh, double rh) { return -lh; }, false, 1},
+    {Op::UnMinus, 11, L"-", [](double lh, double rh) { return -lh; }, false, 1,
+     VectorUnMinus},
     {Op::Minus, 10, L" - ", [](double lh, double rh) { return lh - rh; }, false,
      2},
-    {Op::Plus, 10, L" + ", [](double lh, double rh) { return lh + rh; }, true},
+    {Op::Plus, 10, L" + ", [](double lh, double rh) { return lh + rh; }, true,
+     -1, VectorAdd},
     {Op::Mult, 20, L" ∙ ", [](double lh, double rh) { return lh * rh; }, true,
      -1, ScalarProduct},
     {Op::VectorMult, 20, L" ╲╱ ", nullptr, true, 2, VectorProduct},

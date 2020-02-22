@@ -14,6 +14,7 @@
 namespace {
 const std::string_view kAnonimous("<anonimous>");
 const std::string_view kNull("<null>");
+const std::string_view kArrow(" -> ");
 }  // namespace
 
 Variable::Variable(std::string name) : name_(std::move(name)) {}
@@ -23,17 +24,47 @@ Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 Variable::Variable(std::string name, std::unique_ptr<INode> value)
     : name_(std::move(name)), value_(std::move(value)) {}
 
-std::wstring Variable::Print() const {
+std::wstring Variable::Print(bool with_calc) const {
+  RenderBehaviour render_behaviour;
+
   Canvas canvas;
   canvas.SetDryRun(true);
-  PrintBox initial_print_box(0, 0, 1000, 1000, 0);
-  RenderBehaviour render_behaviour;
-  auto size = Render(&canvas, initial_print_box, true, render_behaviour);
-  canvas.Resize(size);
+  PrintBox initial_print_box(0, 0, 10000, 10000, 0);
+
+  auto value_size = Render(&canvas, initial_print_box, true, render_behaviour);
+  auto total_size(value_size);
+
+  Variable calculated_value = Const(0);
+  if (with_calc) {
+    calculated_value = SymCalc();
+    calculated_value.OpenBrackets();
+    calculated_value.Simplify();
+
+    auto calculated_value_size = calculated_value.Render(
+        &canvas, initial_print_box, true, render_behaviour);
+    auto arrow_size = canvas.PrintAt(initial_print_box, kArrow,
+                                     render_behaviour.GetSubSuper(), true);
+    total_size = value_size.GrowWidth(arrow_size, true)
+                     .GrowWidth(calculated_value_size, true);
+  }
+  canvas.Resize(total_size);
   canvas.SetDryRun(false);
-  PrintBox print_box(0, 0, size);
-  auto size2 = Render(&canvas, print_box, false, render_behaviour);
-  assert(size == size2);
+  PrintBox print_box(0, 0, total_size);
+  auto value_size2 = Render(&canvas, print_box, false, render_behaviour);
+  auto total_size2(value_size2);
+  assert(value_size == value_size2);
+
+  if (with_calc) {
+    print_box = print_box.ShrinkLeft(value_size.width);
+    auto arrow_size = canvas.PrintAt(print_box, kArrow,
+                                     render_behaviour.GetSubSuper(), false);
+    print_box = print_box.ShrinkLeft(arrow_size.width);
+    auto calculated_value_size =
+        calculated_value.Render(&canvas, print_box, false, render_behaviour);
+    total_size2 = value_size.GrowWidth(arrow_size, true)
+                      .GrowWidth(calculated_value_size, true);
+  }
+  assert(total_size == total_size2);
   return canvas.ToString();
 }
 
@@ -216,7 +247,7 @@ PrintSize Variable::RenderName(Canvas* canvas,
     return name_size;
 
   print_box.base_line -= name_size.height - name_size.base_line;
-  print_box.ShrinkLeft((printable_name.size() - 1)/2);
+  print_box.ShrinkLeft((printable_name.size() - 1) / 2);
   std::wstring vector_sign(L"→");
   auto value_type_size = canvas->PrintAt(
       print_box, vector_sign, render_behaviour.GetSubSuper(), dry_run);

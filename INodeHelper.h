@@ -72,6 +72,8 @@ class INodeHelper {
                                                  std::unique_ptr<INode> rh);
   static std::unique_ptr<PlusOperation> MakePlus(
       std::vector<std::unique_ptr<INode>> operands);
+  static std::unique_ptr<INode> MakePlusIfNeeded(
+      std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> MakeMult(std::unique_ptr<INode> lh,
                                                  std::unique_ptr<INode> rh);
   static std::unique_ptr<MultOperation> MakeMult(

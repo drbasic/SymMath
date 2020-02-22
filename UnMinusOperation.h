@@ -10,7 +10,7 @@ class UnMinusOperation : public Operation {
 
   // INode implementation
   std::unique_ptr<INode> Clone() const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  //std::unique_ptr<INode> SymCalc() const override;
 
   // INodeImpl interface
   PrintSize Render(Canvas* canvas,
@@ -18,6 +18,7 @@ class UnMinusOperation : public Operation {
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
+  ValueType GetValueType() const override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;

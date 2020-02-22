@@ -3,6 +3,8 @@
 #include <cassert>
 
 #include "Brackets.h"
+#include "INodeHelper.h"
+#include "PlusOperation.h"
 
 Vector::Vector() {}
 
@@ -66,8 +68,9 @@ PrintSize Vector::Render(Canvas* canvas,
   }
 
   PrintBox values_box;
-  auto print_size = canvas->RenderBrackets(
-      print_box, BracketType::Round, values_print_size_, dry_run, &values_box);
+  auto print_size =
+      canvas->RenderBrackets(print_box, BracketType::Stright,
+                             values_print_size_, dry_run, &values_box);
 
   if (!dry_run) {
     auto values_print_size =
@@ -109,18 +112,32 @@ std::unique_ptr<INode> Vector::TakeValue(size_t indx) {
   return std::move(values_[indx]);
 }
 
+void Vector::Add(std::unique_ptr<Vector> rh) {
+  for (size_t i = 0; i < rh->Size(); ++i) {
+    if (Size() < i) {
+      values_.push_back(rh->TakeValue(i));
+    } else {
+      values_[i] =
+          INodeHelper::MakePlus(std::move(values_[i]), rh->TakeValue(i));
+    }
+  }
+}
+
 PrintSize Vector::RenderAllValues(Canvas* canvas,
                                   PrintBox print_box,
                                   bool dry_run,
                                   RenderBehaviour render_behaviour) const {
   PrintSize values_print_size;
   for (size_t i = 0; i < values_.size(); ++i) {
-    bool with_comma = i != 0;
-    auto operand_size = RenderValue(values_[i].get(), canvas, print_box,
-                                    dry_run, render_behaviour, with_comma);
+    if (!dry_run) {
+      print_box.base_line =
+          print_box.y + values_[i]->AsNodeImpl()->LastPrintSize().base_line;
+    }
+    auto operand_size = values_[i]->AsNodeImpl()->Render(
+        canvas, print_box, dry_run, render_behaviour);
 
-    print_box = print_box.ShrinkLeft(operand_size.width);
-    values_print_size = values_print_size.GrowWidth(operand_size, true);
+    print_box = print_box.ShrinkTop(operand_size.height);
+    values_print_size = values_print_size.GrowDown(operand_size, false);
   }
   return values_print_size;
 }

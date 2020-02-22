@@ -37,6 +37,7 @@ class Vector : public INodeImpl {
   size_t Size() const { return values_.size(); }
   std::unique_ptr<INode> TakeValue(size_t indx);
   const INode* Value(size_t indx) const { return values_[indx].get(); }
+  void Add(std::unique_ptr<Vector> rh);
 
  private:
   PrintSize RenderAllValues(Canvas* canvas,

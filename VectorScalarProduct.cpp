@@ -6,6 +6,7 @@
 #include "INodeImpl.h"
 #include "MultOperation.h"
 #include "PlusOperation.h"
+#include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 #include "Vector.h"
 
@@ -34,7 +35,12 @@ std::unique_ptr<INode> Convert(Int2Type<ScalarT>, std::unique_ptr<INode> node) {
 }
 std::unique_ptr<Vector> Convert(Int2Type<VectorT>,
                                 std::unique_ptr<INode> node) {
-  return std::unique_ptr<Vector>(node.release()->AsNodeImpl()->AsVector());
+  if (auto* as_vector = node->AsNodeImpl()->AsVector()) {
+    node.release();
+    return std::unique_ptr<Vector>(as_vector);
+  }
+  assert(false);
+  return nullptr;
 }
 std::unique_ptr<INode> Convert(Int2Type<MatrixT>, std::unique_ptr<INode> node) {
   return std::unique_ptr<Vector>(node.release()->AsNodeImpl()->AsVector());
@@ -199,4 +205,51 @@ std::unique_ptr<INode> VectorProduct(
   auto z = (lh->Value(X)->Clone() * rh->Value(Y)->Clone()) -
            (lh->Value(Y)->Clone() * rh->Value(X)->Clone());
   return INodeHelper::MakeVector(std::move(x), std::move(y), std::move(z));
+}
+
+std::unique_ptr<INode> VectorAdd(
+    const OpInfo* op,
+    std::vector<std::unique_ptr<INode>>* operands) {
+  assert(op->op == Op::Plus);
+
+  size_t vector_count = 0;
+  for (auto& operand : *operands) {
+    if (operand->AsNodeImpl()->GetValueType() == ValueType::Vector)
+      ++vector_count;
+  }
+  if (vector_count < 2)
+    return nullptr;
+
+  std::unique_ptr<Vector> vector_result;
+  for (auto& operand : *operands) {
+    if (operand->AsNodeImpl()->GetValueType() != ValueType::Vector)
+      continue;
+    if (!vector_result) {
+      vector_result = Convert(Int2Type<VectorT>(), std::move(operand));
+    } else {
+      vector_result->Add(Convert(Int2Type<VectorT>(), std::move(operand)));
+    }
+  }
+  INodeHelper::RemoveEmptyOperands(operands);
+  operands->push_back(std::move(vector_result));
+  return INodeHelper::MakePlusIfNeeded(std::move(*operands));
+}
+
+std::unique_ptr<INode> VectorUnMinus(
+    const OpInfo* op,
+    std::vector<std::unique_ptr<INode>>* operands) {
+  assert(op->op == Op::UnMinus);
+  assert(operands->size() == 1);
+
+  auto* as_vector = operands->front()->AsNodeImpl()->AsVector();
+  if (!as_vector)
+    return nullptr;
+
+  std::vector<std::unique_ptr<INode>> result_values;
+  result_values.reserve(as_vector->Size());
+  for (size_t i = 0; i < as_vector->Size(); ++i) {
+    result_values.push_back(INodeHelper::MakeUnMinus(as_vector->TakeValue(i)));
+  }
+
+  return INodeHelper::MakeVector(std::move(result_values));
 }

@@ -12,15 +12,22 @@ UnMinusOperation::UnMinusOperation(std::unique_ptr<INode> value)
 std::unique_ptr<INode> UnMinusOperation::Clone() const {
   return INodeHelper::MakeUnMinus(operands_[0]->Clone());
 }
-
+/*
 std::unique_ptr<INode> UnMinusOperation::SymCalc() const {
   std::unique_ptr<INode> val = operands_[0]->SymCalc();
+  if (op_info_->calc_f) {
+    std::unique_ptr<INode> result =
+        op_info_->calc_f(op_info_, &calculated_operands);
+    if (result)
+      return result;
+  }
+
   if (Constant* as_const = val->AsNodeImpl()->AsConstant()) {
     return INodeHelper::MakeConst(op_info_->trivial_f(as_const->Value(), 0.0));
   }
   return INodeHelper::MakeUnMinus(std::move(val));
 }
-
+*/
 PrintSize UnMinusOperation::Render(Canvas* canvas,
                                    PrintBox print_box,
                                    bool dry_run,
@@ -60,6 +67,10 @@ PrintSize UnMinusOperation::Render(Canvas* canvas,
 
 bool UnMinusOperation::HasFrontMinus() const {
   return !Operand(0)->HasFrontMinus();
+}
+
+ValueType UnMinusOperation::GetValueType() const {
+  return Operand(0)->GetValueType();
 }
 
 std::optional<CanonicMult> UnMinusOperation::GetCanonicMult() {

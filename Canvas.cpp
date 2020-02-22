@@ -23,6 +23,7 @@ enum BracketsParts {
 const wchar_t kRoundBrackets[BracketsParts::Last + 1] = L"()╭╮│╰╯││";
 const wchar_t kSquareBrackets[BracketsParts::Last + 1] = L"[]┌┐│└┘││";
 const wchar_t kFigureBrackets[BracketsParts::Last + 1] = L"{}╭╮│╰╯╮╭";
+const wchar_t kStrightBrackets[BracketsParts::Last + 1] = L"│││││││││";
 const wchar_t kDivider = L'─';
 
 const wchar_t kN[] =
@@ -226,6 +227,8 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
     case BracketType::Fugure:
       brackets = kFigureBrackets;
       break;
+    case BracketType::Stright:
+      brackets = kStrightBrackets;
   }
   if (height == 1) {
     if (!dry_run) {
@@ -237,7 +240,8 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
     return {1, 1, 0};
   }
 
-  height += 2;
+  if (bracket_type != BracketType::Stright)
+    height += 2;
 
   if (!dry_run) {
     size_t y = print_box.base_line - height / 2;
