@@ -14,8 +14,8 @@ PrintSize ErrorNode::Render(Canvas* canvas,
                             PrintBox print_box,
                             bool dry_run,
                             RenderBehaviour render_behaviour) const {
-  return canvas->PrintAt(print_box, error_, render_behaviour.GetSubSuper(),
-                         dry_run);
+  return print_size_ = canvas->PrintAt(print_box, error_,
+                                       render_behaviour.GetSubSuper(), dry_run);
 }
 
 PrintSize ErrorNode::LastPrintSize() const {

@@ -67,7 +67,7 @@ PrintSize Vector::Render(Canvas* canvas,
 
   PrintBox values_box;
   auto print_size = canvas->RenderBrackets(
-      print_box, BracketType::Square, values_print_size_, dry_run, &values_box);
+      print_box, BracketType::Round, values_print_size_, dry_run, &values_box);
 
   if (!dry_run) {
     auto values_print_size =
@@ -85,6 +85,15 @@ bool Vector::CheckCircular(const INodeImpl* other) const {
       return true;
   }
   return false;
+}
+
+void Vector::SimplifyImpl(std::unique_ptr<INode>* new_node) {
+  for (auto& val : values_) {
+    std::unique_ptr<INode> new_sub_node;
+    val->AsNodeImpl()->SimplifyImpl(&new_sub_node);
+    if (new_sub_node)
+      val = std::move(new_sub_node);
+  }
 }
 
 std::unique_ptr<INode> Vector::TakeValue(size_t indx) {

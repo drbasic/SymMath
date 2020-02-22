@@ -61,7 +61,6 @@ class Variable : public INodeImpl {
   INodeImpl* GetVisibleNode();
   const INodeImpl* GetVisibleNode() const;
 
-  // mutable PrintSize name_size_;
   mutable PrintSize print_size_;
   std::string name_;
   std::unique_ptr<INode> value_;

@@ -2,9 +2,6 @@
 
 #include "Operation.h"
 
-std::unique_ptr<INode> MultCalc(const OpInfo* op,
-                                std::vector<std::unique_ptr<INode>>* operands);
-
 class MultOperation : public Operation {
  public:
   MultOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
@@ -19,6 +16,7 @@ class MultOperation : public Operation {
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
+  ValueType GetValueType() const override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;

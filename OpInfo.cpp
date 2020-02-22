@@ -2,7 +2,7 @@
 
 #include "Exception.h"
 #include "Operations.h"
-#include "MultOperation.h"
+#include "VectorMult.h"
 
 namespace {
 constexpr OpInfo kOps[] = {
@@ -10,8 +10,8 @@ constexpr OpInfo kOps[] = {
     {Op::Minus, 10, L" - ", [](double lh, double rh) { return lh - rh; }, false,
      2},
     {Op::Plus, 10, L" + ", [](double lh, double rh) { return lh + rh; }, true},
-    {Op::Mult, 20, L" ∙ ", [](double lh, double rh) { return lh * rh; }, true, -1,
-     MultCalc},
+    {Op::Mult, 20, L" ∙ ", [](double lh, double rh) { return lh * rh; }, true,
+     -1, MultScalarVectorMatrix},
     {Op::Div, 20, L"/", [](double lh, double rh) { return lh / rh; }, false, 2},
     {Op::Pow, 30, L"^", [](double lh, double rh) { return pow(lh, rh); }, false,
      2},

@@ -13,7 +13,7 @@
 
 int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
-  //Tests::Run();
+  // Tests::Run();
 
   auto a = Var("a");
   auto b = Var("b");
@@ -25,13 +25,13 @@ int main() {
   auto v = Var("v");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = Vector3(a, b, c);
+  Variable t = Vector2(a, b);/// * Vector2(a, b);
   v = t;
-  y = t;
-  //a = 1;
-  //b = 2;
-  //c = 3;
-  //x = 5;
+  y = v * t* a;
+  // a = 1;
+  // b = 2;
+  // c = 3;
+  // x = 5;
   Variable calc = y.SymCalc();
   calc.Simplify();
   std::wcout << y.Print() << calc.Print() << "\n";

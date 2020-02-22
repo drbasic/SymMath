@@ -11,7 +11,12 @@ class Variable;
 class Vector;
 class Operation;
 
-enum class ValueType { Scalar = 0, Complex, Vector, Matrix };
+enum class ValueType {
+  Scalar = 0,
+  Vector = 1,
+  Matrix = 2,
+  Last = Matrix,
+};
 
 class INodeImpl : public INode {
  public:
