@@ -51,4 +51,7 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value);
 std::unique_ptr<INode> Cos(std::unique_ptr<INode> value);
 
+std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,
+                                  std::unique_ptr<INode> rh);
+
 std::ostream& operator<<(std::ostream& out, const Variable& v);

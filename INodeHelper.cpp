@@ -18,6 +18,7 @@
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 #include "Vector.h"
+#include "VectorMultOperation.h"
 
 // static
 Constant* INodeHelper::AsConstant(INode* lh) {
@@ -137,6 +138,13 @@ std::unique_ptr<INode> INodeHelper::MakeMultIfNeeded(
 }
 
 // static
+std::unique_ptr<VectorMultOperation> INodeHelper::MakeVectorMult(
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<INode> rh) {
+  return std::make_unique<VectorMultOperation>(std::move(lh), std::move(rh));
+}
+
+// static
 DivOperation* INodeHelper::AsDiv(INode* lh) {
   auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsDivOperation() : nullptr;
@@ -183,6 +191,17 @@ bool INodeHelper::HasAnyValueType(
 }
 
 // static
+bool INodeHelper::HasAllValueType(
+    const std::vector<std::unique_ptr<INode>>& operands,
+    ValueType value_type) {
+  for (auto& operand : operands) {
+    if (operand->AsNodeImpl()->GetValueType() != value_type)
+      return false;
+  }
+  return true;
+}
+
+// static
 std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
   switch (op) {
     case Op::UnMinus:
@@ -196,6 +215,9 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
       break;
     case Op::Mult:
       return MakeMult(MakeError(), MakeError());
+      break;
+    case Op::VectorMult:
+      return MakeVectorMult(MakeError(), MakeError());
       break;
     case Op::Div:
       return MakeMult(MakeError(), MakeError());

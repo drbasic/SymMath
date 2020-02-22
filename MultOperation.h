@@ -17,6 +17,7 @@ class MultOperation : public Operation {
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
   ValueType GetValueType() const override;
+  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;
@@ -29,7 +30,6 @@ class MultOperation : public Operation {
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
-  void OpenBrackets(std::unique_ptr<INode>* new_node) override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
 

@@ -6,6 +6,7 @@
 struct OpInfo;
 class DivOperation;
 class MultOperation;
+class VectorMultOperation;
 class PlusOperation;
 class PowOperation;
 class UnMinusOperation;
@@ -41,6 +42,10 @@ class IOperation : public INodeImpl {
   virtual const PlusOperation* AsPlusOperation() const { return nullptr; }
   virtual MultOperation* AsMultOperation() { return nullptr; }
   virtual const MultOperation* AsMultOperation() const { return nullptr; }
+  virtual VectorMultOperation* AsVectorMultOperation() { return nullptr; }
+  virtual const VectorMultOperation* AsVectorMultOperation() const {
+    return nullptr;
+  }
   virtual DivOperation* AsDivOperation() { return nullptr; }
   virtual const DivOperation* AsDivOperation() const { return nullptr; }
   virtual PowOperation* AsPowOperation() { return nullptr; }
@@ -53,5 +58,4 @@ class IOperation : public INodeImpl {
   virtual void SimplifyDivMul(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyConsts(std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyTheSame(std::unique_ptr<INode>* new_node) = 0;
-  virtual void OpenBrackets(std::unique_ptr<INode>* new_node) = 0;
 };

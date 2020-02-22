@@ -1,4 +1,4 @@
-#include "VectorMult.h"
+#include "VectorScalarProduct.h"
 
 #include <cassert>
 
@@ -6,6 +6,7 @@
 #include "INodeImpl.h"
 #include "MultOperation.h"
 #include "PlusOperation.h"
+#include "ValueHelpers.h"
 #include "Vector.h"
 
 namespace {
@@ -149,7 +150,11 @@ std::unique_ptr<INode> DoMult(std::unique_ptr<Vector> lh,
 
 }  // namespace
 
-std::unique_ptr<INode> MultScalarVectorMatrix(
+ValueType GetMultResultType(ValueType lh, ValueType rh) {
+  return kMultResult[GetValueTypeIndex(lh)][GetValueTypeIndex(rh)].result_type;
+}
+
+std::unique_ptr<INode> ScalarProduct(
     const OpInfo* op,
     std::vector<std::unique_ptr<INode>>* operands) {
   assert(op->op == Op::Mult);
@@ -168,6 +173,30 @@ std::unique_ptr<INode> MultScalarVectorMatrix(
   return lh;
 }
 
-ValueType GetMultResultType(ValueType lh, ValueType rh) {
-  return kMultResult[GetValueTypeIndex(lh)][GetValueTypeIndex(rh)].result_type;
+std::unique_ptr<INode> VectorProduct(
+    const OpInfo* op,
+    std::vector<std::unique_ptr<INode>>* operands) {
+  assert(op->op == Op::VectorMult);
+  if (operands->size() != 2)
+    return INodeHelper::MakeError("Must have 2 operands");
+  if (!INodeHelper::HasAllValueType(*operands, ValueType::Vector))
+    return INodeHelper::MakeError("All operands must be vectors");
+
+  auto lh = Convert(Int2Type<VectorT>(), std::move((*operands)[0]));
+  assert(lh);
+  auto rh = Convert(Int2Type<VectorT>(), std::move((*operands)[1]));
+  assert(rh);
+  if (lh->Size() != 3 || rh->Size() != 3)
+    return INodeHelper::MakeError("All operands must be Vector3");
+
+  constexpr size_t X = 0;
+  constexpr size_t Y = 1;
+  constexpr size_t Z = 2;
+  auto x = (lh->Value(Y)->Clone() * rh->Value(Z)->Clone()) -
+           (lh->Value(Z)->Clone() * rh->Value(Y)->Clone());
+  auto y = (lh->Value(Z)->Clone() * rh->Value(X)->Clone()) -
+           (lh->Value(X)->Clone() * rh->Value(Z)->Clone());
+  auto z = (lh->Value(X)->Clone() * rh->Value(Y)->Clone()) -
+           (lh->Value(Y)->Clone() * rh->Value(X)->Clone());
+  return INodeHelper::MakeVector(std::move(x), std::move(y), std::move(z));
 }

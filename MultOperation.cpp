@@ -12,7 +12,7 @@
 #include "SimplifyHelpers.h"
 #include "UnMinusOperation.h"
 #include "Vector.h"
-#include "VectorMult.h"
+#include "VectorScalarProduct.h"
 
 namespace {
 
@@ -67,6 +67,14 @@ ValueType MultOperation::GetValueType() const {
         GetMultResultType(result, operands_[i]->AsNodeImpl()->GetValueType());
   }
   return result;
+}
+
+void MultOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(nullptr);
+
+  OpenPlusBrackets(new_node);
+  if (*new_node)
+    return;
 }
 
 std::optional<CanonicMult> MultOperation::GetCanonicMult() {
@@ -209,14 +217,6 @@ void MultOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   if (*new_node)
     return;
   SimplifyTheSamePow(new_node);
-}
-
-void MultOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
-  Operation::OpenBrackets(nullptr);
-
-  OpenPlusBrackets(new_node);
-  if (*new_node)
-    return;
 }
 
 void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {

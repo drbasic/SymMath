@@ -123,6 +123,8 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
       }
     }
     INodeHelper::RemoveEmptyOperands(&operands_);
+    if (operands_.empty())
+      break;
     SimplifyConsts(new_node);
     if (*new_node)
       return;

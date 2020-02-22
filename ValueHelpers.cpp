@@ -14,6 +14,7 @@
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "Vector.h"
+#include "VectorMultOperation.h"
 
 Variable Var(std::string name) {
   return Variable(std::move(name));
@@ -135,6 +136,11 @@ std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {
 
 std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
   return INodeHelper::MakeTrigonometric(Op::Cos, std::move(value));
+}
+
+std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,
+                                  std::unique_ptr<INode> rh) {
+  return INodeHelper::MakeVectorMult(std::move(lh), std::move(rh));
 }
 
 //=============================================================================

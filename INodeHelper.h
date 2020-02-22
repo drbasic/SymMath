@@ -25,6 +25,7 @@ class TrigonometricOperation;
 class UnMinusOperation;
 class Variable;
 class Vector;
+class VectorMultOperation;
 
 class INodeHelper {
  public:
@@ -54,6 +55,9 @@ class INodeHelper {
   static bool HasAnyValueType(
       const std::vector<std::unique_ptr<INode>>& operands,
       ValueType value_type);
+  static bool HasAllValueType(
+      const std::vector<std::unique_ptr<INode>>& operands,
+      ValueType value_type);
 
   static std::unique_ptr<Operation> MakeEmpty(Op op);
   static std::unique_ptr<INode> MakeError();
@@ -78,6 +82,9 @@ class INodeHelper {
       std::vector<std::unique_ptr<INode>*> nodes);
   static std::unique_ptr<INode> MakeMultIfNeeded(
       std::vector<std::unique_ptr<INode>> nodes);
+  static std::unique_ptr<VectorMultOperation> MakeVectorMult(
+      std::unique_ptr<INode> lh,
+      std::unique_ptr<INode> rh);
   static std::unique_ptr<DivOperation> MakeDiv(std::unique_ptr<INode> lh,
                                                std::unique_ptr<INode> rh);
   static std::unique_ptr<PowOperation> MakePow(std::unique_ptr<INode> lh,

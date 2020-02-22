@@ -176,7 +176,8 @@
     <ClCompile Include="Variable.cpp" />
     <ClCompile Include="VariableRef.cpp" />
     <ClCompile Include="Vector.cpp" />
-    <ClCompile Include="VectorMult.cpp" />
+    <ClCompile Include="VectorScalarProduct.cpp" />
+    <ClCompile Include="VectorMultOperation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Brackets.h" />
@@ -205,7 +206,8 @@
     <ClInclude Include="Variable.h" />
     <ClInclude Include="VariableRef.h" />
     <ClInclude Include="Vector.h" />
-    <ClInclude Include="VectorMult.h" />
+    <ClInclude Include="VectorScalarProduct.h" />
+    <ClInclude Include="VectorMultOperation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -93,12 +93,8 @@ void Variable::Simplify() {
 void Variable::OpenBrackets() {
   if (!value_)
     return;
-  auto* op = INodeHelper::AsOperation(value_.get());
-  if (!op)
-    return;
   std::unique_ptr<INode> new_node;
-  op->UnfoldChains();
-  op->OpenBrackets(&new_node);
+  value_->AsNodeImpl()->OpenBracketsImpl(&new_node);
   if (new_node)
     value_ = std::move(new_node);
 }

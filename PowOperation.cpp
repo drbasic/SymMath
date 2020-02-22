@@ -65,18 +65,8 @@ PrintSize PowOperation::Render(Canvas* canvas,
   return print_size_ = total_size;
 }
 
-std::optional<CanonicPow> PowOperation::GetCanonicPow() {
-  auto* exp_const = INodeHelper::AsConstant(operands_[1].get());
-  if (!exp_const)
-    return std::nullopt;
-  CanonicPow result = INodeHelper::GetCanonicPow(operands_[0]);
-  for (auto& node_info : result.base_nodes)
-    node_info.exp *= exp_const->Value();
-  return result;
-}
-
-void PowOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
-  Operation::OpenBrackets(nullptr);
+void PowOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(nullptr);
 
   auto* as_const = INodeHelper::AsConstant(Exp());
   if (!as_const || as_const->Value() > kMaxPowUnfold)
@@ -90,9 +80,19 @@ void PowOperation::OpenBrackets(std::unique_ptr<INode>* new_node) {
   }
   auto mult = INodeHelper::MakeMultIfNeeded(std::move(operands_));
   auto as_op = INodeHelper::AsOperation(mult.get());
-  as_op->OpenBrackets(new_node);
+  as_op->OpenBracketsImpl(new_node);
   if (!*new_node)
     *new_node = std::move(mult);
+}
+
+std::optional<CanonicPow> PowOperation::GetCanonicPow() {
+  auto* exp_const = INodeHelper::AsConstant(operands_[1].get());
+  if (!exp_const)
+    return std::nullopt;
+  CanonicPow result = INodeHelper::GetCanonicPow(operands_[0]);
+  for (auto& node_info : result.base_nodes)
+    node_info.exp *= exp_const->Value();
+  return result;
 }
 
 INodeImpl* PowOperation::Base() {

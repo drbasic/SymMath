@@ -30,6 +30,7 @@ class Operation : public IOperation {
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
   void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override { return std::nullopt; }
@@ -41,7 +42,6 @@ class Operation : public IOperation {
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
-  void OpenBrackets(std::unique_ptr<INode>* new_node) override;
 
   Op op() const;
   size_t OperandsCount() const;

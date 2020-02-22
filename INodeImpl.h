@@ -49,4 +49,5 @@ class INodeImpl : public INode {
   virtual const Operation* AsOperation() const { return nullptr; }
 
   virtual void SimplifyImpl(std::unique_ptr<INode>* new_node) {}
+  virtual void OpenBracketsImpl(std::unique_ptr<INode>* new_node) {}
 };

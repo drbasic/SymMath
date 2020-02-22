@@ -187,7 +187,7 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
         current->SimplifyDivDiv();
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
-        // current->SimplifyConsts(new_node);
+         current->SimplifyConsts(new_node);
       },
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyTheSame(new_node);
@@ -208,6 +208,18 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
         break;
       current->CheckIntegrity();
     }
+  }
+}
+
+void Operation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  for (auto& node : operands_) {
+    std::unique_ptr<INode> new_sub_node;
+    if (auto* op = INodeHelper::AsOperation(node.get())) {
+      op->UnfoldChains();
+    }
+    node->AsNodeImpl()->OpenBracketsImpl(&new_sub_node);
+    if (new_sub_node)
+      node = std::move(new_sub_node);
   }
 }
 
@@ -294,14 +306,6 @@ void Operation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   ApplySimplification(
       [](Operation* operation, std::unique_ptr<INode>* new_node) {
         operation->SimplifyTheSame(new_node);
-      },
-      &operands_);
-}
-
-void Operation::OpenBrackets(std::unique_ptr<INode>* new_node) {
-  ApplySimplification(
-      [](Operation* operation, std::unique_ptr<INode>* new_node) {
-        operation->OpenBrackets(new_node);
       },
       &operands_);
 }

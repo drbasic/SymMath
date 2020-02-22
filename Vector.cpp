@@ -96,6 +96,15 @@ void Vector::SimplifyImpl(std::unique_ptr<INode>* new_node) {
   }
 }
 
+void Vector::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  for (auto& val : values_) {
+    std::unique_ptr<INode> new_sub_node;
+    val->AsNodeImpl()->OpenBracketsImpl(&new_sub_node);
+    if (new_sub_node)
+      val = std::move(new_sub_node);
+  }
+}
+
 std::unique_ptr<INode> Vector::TakeValue(size_t indx) {
   return std::move(values_[indx]);
 }
