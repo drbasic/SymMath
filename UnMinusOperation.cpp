@@ -5,6 +5,7 @@
 #include "Constant.h"
 #include "INodeHelper.h"
 #include "OpInfo.h"
+#include "PlusOperation.h"
 
 UnMinusOperation::UnMinusOperation(std::unique_ptr<INode> value)
     : Operation(GetOpInfo(Op::UnMinus), std::move(value)) {}
@@ -56,6 +57,24 @@ bool UnMinusOperation::HasFrontMinus() const {
 
 ValueType UnMinusOperation::GetValueType() const {
   return Operand(0)->GetValueType();
+}
+
+void UnMinusOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(nullptr);
+
+  auto* as_plus = INodeHelper::AsPlus(Operand(0));
+  if (!as_plus)
+    return;
+
+  auto new_operands = as_plus->TakeAllOperands();
+  for (auto& node : new_operands) {
+    node = INodeHelper::Negate(std::move(node));
+  }
+
+  auto temp_node = INodeHelper::MakePlus(std::move(new_operands));
+  temp_node->OpenBracketsImpl(new_node);
+  if (!*new_node)
+    *new_node = std::move(temp_node);
 }
 
 std::optional<CanonicMult> UnMinusOperation::GetCanonicMult() {

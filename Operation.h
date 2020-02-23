@@ -47,6 +47,7 @@ class Operation : public IOperation {
   size_t OperandsCount() const;
   std::unique_ptr<INode> TakeOperand(size_t indx);
   std::vector<std::unique_ptr<INode>> TakeAllOperands();
+  void CheckIntegrity() const;
 
  protected:
   friend class Tests;
@@ -65,10 +66,10 @@ class Operation : public IOperation {
                           RenderBehaviour render_behaviour,
                           bool with_op) const;
 
-  void CheckIntegrity() const;
   bool IsAllOperandsConst(
       const std::vector<std::unique_ptr<INode>>& operands) const;
 
+  bool is_dead_ = false;
   const OpInfo* op_info_;
   mutable PrintSize print_size_;
   std::vector<std::unique_ptr<INode>> operands_;

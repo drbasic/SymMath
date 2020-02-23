@@ -16,6 +16,7 @@ class UnMinusOperation : public Operation {
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
   ValueType GetValueType() const override;
+  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;

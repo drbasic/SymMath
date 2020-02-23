@@ -78,11 +78,10 @@ void PowOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   for (size_t i = 1; i < exp; ++i) {
     operands_.push_back(operands_[0]->Clone());
   }
-  auto mult = INodeHelper::MakeMultIfNeeded(std::move(operands_));
-  auto as_op = INodeHelper::AsOperation(mult.get());
-  as_op->OpenBracketsImpl(new_node);
+  auto temp_node = INodeHelper::MakeMultIfNeeded(std::move(operands_));
+  temp_node->AsNodeImpl()->OpenBracketsImpl(new_node);
   if (!*new_node)
-    *new_node = std::move(mult);
+    *new_node = std::move(temp_node);
 }
 
 std::optional<CanonicPow> PowOperation::GetCanonicPow() {

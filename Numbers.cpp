@@ -36,7 +36,7 @@ void BacMinusCab() {
   Variable s_ab = a * b;
   std::wcout << s_ab.Print(true) << "\n";
 
-  Variable v_aa = VectorMult(a, a);
+  Variable v_aa = VectorMult(b, c);
   std::wcout << v_aa.Print(true) << "\n";
 
   Variable v_ab = VectorMult(a, b);
@@ -54,22 +54,23 @@ void BacMinusCab() {
   std::wcout << sv_bca.Print(true) << "\n";
   Variable sv_cab = c * VectorMult(a, b);
   std::wcout << sv_cab.Print(true) << "\n";
-  Variable cmp = Vector3(sv_abc == sv_bca, sv_bca == sv_cab, sv_cab == sv_abc);
-  std::wcout << cmp.Print(true) << "\n";
+
+  Variable eq_sv =
+      Vector3(sv_abc == sv_bca, sv_bca == sv_cab, sv_cab == sv_abc);
+  std::wcout << eq_sv.Print(true) << "\n";
 
   Variable abc = VectorMult(a, VectorMult(b, c));
   std::wcout << abc.Print(true) << "\n";
 
   Variable bac = (b * (a * c));
-  //std::wcout << bac.Print(true) << "\n";
+  std::wcout << bac.Print(true) << "\n";
 
   Variable cab = (c * (a * b));
-  //std::wcout << cab.Print(true) << "\n";
+  std::wcout << cab.Print(true) << "\n";
 
   Variable bac_cab = bac - cab;
   std::wcout << bac_cab.Print(true) << "\n";
 
-  // Variable abc_bac_cab("abc-bac-cab");
   Variable abc_bac_cab = abc == (bac - cab);
   std::wcout << abc_bac_cab.Print(true) << "\n";
 }
@@ -79,7 +80,7 @@ int main() {
   // Tests::Run();
 
   BacMinusCab();
-
+  return 0;
   auto a = Var("a");
   auto b = Var("b");
   auto c = Var("c");
@@ -92,8 +93,11 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = -a;
-
-  a = 1;
+  Variable t = (c + 1) - (a - d);
+  std::wcout << t.Print(true) << "\n";
+  t = t.SymCalc();
+  std::wcout << t.Print(true) << "\n";
+  t.OpenBrackets();
+  // t.Simplify();
   std::wcout << t.Print(true) << "\n";
 }

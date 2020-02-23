@@ -132,8 +132,10 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
 
   if (operands_.size() == 1) {
     *new_node = std::move(operands_[0]);
+    return;
   }
   if (operands_.size() == 0) {
     *new_node = INodeHelper::MakeConst(0.0);
+    return;
   }
 }

@@ -36,7 +36,8 @@ MultOperation::MultOperation(std::unique_ptr<INode> lh,
     : Operation(GetOpInfo(Op::Mult), std::move(lh), std::move(rh)) {}
 
 MultOperation::MultOperation(std::vector<std::unique_ptr<INode>> operands)
-    : Operation(GetOpInfo(Op::Mult), std::move(operands)) {}
+    : Operation(GetOpInfo(Op::Mult), std::move(operands)) {
+}
 
 std::unique_ptr<INode> MultOperation::Clone() const {
   std::vector<std::unique_ptr<INode>> new_nodes;
@@ -69,12 +70,21 @@ ValueType MultOperation::GetValueType() const {
   return result;
 }
 
+void DoOpen(INode* src_node, std::unique_ptr<INode>* new_node) {}
+
 void MultOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   Operation::OpenBracketsImpl(nullptr);
 
-  OpenPlusBrackets(new_node);
-  if (*new_node)
+  std::unique_ptr<INode> temp_node;
+  SimplifyUnMinus(&temp_node);
+  if (temp_node) {
+    temp_node->AsNodeImpl()->OpenBracketsImpl(new_node);
+    if (!*new_node)
+      *new_node = std::move(temp_node);
     return;
+  }
+
+  OpenPlusBrackets(new_node);
 }
 
 std::optional<CanonicMult> MultOperation::GetCanonicMult() {
@@ -123,21 +133,22 @@ void MultOperation::UnfoldChains() {
   std::vector<std::unique_ptr<INode>> new_nodes;
   ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
   operands_.swap(new_nodes);
-  CheckIntegrity();
 }
 
 void MultOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyUnMinus(nullptr);
-  bool is_positve = true;
+
+  bool is_positive = true;
   for (auto& node : operands_) {
     if (auto* un_minus = INodeHelper::AsUnMinus(node.get())) {
-      is_positve = !is_positve;
+      is_positive = !is_positive;
       node = INodeHelper::Negate(std::move(node));
     }
   }
-  if (!is_positve) {
+  if (!is_positive) {
     *new_node =
         INodeHelper::MakeUnMinus(INodeHelper::MakeMult(std::move(operands_)));
+    return;
   }
 }
 
@@ -246,7 +257,11 @@ void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {
     auto mult = INodeHelper::MakeMult(std::move(mult_nodes));
     new_plus_nodes.push_back(std::move(mult));
   } while (NextPermutation(&permutation_indexes));
-  *new_node = INodeHelper::MakePlus(std::move(new_plus_nodes));
+
+  auto temp_node = INodeHelper::MakePlus(std::move(new_plus_nodes));
+  temp_node->OpenBracketsImpl(new_node);
+  if (!*new_node)
+    *new_node = std::move(temp_node);
 }
 
 void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
@@ -330,8 +345,10 @@ void MultOperation::SimplifyTheSamePow(std::unique_ptr<INode>* new_node) {
   INodeHelper::RemoveEmptyOperands(&operands_);
   if (operands_.size() == 1) {
     *new_node = std::move(operands_[0]);
+    return;
   }
   if (operands_.size() == 0) {
     *new_node = INodeHelper::MakeConst(0.0);
+    return;
   }
 }

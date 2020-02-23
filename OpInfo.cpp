@@ -1,8 +1,7 @@
 ﻿#include "OpInfo.h"
 
-#include "Exception.h"
-#include "Operations.h"
 #include "CompareOperation.h"
+#include "Exception.h"
 #include "VectorScalarProduct.h"
 
 namespace {
@@ -13,8 +12,8 @@ constexpr OpInfo kOps[] = {
      2},
     {Op::Plus, 10, L" + ", [](double lh, double rh) { return lh + rh; }, true,
      -1, VectorAdd},
-    {Op::Mult, 20, L" ∙ ", [](double lh, double rh) { return lh * rh; }, true,
-     -1, ScalarProduct},
+    {Op::Mult, 20, L"∙", [](double lh, double rh) { return lh * rh; }, true, -1,
+     ScalarProduct},
     {Op::VectorMult, 20, L" ╲╱ ", nullptr, true, 2, VectorProduct},
     {Op::Div, 20, L"/", [](double lh, double rh) { return lh / rh; }, false, 2},
     {Op::Pow, 30, L"^", [](double lh, double rh) { return pow(lh, rh); }, false,

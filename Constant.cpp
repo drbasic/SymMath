@@ -38,11 +38,13 @@ bool Constant::HasFrontMinus() const {
 
 bool Constant::IsEqual(const INode* rh) const {
   const Constant* rh_const = rh->AsNodeImpl()->AsConstant();
+  if (!rh_const)
+    return false;
   if (bool_value_ != rh_const->bool_value_)
     return false;
   if (bool_value_)
     return (*bool_value_) == (*rh_const->bool_value_);
-  return rh_const && (Value() == rh_const->Value());
+  return Value() == rh_const->Value();
 }
 
 std::unique_ptr<INode> Constant::SymCalc() const {

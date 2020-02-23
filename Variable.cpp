@@ -124,10 +124,10 @@ void Variable::Simplify() {
 void Variable::OpenBrackets() {
   if (!value_)
     return;
-  std::unique_ptr<INode> new_node;
-  value_->AsNodeImpl()->OpenBracketsImpl(&new_node);
-  if (new_node)
-    value_ = std::move(new_node);
+  std::unique_ptr<INode> temp_node;
+  value_->AsNodeImpl()->OpenBracketsImpl(&temp_node);
+  if (temp_node)
+    value_ = std::move(temp_node);
 }
 
 void Variable::operator=(std::unique_ptr<INode> value) {

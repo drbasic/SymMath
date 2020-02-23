@@ -1,6 +1,7 @@
 #include "SimplifyHelpers.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <map>
 
@@ -95,9 +96,11 @@ bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
 void ExctractNodesWithOp(Op op,
                          std::vector<std::unique_ptr<INode>>* src,
                          std::vector<std::unique_ptr<INode>>* nodes) {
+  assert(!src->empty());
   for (auto& node : *src) {
     ExctractNodesWithOp(op, std::move(node), nodes);
   }
+  assert(!nodes->empty());
 }
 
 void ExctractNodesWithOp(Op op,
@@ -125,8 +128,15 @@ void ExctractNodesWithOp(Op op,
     return;
   }
   if (operation->op() == Op::UnMinus) {
-    ExctractNodesWithOp(op, operation->TakeOperand(0), negative_nodes,
-                        positive_nodes);
+    if (op == Op::Mult) {
+      ExctractNodesWithOp(op, operation->TakeOperand(0), positive_nodes,
+                          negative_nodes);
+      negative_nodes->push_back(std::move(positive_nodes->back()));
+      positive_nodes->pop_back();
+    } else {
+      ExctractNodesWithOp(op, operation->TakeOperand(0), negative_nodes,
+                          positive_nodes);
+    }
     return;
   }
   if (operation->op() != op) {
