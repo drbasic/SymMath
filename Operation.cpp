@@ -200,6 +200,9 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyConsts(new_node);
       },
+      [](Operation* current, std::unique_ptr<INode>* new_node) {
+        current->OrderOperands();
+      },
   };
 
   Operation* current = this;
@@ -313,6 +316,11 @@ void Operation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
         operation->SimplifyTheSame(new_node);
       },
       &operands_);
+}
+
+void Operation::OrderOperands() {
+  ApplySimplification([](Operation* operation) { operation->OrderOperands(); },
+                      &operands_);
 }
 
 Op Operation::op() const {

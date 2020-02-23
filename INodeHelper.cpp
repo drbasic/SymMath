@@ -83,6 +83,28 @@ const DivOperation* INodeHelper::AsDiv(const INode* lh) {
 }
 
 // static
+Variable* INodeHelper::AsVariable(INode* lh) {
+  return lh->AsNodeImpl()->AsVariable();
+}
+
+// static
+const Variable* INodeHelper::AsVariable(const INode* lh) {
+  return lh->AsNodeImpl()->AsVariable();
+}
+
+// static
+PowOperation* INodeHelper::AsPow(INode* lh) {
+  auto result = lh->AsNodeImpl()->AsOperation();
+  return (result) ? result->AsPowOperation() : nullptr;
+}
+
+// static
+const PowOperation* INodeHelper::AsPow(const INode* lh) {
+  auto result = lh->AsNodeImpl()->AsOperation();
+  return (result) ? result->AsPowOperation() : nullptr;
+}
+
+// static
 CanonicMult INodeHelper::GetCanonicMult(std::unique_ptr<INode>& node) {
   if (auto* operation = AsOperation(node.get())) {
     auto inner_canonic = operation->GetCanonicMult();
@@ -221,7 +243,7 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
       return MakeVectorMult(MakeError(), MakeError());
       break;
     case Op::Div:
-      return MakeMult(MakeError(), MakeError());
+      return MakeDiv(MakeError(), MakeError());
       break;
     case Op::Pow:
       return MakePow(MakeError(), MakeError());

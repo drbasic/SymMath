@@ -12,10 +12,6 @@
 #include "ValueHelpers.h"
 
 void BacMinusCab() {
-  auto a = Var("a");
-  auto b = Var("b");
-  auto c = Var("c");
-
   auto a1 = Var("a1");
   auto a2 = Var("a2");
   auto a3 = Var("a3");
@@ -25,11 +21,17 @@ void BacMinusCab() {
   auto c1 = Var("c1");
   auto c2 = Var("c2");
   auto c3 = Var("c3");
+    auto q = Var("q");
 
-  a = Vector3(a1, a2, a3);
+  auto a = Var("a");
+  a = Vector3(a1*a1, a2/q, a3);
   std::wcout << a.Print() << "\n";
+
+  auto b = Var("b");
   b = Vector3(b1, b2, b3);
   std::wcout << b.Print() << "\n";
+
+  auto c = Var("c");
   c = Vector3(c1, c2, c3);
   std::wcout << c.Print() << "\n";
 
@@ -93,11 +95,6 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = (c + 1) - (a - d);
-  std::wcout << t.Print(true) << "\n";
-  t = t.SymCalc();
-  std::wcout << t.Print(true) << "\n";
-  t.OpenBrackets();
-  // t.Simplify();
+  Variable t = a* (b /c);
   std::wcout << t.Print(true) << "\n";
 }

@@ -40,3 +40,6 @@ bool MergeCanonicToPow(CanonicPow lh,
                        CanonicPow rh,
                        std::vector<std::unique_ptr<INode>>* top,
                        std::vector<std::unique_ptr<INode>>* bottom);
+
+void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
+                     bool move_const_to_front);

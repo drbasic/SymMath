@@ -36,8 +36,7 @@ MultOperation::MultOperation(std::unique_ptr<INode> lh,
     : Operation(GetOpInfo(Op::Mult), std::move(lh), std::move(rh)) {}
 
 MultOperation::MultOperation(std::vector<std::unique_ptr<INode>> operands)
-    : Operation(GetOpInfo(Op::Mult), std::move(operands)) {
-}
+    : Operation(GetOpInfo(Op::Mult), std::move(operands)) {}
 
 std::unique_ptr<INode> MultOperation::Clone() const {
   std::vector<std::unique_ptr<INode>> new_nodes;
@@ -226,6 +225,12 @@ void MultOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   if (*new_node)
     return;
   SimplifyTheSamePow(new_node);
+}
+
+void MultOperation::OrderOperands() {
+  Operation::OrderOperands();
+
+  ReorderOperands(&operands_, true);
 }
 
 void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {

@@ -30,6 +30,7 @@ class MultOperation : public Operation {
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
+  void OrderOperands() override;
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
 

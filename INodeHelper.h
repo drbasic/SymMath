@@ -43,6 +43,10 @@ class INodeHelper {
   static const MultOperation* AsMult(const INode* lh);
   static DivOperation* AsDiv(INode* lh);
   static const DivOperation* AsDiv(const INode* lh);
+  static Variable* AsVariable(INode* lh);
+  static const Variable* AsVariable(const INode* lh);
+  static PowOperation* AsPow(INode* lh);
+  static const PowOperation* AsPow(const INode* lh);
 
   static CanonicMult GetCanonicMult(std::unique_ptr<INode>& node);
   static CanonicPow GetCanonicPow(std::unique_ptr<INode>& node);

@@ -11,8 +11,11 @@
 #include "IOperation.h"
 #include "MultOperation.h"
 #include "PowOperation.h"
+#include "UnMinusOperation.h"
+#include "Variable.h"
 
 namespace {
+
 bool ReduceFullMultiplicity(double top,
                             double bottom,
                             double* new_top,
@@ -39,6 +42,30 @@ bool ReduceFullMultiplicity(double top,
   }
   return result;
 }
+
+std::string GetBaseName(const INode* node) {
+  if (const auto* as_var = INodeHelper::AsVariable(node))
+    return as_var->GetName();
+  if (const auto* as_un_minus = INodeHelper::AsUnMinus(node))
+    return GetBaseName(as_un_minus->Operand(0));
+  if (const auto* as_pow = INodeHelper::AsPow(node)) {
+    return GetBaseName(as_pow->Base());
+  }
+  if (const auto* as_mult = INodeHelper::AsMult(node)) {
+    std::string result;
+    for (size_t i = 0; i < as_mult->OperandsCount(); ++i) {
+      result += GetBaseName(as_mult->Operand(i));
+    }
+    return result;
+  }
+  if (const auto* as_div = INodeHelper::AsDiv(node)) {
+    std::string result =
+        GetBaseName(as_div->Operand(0)) + GetBaseName(as_div->Operand(1));
+    return result;
+  }
+  return std::string();
+}
+
 }  // namespace
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
@@ -275,4 +302,34 @@ bool MergeCanonicToPow(CanonicPow lh,
   }
 
   return true;
+}
+
+void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
+                     bool move_const_to_front) {
+  {
+    auto order_by_name = [](const std::unique_ptr<INode>& lh,
+                            const std::unique_ptr<INode>& rh) {
+      std::string lh_name = GetBaseName(lh.get());
+      std::string rh_name = GetBaseName(rh.get());
+      return lh_name < rh_name;
+    };
+    std::sort(operands->begin(), operands->end(), order_by_name);
+  }
+  {
+    auto const_to_front = [move_const_to_front](
+                              const std::unique_ptr<INode>& lh,
+                              const std::unique_ptr<INode>& rh) {
+      auto lh_as_const = INodeHelper::AsConstant(lh.get());
+      auto rh_as_const = INodeHelper::AsConstant(rh.get());
+      if (!lh_as_const && !rh_as_const)
+        return false;
+      if (lh_as_const && rh_as_const) {
+        return lh_as_const->Value() < rh_as_const->Value();
+      }
+
+      return move_const_to_front ? lh_as_const > rh_as_const
+                                 : lh_as_const < rh_as_const;
+    };
+    std::stable_sort(operands->begin(), operands->end(), const_to_front);
+  }
 }

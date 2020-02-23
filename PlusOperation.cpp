@@ -139,3 +139,9 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
     return;
   }
 }
+
+void PlusOperation::OrderOperands() {
+  Operation::OrderOperands();
+
+  ReorderOperands(&operands_, false);
+}

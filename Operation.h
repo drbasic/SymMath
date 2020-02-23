@@ -42,18 +42,18 @@ class Operation : public IOperation {
   void SimplifyDivMul(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
+  void OrderOperands() override;
 
   Op op() const;
   size_t OperandsCount() const;
+  INodeImpl* Operand(size_t indx);
+  const INodeImpl* Operand(size_t indx) const;
   std::unique_ptr<INode> TakeOperand(size_t indx);
   std::vector<std::unique_ptr<INode>> TakeAllOperands();
   void CheckIntegrity() const;
 
  protected:
   friend class Tests;
-
-  INodeImpl* Operand(size_t indx);
-  const INodeImpl* Operand(size_t indx) const;
 
   PrintSize RenderOperandChain(Canvas* canvas,
                                PrintBox print_box,

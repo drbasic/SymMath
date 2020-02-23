@@ -22,12 +22,12 @@ class PowOperation : public Operation {
   PowOperation* AsPowOperation() override { return this; }
   const PowOperation* AsPowOperation() const override { return this; }
 
- private:
   INodeImpl* Base();
   const INodeImpl* Base() const;
   INodeImpl* Exp();
   const INodeImpl* Exp() const;
-  
+
+ private:
   mutable PrintSize base_print_size_;
   mutable PrintSize pow_print_size_;
 };
