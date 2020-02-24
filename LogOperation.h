@@ -6,6 +6,10 @@ double TrivialLogCalc(double lh, double rh);
 
 class LogOperation : public Operation {
  public:
+  enum : size_t {
+    BaseIndex = 0,
+    ValueIndex = 1,
+  };
   LogOperation(std::unique_ptr<INode> base, std::unique_ptr<INode> value);
 
   // INode implementation
@@ -21,9 +25,12 @@ class LogOperation : public Operation {
   // IOperation implementation
   LogOperation* AsLogOperation() override { return this; }
   const LogOperation* AsLogOperation() const override { return this; }
+  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
 
-  INodeImpl* Base();
-  const INodeImpl* Base() const;
+  INodeImpl* Base() { return Operand(BaseIndex); }
+  const INodeImpl* Base() const { return Operand(BaseIndex); }
+  INodeImpl* Value() { return Operand(ValueIndex); }
+  const INodeImpl* Value() const { return Operand(ValueIndex); }
 
  private:
   PrintSize RenderBase(Canvas* canvas,

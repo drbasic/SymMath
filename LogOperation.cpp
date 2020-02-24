@@ -5,7 +5,10 @@
 #include <sstream>
 
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INodeHelper.h"
+#include "MultOperation.h"
+#include "PowOperation.h"
 
 double TrivialLogCalc(double lh, double rh) {
   if (lh == M_E)
@@ -60,12 +63,53 @@ PrintSize LogOperation::Render(Canvas* canvas,
   return print_size_ = log_size;
 }
 
-INodeImpl* LogOperation::Base() {
-  return Operand(0);
-}
+void LogOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(nullptr);
 
-const INodeImpl* LogOperation::Base() const {
-  return Operand(0);
+  if (auto* as_mult = INodeHelper::AsMult(Value())) {
+    std::vector<std::unique_ptr<INode>> sum_operands;
+    sum_operands.reserve(as_mult->OperandsCount());
+    for (size_t i = 0; i < as_mult->OperandsCount(); ++i) {
+      auto node = INodeHelper::MakeLogIfNeeded(Base()->Clone(),
+                                               as_mult->TakeOperand(i));
+      {
+        std::unique_ptr<INode> new_node;
+        node->AsNodeImpl()->OpenBracketsImpl(&new_node);
+        if (new_node)
+          node = std::move(new_node);
+      }
+      sum_operands.push_back(std::move(node));
+    }
+    *new_node = INodeHelper::MakePlusIfNeeded(std::move(sum_operands));
+    return;
+  }
+  if (auto* as_div = INodeHelper::AsDiv(Value())) {
+    std::vector<std::unique_ptr<INode>> sum_operands;
+    sum_operands.reserve(as_div->OperandsCount());
+    for (size_t i = 0; i < as_div->OperandsCount(); ++i) {
+      auto node =
+          INodeHelper::MakeLogIfNeeded(Base()->Clone(), as_div->TakeOperand(i));
+      {
+        std::unique_ptr<INode> new_node;
+        node->AsNodeImpl()->OpenBracketsImpl(&new_node);
+        if (new_node)
+          node = std::move(new_node);
+      }
+      if (i == 1)
+        node = INodeHelper::Negate(std::move(node));
+      sum_operands.push_back(std::move(node));
+    }
+    *new_node = INodeHelper::MakePlusIfNeeded(std::move(sum_operands));
+    return;
+  }
+  if (auto* as_pow = INodeHelper::AsPow(Value())) {
+    *new_node = INodeHelper::MakeMultIfNeeded(
+        as_pow->TakeOperand(PowOperation::BaseIndex),
+        INodeHelper::MakeLogIfNeeded(
+            TakeOperand(LogOperation::BaseIndex),
+            as_pow->TakeOperand(PowOperation::PowIndex)));
+    return;
+  }
 }
 
 PrintSize LogOperation::RenderBase(Canvas* canvas,

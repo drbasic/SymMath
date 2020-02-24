@@ -53,7 +53,8 @@ PrintSize PowOperation::Render(Canvas* canvas,
       // Render exp
       PrintBox exp_box = print_box.ShrinkLeft(base_print_size_.width);
       exp_box.height = pow_print_size_.height;
-      exp_box.y = print_box.base_line - base_print_size_.base_line - pow_print_size_.height;
+      exp_box.y = print_box.base_line - base_print_size_.base_line -
+                  pow_print_size_.height;
       exp_box.base_line = exp_box.y + pow_print_size_.base_line;
       auto exp_size2 = RenderOperand(Exp(), canvas, exp_box, dry_run,
                                      exp_render_behaviour, false);
@@ -96,17 +97,17 @@ std::optional<CanonicPow> PowOperation::GetCanonicPow() {
 }
 
 INodeImpl* PowOperation::Base() {
-  return Operand(0);
+  return Operand(BaseIndex);
 }
 
 const INodeImpl* PowOperation::Base() const {
-  return Operand(0);
+  return Operand(BaseIndex);
 }
 
 INodeImpl* PowOperation::Exp() {
-  return Operand(1);
+  return Operand(PowIndex);
 }
 
 const INodeImpl* PowOperation::Exp() const {
-  return Operand(1);
+  return Operand(PowIndex);
 }

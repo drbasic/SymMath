@@ -186,11 +186,13 @@ std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
 std::unique_ptr<INode> DoDiffNode(const INode* node, const Variable& by_var) {
   if (auto* as_const = node->AsNodeImpl()->AsConstant())
     return INodeHelper::MakeConst(0.0);
+  if (auto* as_imag = node->AsNodeImpl()->AsImaginary())
+    return INodeHelper::MakeConst(0.0);
   if (auto* as_operation = node->AsNodeImpl()->AsOperation())
     return DoDiffOperation(as_operation, by_var);
   if (auto* as_var = node->AsNodeImpl()->AsVariable())
     return DoDiffVariable(as_var, by_var);
-
+  assert(false);
   return nullptr;
 }
 }  // namespace

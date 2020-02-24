@@ -4,6 +4,10 @@
 
 class PowOperation : public Operation {
  public:
+  enum : size_t {
+    BaseIndex = 0,
+    PowIndex = 1,
+  };
   PowOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
 
   // INode implementation

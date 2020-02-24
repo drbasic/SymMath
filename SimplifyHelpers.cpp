@@ -311,6 +311,9 @@ void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
                             const std::unique_ptr<INode>& rh) {
       std::string lh_name = GetBaseName(lh.get());
       std::string rh_name = GetBaseName(rh.get());
+      if (lh_name.empty() || rh_name.empty()) {
+        return lh_name.empty() < rh_name.empty();
+      }
       return lh_name < rh_name;
     };
     std::sort(operands->begin(), operands->end(), order_by_name);
