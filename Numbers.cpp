@@ -78,26 +78,45 @@ void BacMinusCab() {
 
 void EulerEquation() {
   auto x = Var("x");
-  Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
-  std::wcout << t.Print(true) << "\n";
-  t.ConvertToComplex();
-  t.OpenBrackets();
-  std::wcout << t.Print(true) << "\n";
+  {
+    Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
+    std::wcout << t.Print(true) << "\n";
+    t.ConvertToComplex();
+    t.OpenBrackets();
+    std::wcout << t.Print(true) << "\n";
+  }
+  {
+    Variable t1 = 2 * Sin(x) * Cos(x);
+    std::wcout << t1.Print(true) << "\n";
+    t1.ConvertToComplex();
+    t1.OpenBrackets();
+    t1.Simplify();
 
-  Variable t1 = 2 * Sin(x) * Cos(x);
-  std::wcout << t1.Print(true) << "\n";
-  t1.ConvertToComplex();
-  t1.OpenBrackets();
-  t1.Simplify();
+    Variable t2 = Sin(2 * x);
+    std::wcout << t2.Print(true) << "\n";
+    t2.ConvertToComplex();
+    t2.OpenBrackets();
+    t2.Simplify();
 
-  Variable t2 = Sin(2 * x);
-  std::wcout << t2.Print(true) << "\n";
-  t2.ConvertToComplex();
-  t2.OpenBrackets();
-  t2.Simplify();
+    Variable t12 = t1 == t2;
+    std::wcout << t12.Print(true) << "\n";
+  }
+  {
+    Variable t3 = Pow(Cos(x), 2) - Pow(Sin(x), 2);
+    std::wcout << t3.Print(true) << "\n";
+    t3.ConvertToComplex();
+    t3.OpenBrackets();
+    t3.Simplify();
 
-  Variable t12 = t1 == t2;
-  std::wcout << t12.Print(true) << "\n";
+    Variable t4 = Cos(2 * x);
+    std::wcout << t4.Print(true) << "\n";
+    t4.ConvertToComplex();
+    t4.OpenBrackets();
+    t4.Simplify();
+
+    Variable t34 = t3 == t4;
+    std::wcout << t34.Print(true) << "\n";
+  }
 }
 
 int main() {
