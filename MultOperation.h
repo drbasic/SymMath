@@ -22,8 +22,6 @@ class MultOperation : public Operation {
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;
   std::optional<CanonicPow> GetCanonicPow() override;
-  void ProcessImaginary(
-      std::vector<std::unique_ptr<INode>>* nodes) const override;
   void UnfoldChains() override;
   void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
   void SimplifyChains(std::unique_ptr<INode>* new_node) override;
@@ -34,6 +32,8 @@ class MultOperation : public Operation {
   MultOperation* AsMultOperation() override { return this; }
   const MultOperation* AsMultOperation() const override { return this; }
 
+   static std::unique_ptr<INode> ProcessImaginary(
+      std::vector<std::unique_ptr<INode>>* nodes);
  private:
   void SimplifyTheSameMult(std::unique_ptr<INode>* new_node);
   void SimplifyTheSamePow(std::unique_ptr<INode>* new_node);

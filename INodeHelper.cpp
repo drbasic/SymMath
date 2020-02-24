@@ -287,6 +287,11 @@ std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
 }
 
+std::unique_ptr<Constant> INodeHelper::MakeConst(double value,
+                                                 std::string name) {
+  return std::make_unique<Constant>(std::move(value), std::move(name));
+}
+
 // static
 std::unique_ptr<Constant> INodeHelper::MakeConst(bool value) {
   return std::make_unique<Constant>(value);
@@ -434,11 +439,7 @@ std::unique_ptr<PowOperation> INodeHelper::MakePow(std::unique_ptr<INode> base,
 
 std::unique_ptr<INode> INodeHelper::MakePowIfNeeded(std::unique_ptr<INode> base,
                                                     double exp) {
-  if (exp == 0.0)
-    return nullptr;
-  if (exp == 1.0)
-    return base;
-  return MakePow(std::move(base), INodeHelper::MakeConst(exp));
+  return PowOperation::MakeIfNeeded(std::move(base), exp);
 }
 
 // static

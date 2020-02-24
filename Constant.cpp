@@ -6,6 +6,9 @@ Constant::Constant(double val) : value_(val) {}
 
 Constant::Constant(bool val) : bool_value_(val), value_(val ? 1.0 : 0.0) {}
 
+Constant::Constant(double val, std::string name)
+    : value_(val), name_(std::move(name)) {}
+
 PrintSize Constant::Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
@@ -14,13 +17,15 @@ PrintSize Constant::Render(Canvas* canvas,
   auto minus_behaviour = render_behaviour.TakeMinus();
 
   std::stringstream ss;
-  if (!bool_value_) {
+  if (!bool_value_ && name_.empty()) {
     double for_print =
         ((has_front_minus && minus_behaviour == MinusBehaviour::Ommit) ||
          (!has_front_minus && minus_behaviour == MinusBehaviour::Force))
             ? -value_
             : value_;
     ss << for_print;
+  } else if (!name_.empty()) {
+    ss << name_;
   } else {
     ss << ((*bool_value_) ? "true" : "false");
   }
@@ -33,7 +38,7 @@ PrintSize Constant::LastPrintSize() const {
 }
 
 bool Constant::HasFrontMinus() const {
-  return !bool_value_ && value_ < 0;
+  return name_.empty() && !bool_value_ && value_ < 0;
 }
 
 bool Constant::IsEqual(const INode* rh) const {
@@ -52,6 +57,8 @@ std::unique_ptr<INode> Constant::SymCalc() const {
 }
 
 std::unique_ptr<INode> Constant::Clone() const {
+  if (!name_.empty())
+    return std::make_unique<Constant>(value_, name_);
   if (bool_value_)
     return std::make_unique<Constant>(*bool_value_);
   return std::make_unique<Constant>(value_);

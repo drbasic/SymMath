@@ -35,9 +35,6 @@ class IOperation : public INodeImpl {
   virtual std::optional<CanonicMult> GetCanonicMult() = 0;
   virtual std::optional<CanonicPow> GetCanonicPow() = 0;
 
-  virtual void ProcessImaginary(
-      std::vector<std::unique_ptr<INode>>* nodes) const {}
-
   virtual UnMinusOperation* AsUnMinusOperation() { return nullptr; }
   virtual const UnMinusOperation* AsUnMinusOperation() const { return nullptr; }
   virtual PlusOperation* AsPlusOperation() { return nullptr; }

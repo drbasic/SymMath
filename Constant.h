@@ -2,13 +2,15 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 
 #include "INodeImpl.h"
 
 class Constant : public INodeImpl {
  public:
-  Constant(double val);
-  Constant(bool val);
+  explicit Constant(double val);
+  explicit Constant(bool val);
+  Constant(double val, std::string name);
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
@@ -33,4 +35,5 @@ class Constant : public INodeImpl {
   mutable PrintSize print_size_;
   std::optional<bool> bool_value_;
   double value_ = 0;
+  std::string name_;
 };

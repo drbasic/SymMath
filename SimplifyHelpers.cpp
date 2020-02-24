@@ -10,6 +10,7 @@
 #include "INodeHelper.h"
 #include "IOperation.h"
 #include "MultOperation.h"
+#include "PlusOperation.h"
 #include "PowOperation.h"
 #include "UnMinusOperation.h"
 #include "Variable.h"
@@ -216,14 +217,19 @@ bool MergeCanonicToMult(const CanonicMult& lh,
   for (auto node : lh.nodes)
     base_nodes.push_back(std::move(*node));
 
-  auto base = INodeHelper::MakeMultIfNeeded(std::move(base_nodes));
-  auto pow = INodeHelper::MakePow(std::move(base), INodeHelper::MakeConst(2.0));
+  auto pow =
+      INodeHelper::MakePow(INodeHelper::MakeMultIfNeeded(std::move(base_nodes)),
+                           INodeHelper::MakeConst(2.0));
+  std::unique_ptr<INode> new_pow;
+  pow->SimplifyImpl(&new_pow);
+  if (!new_pow)
+    new_pow = std::move(pow);
   if (dividend == divider) {
-    *lh_node = std::move(pow);
+    *lh_node = std::move(new_pow);
     rh_node->reset();
   } else {
     *lh_node = INodeHelper::MakeConst(dividend / divider);
-    *rh_node = std::move(pow);
+    *rh_node = std::move(new_pow);
   }
 
   return true;
@@ -244,17 +250,59 @@ bool MergeCanonicToPow(CanonicPow lh,
   for (auto& lh_node_info : lh.base_nodes) {
     if (!lh_node_info.node)
       continue;
-    auto* lh_const = INodeHelper::AsConstant(lh_node_info.node->get());
+
     for (auto& rh_node_info : rh.base_nodes) {
       if (!rh_node_info.node)
         continue;
+
+      auto* lh_pow = INodeHelper::AsPow(lh_node_info.node->get());
+      auto* rh_pow = INodeHelper::AsPow(rh_node_info.node->get());
+      if (lh_pow && rh_pow && lh_pow->Base()->IsEqual(rh_pow->Base())) {
+        // x^a * x^b
+        auto new_pow = INodeHelper::MakePow(
+            lh_pow->Base()->Clone(),
+            INodeHelper::MakePlus(lh_pow->TakeOperand(PowOperation::PowIndex),
+                                  rh_pow->TakeOperand(PowOperation::PowIndex)));
+        merged_nodes.emplace_back(1.0, std::move(new_pow));
+        lh_node_info.node = nullptr;
+        rh_node_info.node = nullptr;
+        break;
+      }
+      if (lh_pow && !rh_pow &&
+          lh_pow->Base()->IsEqual(rh_node_info.node->get())) {
+        // x^a * x
+        auto new_pow = INodeHelper::MakePow(
+            lh_pow->Base()->Clone(),
+            INodeHelper::MakePlus(lh_pow->TakeOperand(PowOperation::PowIndex),
+                                  INodeHelper::MakeConst(1.0)));
+        merged_nodes.emplace_back(1.0, std::move(new_pow));
+        lh_node_info.node = nullptr;
+        rh_node_info.node = nullptr;
+        break;
+      }
+      if (rh_pow && !lh_pow &&
+          rh_pow->Base()->IsEqual(lh_node_info.node->get())) {
+        // x * x^b
+        auto new_pow = INodeHelper::MakePow(
+            rh_pow->Base()->Clone(),
+            INodeHelper::MakePlus(rh_pow->TakeOperand(PowOperation::PowIndex),
+                                  INodeHelper::MakeConst(1.0)));
+        merged_nodes.emplace_back(1.0, std::move(new_pow));
+        lh_node_info.node = nullptr;
+        rh_node_info.node = nullptr;
+        break;
+      }
+
       if (lh_node_info.node->get()->IsEqual(rh_node_info.node->get())) {
+        // x^3 * x^2
         merged_nodes.emplace_back(lh_node_info.exp + rh_node_info.exp,
                                   std::move(*lh_node_info.node));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
         break;
       }
+
+      auto* lh_const = INodeHelper::AsConstant(lh_node_info.node->get());
       if (!lh_const)
         continue;
       auto* rh_const = INodeHelper::AsConstant(rh_node_info.node->get());
@@ -274,6 +322,7 @@ bool MergeCanonicToPow(CanonicPow lh,
         }
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
+        break;
       }
     }
   }

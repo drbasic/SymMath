@@ -2,11 +2,14 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "Imaginary.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
+#include "ValueHelpers.h"
 
 namespace {
 constexpr size_t kMaxPowUnfold = 10;
@@ -14,6 +17,18 @@ constexpr size_t kMaxPowUnfold = 10;
 
 PowOperation::PowOperation(std::unique_ptr<INode> lh, std::unique_ptr<INode> rh)
     : Operation(GetOpInfo(Op::Pow), std::move(lh), std::move(rh)) {}
+
+std::unique_ptr<INode> PowOperation::MakeIfNeeded(std::unique_ptr<INode> base,
+                                                  double exp) {
+  auto pow = INodeHelper::MakePow(std::move(base), INodeHelper::MakeConst(exp));
+
+  std::unique_ptr<INode> result;
+  pow->SimplifyExp(&result);
+  if (!result)
+    result = std::move(pow);
+
+  return result;
+}
 
 std::unique_ptr<INode> PowOperation::Clone() const {
   return std::make_unique<PowOperation>(operands_[0]->Clone(),
@@ -74,16 +89,31 @@ void PowOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   if (!as_const || as_const->Value() > kMaxPowUnfold)
     return;
   auto exp = as_const->Value();
+  if (exp == 0) {
+    *new_node = INodeHelper::MakeConst(1.0);
+    return;
+  }
+  bool negative_exp = false;
+  if (exp < 0) {
+    exp = -exp;
+    negative_exp = true;
+  }
 
   operands_.resize(1);
   operands_.reserve(exp);
   for (size_t i = 1; i < exp; ++i) {
     operands_.push_back(operands_[0]->Clone());
   }
-  auto temp_node = INodeHelper::MakeMultIfNeeded(std::move(operands_));
-  temp_node->AsNodeImpl()->OpenBracketsImpl(new_node);
-  if (!*new_node)
-    *new_node = std::move(temp_node);
+  std::unique_ptr<INode> new_temp_node;
+  {
+    auto temp_node = INodeHelper::MakeMultIfNeeded(std::move(operands_));
+    temp_node->AsNodeImpl()->OpenBracketsImpl(&new_temp_node);
+    if (!new_temp_node)
+      new_temp_node = std::move(temp_node);
+    if (negative_exp)
+      new_temp_node = INodeHelper::Negate(std::move(new_temp_node));
+  }
+  *new_node = std::move(new_temp_node);
 }
 
 std::optional<CanonicPow> PowOperation::GetCanonicPow() {
@@ -94,6 +124,12 @@ std::optional<CanonicPow> PowOperation::GetCanonicPow() {
   for (auto& node_info : result.base_nodes)
     node_info.exp *= exp_const->Value();
   return result;
+}
+
+void PowOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyChains(nullptr);
+
+  SimplifyExp(new_node);
 }
 
 INodeImpl* PowOperation::Base() {
@@ -110,4 +146,41 @@ INodeImpl* PowOperation::Exp() {
 
 const INodeImpl* PowOperation::Exp() const {
   return Operand(PowIndex);
+}
+
+void PowOperation::SimplifyExp(std::unique_ptr<INode>* new_node) {
+  if (auto* exp_const = Exp()->AsConstant()) {
+    if (exp_const->Value() == 0) {
+      *new_node = INodeHelper::MakeConst(1.0);
+      return;
+    }
+    if (exp_const->Value() == 1.0) {
+      *new_node = TakeOperand(BaseIndex);
+      return;
+    }
+  }
+
+  if (!Base()->IsEqual(Constants::Imag()))
+    return;
+  if (auto* exp_const = Exp()->AsConstant()) {
+    double remains_exp = exp_const->Value();
+    bool negate = false;
+    bool simplified = false;
+    if (remains_exp >= 4.0) {
+      remains_exp = std::fmod(remains_exp, 4.0);
+      simplified = true;
+    }
+    if (remains_exp >= 2.0) {
+      remains_exp -= 2;
+      negate = true;
+      simplified = true;
+    }
+    if (simplified) {
+      auto node = INodeHelper::MakePowIfNeeded(Imag(), remains_exp);
+      if (negate)
+        node = INodeHelper::Negate(std::move(node));
+      *new_node = std::move(node);
+      return;
+    }
+  }
 }

@@ -13,11 +13,13 @@ namespace Constants {
   const Constant* E();
   std::unique_ptr<Constant> MakeE();
   const Constant* PI();
+  const Imaginary* Imag();
 }
 
 Variable Var(std::string name);
 Variable Var(std::string name, double val);
 std::unique_ptr<INode> Const(double val);
+std::unique_ptr<INode> Const(double val, std::string name);
 std::unique_ptr<INode> iConst(double val);
 std::unique_ptr<INode> Imag();
 std::unique_ptr<INode> Vector2(std::unique_ptr<INode> a,

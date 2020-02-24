@@ -30,17 +30,22 @@ const Constant* Zero() {
 }
 
 const Constant* E() {
-  static const auto kE = INodeHelper::MakeConst(M_E);
+  static const auto kE = INodeHelper::MakeConst(M_E, "e");
   return kE.get();
 }
 
 std::unique_ptr<Constant> MakeE() {
-  return INodeHelper::MakeConst(M_E);
+  return INodeHelper::MakeConst(M_E, "e");
 }
 
 const Constant* PI() {
-  static const auto kPi = INodeHelper::MakeConst(M_PI);
+  static const auto kPi = INodeHelper::MakeConst(M_PI, "Pi");
   return kPi.get();
+}
+
+const Imaginary* Imag() {
+  static const auto kImag = INodeHelper::MakeImaginary();
+  return kImag.get();
 }
 
 }  // namespace Constants
@@ -55,6 +60,10 @@ Variable Var(std::string name, double val) {
 
 std::unique_ptr<INode> Const(double val) {
   return INodeHelper::MakeConst(val);
+}
+
+std::unique_ptr<INode> Const(double val, std::string name) {
+  return INodeHelper::MakeConst(val, std::move(name));
 }
 
 std::unique_ptr<INode> iConst(double val) {

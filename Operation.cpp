@@ -91,7 +91,11 @@ std::unique_ptr<INode> Operation::SymCalc() const {
   std::vector<std::unique_ptr<INode>> calculated_operands =
       CalcOperands(operands_);
 
-  ProcessImaginary(&calculated_operands);
+  if (op_info_->op == Op::Mult) {
+    auto i_node = MultOperation::ProcessImaginary(&calculated_operands);
+    if (i_node)
+      return i_node;
+  }
 
   if (op_info_->calc_f) {
     std::unique_ptr<INode> result =

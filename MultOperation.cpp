@@ -107,23 +107,50 @@ std::optional<CanonicPow> MultOperation::GetCanonicPow() {
   return result;
 }
 
-void MultOperation::ProcessImaginary(
-    std::vector<std::unique_ptr<INode>>* nodes) const {
-  bool has_imaginary = false;
+// static
+std::unique_ptr<INode> MultOperation::ProcessImaginary(
+    std::vector<std::unique_ptr<INode>>* nodes) {
+
+  size_t count_i = 0;
   for (auto& node : *nodes) {
     if (!node->AsNodeImpl()->AsImaginary())
       continue;
-    if (has_imaginary) {
-      node = INodeHelper::MakeConst(-1.0);
-      has_imaginary = false;
-    } else {
-      node.reset();
-      has_imaginary = true;
-    }
+    ++count_i;
+    if (count_i == 2)
+      break;
   }
+  if (count_i < 2)
+    return nullptr;
+
+  count_i = 0;
+  for (auto& node : *nodes) {
+    if (!node->AsNodeImpl()->AsImaginary())
+      continue;
+    ++count_i;
+    node.reset();
+  }
+
   INodeHelper::RemoveEmptyOperands(nodes);
-  if (has_imaginary)
-    nodes->push_back(INodeHelper::MakeImaginary());
+  if (count_i >= 4) {
+    count_i = count_i % 4;
+  }
+  bool negate = false;
+  if (count_i >= 2) {
+    count_i -= 2;
+    negate = true;
+  }
+  assert(count_i == 0 || count_i == 1);
+  std::unique_ptr<INode> node;
+  if (count_i)
+    node = INodeHelper::MakeImaginary();
+  else
+    node = INodeHelper::MakeConst(1.0);
+  if (negate)
+    node = INodeHelper::Negate(std::move(node));
+  if (!nodes->empty()) {
+    nodes->push_back(std::move(node));
+  }
+  return node;
 }
 
 void MultOperation::UnfoldChains() {
@@ -136,6 +163,7 @@ void MultOperation::UnfoldChains() {
 
 void MultOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyUnMinus(nullptr);
+  CheckIntegrity();
 
   bool is_positive = true;
   for (auto& node : operands_) {
@@ -153,10 +181,17 @@ void MultOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
 
 void MultOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyChains(nullptr);
-  ProcessImaginary(&operands_);
+
+  auto i_node = ProcessImaginary(&operands_);
+  if (i_node) {
+    *new_node = std::move(i_node);
+    return;
+  }
 }
 
 void MultOperation::SimplifyDivMul(std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyDivMul(nullptr);
+
   std::vector<std::unique_ptr<INode>> new_bottom;
   for (auto& node : operands_) {
     if (auto* div = INodeHelper::AsDiv(node.get())) {
@@ -221,10 +256,10 @@ void MultOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
 void MultOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyTheSame(nullptr);
 
-  SimplifyTheSameMult(new_node);
+  SimplifyTheSamePow(new_node);
   if (*new_node)
     return;
-  SimplifyTheSamePow(new_node);
+  SimplifyTheSameMult(new_node);
 }
 
 void MultOperation::OrderOperands() {
