@@ -94,10 +94,25 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = (Sin(x) ^ 2) + (Cos(x)^2);
+  /*
+  Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
   t.ConvertToComplex();
   t.OpenBrackets();
-  //t.Simplify();
-  //t.OpenBrackets();
   std::wcout << t.Print(true) << "\n";
+  */
+
+  Variable t1 = 2 * Sin(x) * Cos(x);
+  t1.ConvertToComplex();
+  t1.OpenBrackets();
+
+  Variable t2 = Sin(2 * x);
+  t2.ConvertToComplex();
+  t2.OpenBrackets();
+  std::wcout << t1.Print(true) << "\n";
+  std::wcout << t2.Print(true) << "\n";
+
+  Variable t3 = (2 * Pow(Constants::MakeE(), x * Imag() + x * Imag()) -
+                 2 * Pow(Constants::MakeE(), -x * Imag() - x * Imag())) /
+                (4 * Imag());
+  std::wcout << t3.Print(true) << "\n";
 }

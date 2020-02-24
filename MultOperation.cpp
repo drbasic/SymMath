@@ -375,12 +375,16 @@ void MultOperation::SimplifyTheSamePow(std::unique_ptr<INode>* new_node) {
         operands_[i].reset();
         operands_[j].reset();
         for (size_t k = 0; k < new_sub_nodes.size(); ++k) {
+          std::unique_ptr<INode> new_sub_node;
+          new_sub_nodes[k]->AsNodeImpl()->SimplifyImpl(&new_sub_node);
+          if (!new_sub_node)
+            new_sub_node = std::move(new_sub_nodes[k]);
           if (k == 0)
-            operands_[i] = std::move(new_sub_nodes[k]);
+            operands_[i] = std::move(new_sub_node);
           else if (k == 1)
-            operands_[j] = std::move(new_sub_nodes[k]);
+            operands_[j] = std::move(new_sub_node);
           else
-            operands_.push_back(std::move(new_sub_nodes[k]));
+            operands_.push_back(std::move(new_sub_node));
         }
         canonic_1 = INodeHelper::GetCanonicPow(operands_[i]);
       }
