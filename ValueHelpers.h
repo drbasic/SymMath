@@ -3,9 +3,17 @@
 #include <ostream>
 #include <string>
 
+#include "Constant.h"
 #include "Variable.h"
 
 class INode;
+
+namespace Constants {
+  const Constant* Zero();
+  const Constant* E();
+  const Constant* PI();
+}
+
 Variable Var(std::string name);
 Variable Var(std::string name, double val);
 std::unique_ptr<INode> Const(double val);
@@ -53,7 +61,7 @@ std::unique_ptr<INode> AddBrackets(BracketType bracket_type,
 
 std::unique_ptr<INode> Sin(std::unique_ptr<INode> value);
 std::unique_ptr<INode> Cos(std::unique_ptr<INode> value);
-std::unique_ptr<INode> Ln(std::unique_ptr<INode> value);
+std::unique_ptr<INode> Log(std::unique_ptr<INode> value);
 std::unique_ptr<INode> Log2(std::unique_ptr<INode> value);
 std::unique_ptr<INode> Log10(std::unique_ptr<INode> value);
 

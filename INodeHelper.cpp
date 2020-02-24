@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 #include "Brackets.h"
 #include "CompareOperation.h"
@@ -262,8 +260,8 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::Cos:
       return MakeTrigonometric(op, MakeError());
       break;
-    case Op::Ln:
-      return MakeLn(MakeError());
+    case Op::Log:
+      return MakeLog(MakeError(), MakeError());
       break;
     case Op::Equal:
       return MakeCompare(op, MakeError(), MakeError());
@@ -363,6 +361,23 @@ std::unique_ptr<MultOperation> INodeHelper::MakeMult(
   return std::make_unique<MultOperation>(std::move(lh), std::move(rh));
 }
 
+std::unique_ptr<INode> INodeHelper::MakeMultIfNeeded(
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<INode> rh) {
+  auto* lh_const = AsConstant(lh.get());
+  auto* rh_const = AsConstant(rh.get());
+  if (lh_const && rh_const)
+    return MakeConst(lh_const->Value() * rh_const->Value());
+  if ((lh_const && lh_const->Value() == 0.0) ||
+      (rh_const && rh_const->Value() == 0.0))
+    return MakeConst(0.0);
+  if ((lh_const && lh_const->Value() == 1.0))
+    return rh;
+  if ((rh_const && rh_const->Value() == 1.0))
+    return lh;
+  return std::make_unique<MultOperation>(std::move(lh), std::move(rh));
+}
+
 // static
 std::unique_ptr<MultOperation> INodeHelper::MakeMult(
     std::vector<std::unique_ptr<INode>> operands) {
@@ -435,28 +450,18 @@ std::unique_ptr<TrigonometricOperation> INodeHelper::MakeTrigonometric(
 }
 
 // static
-std::unique_ptr<LogOperation> INodeHelper::MakeLn(
-    std::unique_ptr<INode> value) {
-  return std::make_unique<LogOperation>(Const(M_E), std::move(value));
-}
-
-// static
-std::unique_ptr<LogOperation> INodeHelper::MakeLog2(
-    std::unique_ptr<INode> value) {
-  return std::make_unique<LogOperation>(Const(2.0), std::move(value));
-}
-
-// static
-std::unique_ptr<LogOperation> INodeHelper::MakeLog10(
-    std::unique_ptr<INode> value) {
-  return std::make_unique<LogOperation>(Const(10.0), std::move(value));
-}
-
-// static
 std::unique_ptr<LogOperation> INodeHelper::MakeLog(
     std::unique_ptr<INode> base,
     std::unique_ptr<INode> value) {
   return std::make_unique<LogOperation>(std::move(base), std::move(value));
+}
+
+std::unique_ptr<INode> INodeHelper::MakeLogIfNeeded(
+    std::unique_ptr<INode> base,
+    std::unique_ptr<INode> value) {
+  if (base->IsEqual(value.get()))
+    return Const(1.0);
+  return MakeLog(std::move(base), std::move(value));
 }
 
 // static

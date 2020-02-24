@@ -94,6 +94,7 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = Diff(1 / (x *x), x);
+  Variable tt = Pow(Constants::E()->Clone(), x) + Pow(x, 10) + Log10(x);
+  Variable t = Diff(tt, y);
   std::wcout << t.Print(true) << "\n";
 }

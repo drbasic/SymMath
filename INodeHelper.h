@@ -85,6 +85,8 @@ class INodeHelper {
       std::vector<std::unique_ptr<INode>> nodes);
   static std::unique_ptr<MultOperation> MakeMult(std::unique_ptr<INode> lh,
                                                  std::unique_ptr<INode> rh);
+  static std::unique_ptr<INode> MakeMultIfNeeded(std::unique_ptr<INode> lh,
+                                                 std::unique_ptr<INode> rh);
   static std::unique_ptr<MultOperation> MakeMult(
       std::vector<std::unique_ptr<INode>> operands);
   static std::unique_ptr<INode> MakeMult(
@@ -105,11 +107,10 @@ class INodeHelper {
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);
-  static std::unique_ptr<LogOperation> MakeLn(std::unique_ptr<INode> value);
-  static std::unique_ptr<LogOperation> MakeLog2(std::unique_ptr<INode> value);
-  static std::unique_ptr<LogOperation> MakeLog10(std::unique_ptr<INode> value);
   static std::unique_ptr<LogOperation> MakeLog(std::unique_ptr<INode> base,
                                                std::unique_ptr<INode> value);
+  static std::unique_ptr<INode> MakeLogIfNeeded(std::unique_ptr<INode> base,
+                                                std::unique_ptr<INode> value);
   static std::unique_ptr<CompareOperation>
   MakeCompare(Op op, std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
   static std::unique_ptr<Brackets> MakeBrackets(BracketType bracket_type,

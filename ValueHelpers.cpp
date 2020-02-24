@@ -1,4 +1,6 @@
 #include "ValueHelpers.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include "Brackets.h"
 #include "CompareOperation.h"
@@ -19,6 +21,25 @@
 #include "VariableRef.h"
 #include "Vector.h"
 #include "VectorMultOperation.h"
+
+namespace Constants {
+
+const Constant* Zero() {
+  static const auto kZero = INodeHelper::MakeConst(0.0);
+  return kZero.get();
+}
+
+const Constant* E() {
+  static const auto kE = INodeHelper::MakeConst(M_E);
+  return kE.get();
+}
+
+const Constant* PI() {
+  static const auto kPi = INodeHelper::MakeConst(M_PI);
+  return kPi.get();
+}
+
+}  // namespace Constants
 
 Variable Var(std::string name) {
   return Variable(std::move(name));
@@ -147,16 +168,17 @@ std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
   return INodeHelper::MakeTrigonometric(Op::Cos, std::move(value));
 }
 
-std::unique_ptr<INode> Ln(std::unique_ptr<INode> value) {
-  return INodeHelper::MakeLn(std::move(value));
+std::unique_ptr<INode> Log(std::unique_ptr<INode> value) {
+  return INodeHelper::MakeLogIfNeeded(Constants::E()->Clone(),
+                                      std::move(value));
 }
 
 std::unique_ptr<INode> Log2(std::unique_ptr<INode> value) {
-  return INodeHelper::MakeLog2(std::move(value));
+  return INodeHelper::MakeLogIfNeeded(Const(2.0), std::move(value));
 }
 
 std::unique_ptr<INode> Log10(std::unique_ptr<INode> value) {
-  return INodeHelper::MakeLog10(std::move(value));
+  return INodeHelper::MakeLogIfNeeded(Const(10.0), std::move(value));
 }
 
 std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,

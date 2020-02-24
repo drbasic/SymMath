@@ -27,6 +27,8 @@ std::unique_ptr<INode> DoDiffPlusOperation(const Operation* operation,
                                            const Variable& by_var);
 std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
                                           const Variable& by_var);
+std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
+                                          const Variable& by_var);
 
 std::unique_ptr<INode> DoDiffVariable(const Variable* var,
                                       const Variable& by_var) {
@@ -66,12 +68,8 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
       auto f = operation->Operand(0);
       return -DoDiffNode(f, by_var) * Sin(f->Clone());
     } break;
-    case Op::Ln: {
-      auto base = operation->Operand(0);
-      auto f = operation->Operand(1);
-      assert(INodeHelper::AsConstant(base));
-      return DoDiffNode(f, by_var) /
-             (f->Clone() * INodeHelper::MakeLn(base->Clone()));
+    case Op::Log: {
+      return DoDiffLogOperation(operation, by_var);
     } break;
     case Op::Equal: {
       assert(false);
@@ -138,9 +136,51 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
                                           const Variable& by_var) {
   auto f = operation->Operand(0);
   auto g = operation->Operand(1);
-  return Pow(f->Clone(), g->Clone() - 1.0) *
-         (g->Clone() * DoDiffNode(f, by_var) +
-          f->Clone() * INodeHelper::MakeLn(f->Clone()) * DoDiffNode(g, by_var));
+  auto derivative_f = DoDiffNode(f, by_var);
+  auto derivative_g = DoDiffNode(g, by_var);
+  if (derivative_f->IsEqual(Constants::Zero()) &&
+      derivative_g->IsEqual(Constants::Zero())) {
+    return Const(0.0);
+  }
+
+  if (derivative_f->IsEqual(Constants::Zero())) {
+    // 10^x = 10^x * log(10);
+    return operation->Clone() * Log(f->Clone());
+  }
+  if (derivative_g->IsEqual(Constants::Zero())) {
+    // x ^ a = a *( x ^ (a-1))
+    return g->Clone() * Pow(f->Clone(), g->Clone() - 1.0);
+  }
+
+  // (f(x)^g(x))' = f(x) ^ (g(x)-1) * (g(x)*f'(x) + f(x)*log(f(x)*g'(x)))
+  auto a = Pow(f->Clone(), (g->Clone() - 1.0)->SymCalc());
+
+  std::vector<std::unique_ptr<INode>> b;
+  b.push_back(
+      INodeHelper::MakeMultIfNeeded(g->Clone(), std::move(derivative_f)));
+
+  if (!derivative_g->IsEqual(Constants::Zero())) {
+    b.push_back(
+        f->Clone() *
+        INodeHelper::MakeLogIfNeeded(Constants::E()->Clone(), f->Clone()) *
+        std::move(derivative_g));
+  }
+  return std::move(a) * (INodeHelper::MakePlusIfNeeded(std::move(b)));
+}
+
+std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
+                                          const Variable& by_var) {
+  auto base = operation->Operand(0);
+  auto f = operation->Operand(1);
+  auto derivative_base = DoDiffNode(base, by_var);
+  if (!INodeHelper::AsConstant(derivative_base.get())) {
+    return INodeHelper::MakeError("base is not constant");
+  }
+
+  return DoDiffNode(f, by_var) /
+         (INodeHelper::MakeMultIfNeeded(
+             f->Clone(), INodeHelper::MakeLogIfNeeded(Constants::E()->Clone(),
+                                                      base->Clone())));
 }
 
 std::unique_ptr<INode> DoDiffNode(const INode* node, const Variable& by_var) {

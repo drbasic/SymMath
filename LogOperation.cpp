@@ -20,7 +20,7 @@ double TrivialLogCalc(double lh, double rh) {
 //=============================================================================
 LogOperation::LogOperation(std::unique_ptr<INode> base,
                            std::unique_ptr<INode> value)
-    : Operation(GetOpInfo(Op::Ln), std::move(base), std::move(value)) {}
+    : Operation(GetOpInfo(Op::Log), std::move(base), std::move(value)) {}
 
 std::unique_ptr<INode> LogOperation::Clone() const {
   return INodeHelper::MakeLog(Operand(0)->Clone(), Operand(1)->Clone());
@@ -39,7 +39,8 @@ PrintSize LogOperation::Render(Canvas* canvas,
     auto base_render_behaviour = render_behaviour;
     base_render_behaviour.SetSubSuper(SubSuperBehaviour::Subscript);
     auto base_print_box = print_box;
-    base_print_box.y = print_box.base_line - log_size.base_line + log_size.height;
+    base_print_box.y =
+        print_box.base_line - log_size.base_line + log_size.height;
     base_print_box.base_line = base_print_box.y + base_print_size_.base_line;
     base_print_size_ =
         RenderBase(canvas, base_print_box, dry_run, base_render_behaviour);
