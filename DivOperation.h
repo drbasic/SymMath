@@ -4,6 +4,10 @@
 
 class DivOperation : public Operation {
  public:
+  enum : size_t {
+    Dividend = 0,
+    Divider = 1,
+  };
   DivOperation(std::unique_ptr<INode> top, std::unique_ptr<INode> bottom);
 
   // INode implementation

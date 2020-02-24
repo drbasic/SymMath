@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INodeHelper.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
@@ -140,4 +141,49 @@ void PlusOperation::OrderOperands() {
   Operation::OrderOperands();
 
   ReorderOperands(&operands_, false);
+}
+
+void PlusOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(nullptr);
+
+  if (!INodeHelper::HasAnyOperation(Op::Div, operands_))
+    return;
+
+  std::vector<std::pair<size_t, std::unique_ptr<INode>>> dividers;
+  for (size_t i = 0; i < OperandsCount(); ++i) {
+    if (auto* as_div = INodeHelper::AsDiv(Operand(i))) {
+      dividers.emplace_back(i, as_div->TakeOperand(DivOperation::Divider));
+    }
+  }
+
+  std::vector<std::unique_ptr<INode>> new_dividents;
+  for (size_t i = 0; i < OperandsCount(); ++i) {
+    std::unique_ptr<INode> node;
+    if (auto* as_div = INodeHelper::AsDiv(Operand(i)))
+      node = as_div->TakeOperand(DivOperation::Dividend);
+    else
+      node = TakeOperand(i);
+
+    std::vector<std::unique_ptr<INode>> dividents;
+    dividents.reserve(dividers.size() + 1);
+    dividents.push_back(std::move(node));
+    for (auto& divider : dividers) {
+      if (i == divider.first)
+        continue;
+      dividents.push_back(divider.second->Clone());
+    }
+    new_dividents.push_back(
+        INodeHelper::MakeMultIfNeeded(std::move(dividents)));
+  }
+  std::vector<std::unique_ptr<INode>> new_dividerss;
+  for (auto& divider : dividers) {
+    new_dividerss.push_back(std::move(divider.second));
+  }
+
+  std::unique_ptr<INode> new_div = INodeHelper::MakeDiv(
+      INodeHelper::MakePlusIfNeeded(std::move(new_dividents)),
+      INodeHelper::MakeMultIfNeeded(std::move(new_dividerss)));
+  new_div->AsNodeImpl()->OpenBracketsImpl(new_node);
+  if (!*new_node)
+    *new_node = std::move(new_div);
 }

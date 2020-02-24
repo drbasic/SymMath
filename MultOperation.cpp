@@ -69,13 +69,18 @@ ValueType MultOperation::GetValueType() const {
   return result;
 }
 
-void DoOpen(INode* src_node, std::unique_ptr<INode>* new_node) {}
-
 void MultOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   Operation::OpenBracketsImpl(nullptr);
-
   std::unique_ptr<INode> temp_node;
   SimplifyUnMinus(&temp_node);
+  if (temp_node) {
+    temp_node->AsNodeImpl()->OpenBracketsImpl(new_node);
+    if (!*new_node)
+      *new_node = std::move(temp_node);
+    return;
+  }
+
+  SimplifyDivMul(&temp_node);
   if (temp_node) {
     temp_node->AsNodeImpl()->OpenBracketsImpl(new_node);
     if (!*new_node)
@@ -110,7 +115,6 @@ std::optional<CanonicPow> MultOperation::GetCanonicPow() {
 // static
 std::unique_ptr<INode> MultOperation::ProcessImaginary(
     std::vector<std::unique_ptr<INode>>* nodes) {
-
   size_t count_i = 0;
   for (auto& node : *nodes) {
     if (!node->AsNodeImpl()->AsImaginary())
@@ -269,7 +273,7 @@ void MultOperation::OrderOperands() {
 }
 
 void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {
-  if (!INodeHelper::HasAnyPlusOperation(operands_))
+  if (!INodeHelper::HasAnyOperation(Op::Plus, operands_))
     return;
 
   std::vector<std::unique_ptr<INode>> ordinal_nodes;

@@ -201,10 +201,12 @@ void INodeHelper::RemoveEmptyOperands(
 }
 
 // static
-bool INodeHelper::HasAnyPlusOperation(
+bool INodeHelper::HasAnyOperation(
+    Op op,
     const std::vector<std::unique_ptr<INode>>& nodes) {
   for (const auto& node : nodes) {
-    if (const auto* plus_op = AsPlus(node.get()))
+    const auto* as_op = AsOperation(node.get());
+    if (as_op && as_op->op() == op)
       return true;
   }
   return false;

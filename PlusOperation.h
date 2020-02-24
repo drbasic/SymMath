@@ -24,6 +24,7 @@ class PlusOperation : public Operation {
   void OrderOperands() override;
   PlusOperation* AsPlusOperation() override { return this; }
   const PlusOperation* AsPlusOperation() const override { return this; }
+  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
 
  private:
 };

@@ -94,19 +94,10 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = 4 * (Sin(x) ^ 2) + 4 * (Cos(x) ^ 2);
-  // Variable tt = Pow(Pow(Constants::MakeE(), x * Imag()), 2);
-  // Variable t = 1 / Pow(Imag(),2) ;
-  // t = t * t;
+  Variable t = (Sin(x) ^ 2) + (Cos(x)^2);
   t.ConvertToComplex();
   t.OpenBrackets();
   //t.Simplify();
-  // t.SymCalc();
-
-  // std::wcout << t.Print(true) << "\n";
+  //t.OpenBrackets();
   std::wcout << t.Print(true) << "\n";
-  // t.Simplify();
-  // t.OpenBrackets();
-  // t.Simplify();
-  // std::wcout << t.Print(true) << "\n";
 }

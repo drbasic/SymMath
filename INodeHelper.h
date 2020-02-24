@@ -58,8 +58,8 @@ class INodeHelper {
   static std::unique_ptr<INode> Negate(std::unique_ptr<INode> node);
   static std::unique_ptr<MultOperation> ConvertToMul(std::unique_ptr<INode> rh);
   static void RemoveEmptyOperands(std::vector<std::unique_ptr<INode>>* nodes);
-  static bool HasAnyPlusOperation(
-      const std::vector<std::unique_ptr<INode>>& nodes);
+  static bool HasAnyOperation(Op op,
+                              const std::vector<std::unique_ptr<INode>>& nodes);
   static bool HasAnyValueType(
       const std::vector<std::unique_ptr<INode>>& operands,
       ValueType value_type);

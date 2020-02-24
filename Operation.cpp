@@ -21,9 +21,9 @@
 
 namespace {
 
-using SymplificatorFWithNewNode = void (*)(Operation* operation,
-                                           std::unique_ptr<INode>* new_node);
-void ApplySimplification(SymplificatorFWithNewNode simplificator,
+using SimplificatorFunc = void (*)(Operation* operation,
+                                   std::unique_ptr<INode>* new_node);
+void ApplySimplification(SimplificatorFunc simplificator,
                          std::vector<std::unique_ptr<INode>>* operands) {
   for (auto& node : *operands) {
     if (Operation* operation = INodeHelper::AsOperation(node.get())) {
@@ -46,6 +46,25 @@ void ApplySimplification(SymplificatorF simplificator,
       simplificator(operation);
       operation->CheckIntegrity();
     }
+  }
+}
+
+void ApplySimplifications(const SimplificatorFunc* begin,
+                          const SimplificatorFunc* end,
+                          Operation* current,
+                          std::unique_ptr<INode>* new_node) {
+  current->CheckIntegrity();
+  for (const SimplificatorFunc* it = begin; it != end; ++it) {
+    std::unique_ptr<INode> temp_node;
+    (*it)(current, &temp_node);
+    if (temp_node) {
+      *new_node = std::move(temp_node);
+      current = INodeHelper::AsOperation(new_node->get());
+      if (!current)
+        break;
+      it = begin;
+    }
+    current->CheckIntegrity();
   }
 }
 
@@ -172,10 +191,6 @@ bool Operation::IsEqual(const INode* rh) const {
 }
 
 void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
-  CheckIntegrity();
-
-  using SimplificatorFunc =
-      void (*)(Operation * current, std::unique_ptr<INode> * new_node);
   constexpr SimplificatorFunc simplificators[] = {
       [](Operation* current, std::unique_ptr<INode>* new_node) {
         current->SimplifyUnMinus(new_node);
@@ -208,20 +223,8 @@ void Operation::SimplifyImpl(std::unique_ptr<INode>* new_node) {
         current->OrderOperands();
       },
   };
-
-  Operation* current = this;
-  for (size_t i = 0; i < std::size(simplificators); ++i) {
-    std::unique_ptr<INode> temp_node;
-    simplificators[i](current, &temp_node);
-    if (temp_node) {
-      *new_node = std::move(temp_node);
-      current = INodeHelper::AsOperation(new_node->get());
-      if (!current)
-        break;
-      i = 0;
-    }
-    current->CheckIntegrity();
-  }
+  ApplySimplifications(std::begin(simplificators), std::end(simplificators),
+                       this, new_node);
 }
 
 void Operation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
