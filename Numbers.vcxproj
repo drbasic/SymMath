@@ -162,6 +162,7 @@
     <ClCompile Include="INodeHelper.cpp" />
     <ClCompile Include="INodeImpl.cpp" />
     <ClCompile Include="IOperation.cpp" />
+    <ClCompile Include="LogOperation.cpp" />
     <ClCompile Include="MultOperation.cpp" />
     <ClCompile Include="OpInfo.cpp" />
     <ClCompile Include="PlusOperation.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="INodeHelper.h" />
     <ClInclude Include="INodeImpl.h" />
     <ClInclude Include="IOperation.h" />
+    <ClInclude Include="LogOperation.h" />
     <ClInclude Include="MultOperation.h" />
     <ClInclude Include="OpInfo.h" />
     <ClInclude Include="PlusOperation.h" />

@@ -16,6 +16,7 @@ enum class Op : int {
   Pow,
   Sin,
   Cos,
+  Ln,
   Equal,
   Diff,
 };

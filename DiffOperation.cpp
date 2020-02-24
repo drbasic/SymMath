@@ -1,10 +1,11 @@
-#include "DiffOperation.h"
+﻿#include "DiffOperation.h"
 
 #include <cassert>
 
 #include "Brackets.h"
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "LogOperation.h"
 #include "MultOperation.h"
 #include "PlusOperation.h"
 #include "UnMinusOperation.h"
@@ -58,12 +59,19 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
       return DoDiffDivOperation(operation, by_var);
     } break;
     case Op::Sin: {
-      return DoDiffNode(operation->Operand(0), by_var) *
-             Cos(operation->Operand(0)->Clone());
+      auto f = operation->Operand(0);
+      return DoDiffNode(f, by_var) * Cos(f->Clone());
     }
     case Op::Cos: {
-      return -DoDiffNode(operation->Operand(0), by_var) *
-             Sin(operation->Operand(0)->Clone());
+      auto f = operation->Operand(0);
+      return -DoDiffNode(f, by_var) * Sin(f->Clone());
+    } break;
+    case Op::Ln: {
+      auto base = operation->Operand(0);
+      auto f = operation->Operand(1);
+      assert(INodeHelper::AsConstant(base));
+      return DoDiffNode(f, by_var) /
+             (f->Clone() * INodeHelper::MakeLn(base->Clone()));
     } break;
     case Op::Equal: {
       assert(false);
@@ -132,7 +140,7 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
   auto g = operation->Operand(1);
   return Pow(f->Clone(), g->Clone() - 1.0) *
          (g->Clone() * DoDiffNode(f, by_var) +
-          f->Clone() * Sin(f->Clone()) * DoDiffNode(g, by_var));
+          f->Clone() * INodeHelper::MakeLn(f->Clone()) * DoDiffNode(g, by_var));
 }
 
 std::unique_ptr<INode> DoDiffNode(const INode* node, const Variable& by_var) {
@@ -179,9 +187,9 @@ PrintSize DiffOperation::RenderPrefix(Canvas* canvas,
                                       PrintBox print_box,
                                       bool dry_run,
                                       RenderBehaviour render_behaviour) const {
-  std::wstring top_text = L"d";
+  std::wstring top_text = L"δ";
   auto temp = Operand(1)->AsVariable()->GetName();
-  std::wstring bottom_text = L"d" + std::wstring(temp.begin(), temp.end());
+  std::wstring bottom_text = L"δ" + std::wstring(temp.begin(), temp.end());
   PrintSize print_size{bottom_text.size(), 3, 1};
   if (dry_run)
     return print_size;

@@ -2,6 +2,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include "Brackets.h"
 #include "CompareOperation.h"
@@ -11,6 +14,7 @@
 #include "ErrorNode.h"
 #include "INode.h"
 #include "Imaginary.h"
+#include "LogOperation.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
@@ -258,6 +262,9 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::Cos:
       return MakeTrigonometric(op, MakeError());
       break;
+    case Op::Ln:
+      return MakeLn(MakeError());
+      break;
     case Op::Equal:
       return MakeCompare(op, MakeError(), MakeError());
       break;
@@ -427,6 +434,32 @@ std::unique_ptr<TrigonometricOperation> INodeHelper::MakeTrigonometric(
                                                   std::move(value));
 }
 
+// static
+std::unique_ptr<LogOperation> INodeHelper::MakeLn(
+    std::unique_ptr<INode> value) {
+  return std::make_unique<LogOperation>(Const(M_E), std::move(value));
+}
+
+// static
+std::unique_ptr<LogOperation> INodeHelper::MakeLog2(
+    std::unique_ptr<INode> value) {
+  return std::make_unique<LogOperation>(Const(2.0), std::move(value));
+}
+
+// static
+std::unique_ptr<LogOperation> INodeHelper::MakeLog10(
+    std::unique_ptr<INode> value) {
+  return std::make_unique<LogOperation>(Const(10.0), std::move(value));
+}
+
+// static
+std::unique_ptr<LogOperation> INodeHelper::MakeLog(
+    std::unique_ptr<INode> base,
+    std::unique_ptr<INode> value) {
+  return std::make_unique<LogOperation>(std::move(base), std::move(value));
+}
+
+// static
 std::unique_ptr<CompareOperation> INodeHelper::MakeCompare(
     Op op,
     std::unique_ptr<INode> lh,
@@ -457,7 +490,7 @@ std::unique_ptr<Vector> INodeHelper::MakeVector(
 }
 
 std::unique_ptr<DiffOperation> INodeHelper::MakeDiff(std::unique_ptr<INode> lh,
-                                                    const Variable& var) {
+                                                     const Variable& var) {
   return std::make_unique<DiffOperation>(std::move(lh),
-                                        std::make_unique<VariableRef>(&var));
+                                         std::make_unique<VariableRef>(&var));
 }

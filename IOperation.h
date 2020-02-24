@@ -5,6 +5,7 @@
 
 struct OpInfo;
 class DivOperation;
+class LogOperation;
 class MultOperation;
 class VectorMultOperation;
 class PlusOperation;
@@ -53,6 +54,8 @@ class IOperation : public INodeImpl {
   virtual const PowOperation* AsPowOperation() const { return nullptr; }
   virtual CompareOperation* AsCompareOperation() { return nullptr; }
   virtual const CompareOperation* AsCompareOperation() const { return nullptr; }
+  virtual LogOperation* AsLogOperation() { return nullptr; }
+  virtual const LogOperation* AsLogOperation() const { return nullptr; }
 
   virtual void UnfoldChains() = 0;
   virtual void SimplifyUnMinus(std::unique_ptr<INode>* new_node) = 0;

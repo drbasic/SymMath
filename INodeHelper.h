@@ -22,6 +22,7 @@ class INodeImpl;
 class MultOperation;
 class Operation;
 class PlusOperation;
+class LogOperation;
 class PowOperation;
 class TrigonometricOperation;
 class UnMinusOperation;
@@ -104,6 +105,11 @@ class INodeHelper {
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);
+  static std::unique_ptr<LogOperation> MakeLn(std::unique_ptr<INode> value);
+  static std::unique_ptr<LogOperation> MakeLog2(std::unique_ptr<INode> value);
+  static std::unique_ptr<LogOperation> MakeLog10(std::unique_ptr<INode> value);
+  static std::unique_ptr<LogOperation> MakeLog(std::unique_ptr<INode> base,
+                                               std::unique_ptr<INode> value);
   static std::unique_ptr<CompareOperation>
   MakeCompare(Op op, std::unique_ptr<INode> lh, std::unique_ptr<INode> rh);
   static std::unique_ptr<Brackets> MakeBrackets(BracketType bracket_type,
@@ -116,5 +122,5 @@ class INodeHelper {
   static std::unique_ptr<Vector> MakeVector(
       std::vector<std::unique_ptr<INode>> values);
   static std::unique_ptr<DiffOperation> MakeDiff(std::unique_ptr<INode> lh,
-                                                const Variable& var);
+                                                 const Variable& var);
 };

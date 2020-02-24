@@ -94,6 +94,6 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = Diff(Sin(x)/ (x+2) + x, x);
+  Variable t = Diff(1 / (x *x), x);
   std::wcout << t.Print(true) << "\n";
 }

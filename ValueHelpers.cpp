@@ -8,6 +8,7 @@
 #include "INode.h"
 #include "INodeHelper.h"
 #include "Imaginary.h"
+#include "LogOperation.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
@@ -144,6 +145,18 @@ std::unique_ptr<INode> Sin(std::unique_ptr<INode> value) {
 
 std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
   return INodeHelper::MakeTrigonometric(Op::Cos, std::move(value));
+}
+
+std::unique_ptr<INode> Ln(std::unique_ptr<INode> value) {
+  return INodeHelper::MakeLn(std::move(value));
+}
+
+std::unique_ptr<INode> Log2(std::unique_ptr<INode> value) {
+  return INodeHelper::MakeLog2(std::move(value));
+}
+
+std::unique_ptr<INode> Log10(std::unique_ptr<INode> value) {
+  return INodeHelper::MakeLog10(std::move(value));
 }
 
 std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,

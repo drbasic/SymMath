@@ -3,6 +3,7 @@
 #include "CompareOperation.h"
 #include "DiffOperation.h"
 #include "Exception.h"
+#include "LogOperation.h"
 #include "VectorScalarProduct.h"
 
 namespace {
@@ -23,6 +24,7 @@ constexpr OpInfo kOps[] = {
      1},
     {Op::Cos, 1000, L"cos", [](double lh, double rh) { return cos(lh); }, false,
      1},
+    {Op::Ln, 1000, L"log", TrivialLogCalc, false, 2},
     {Op::Equal, 5, L" == ",
      [](double lh, double rh) -> double { return (lh == rh) ? 1.0 : 0.0; },
      true, 2, CompareEqual},
