@@ -17,6 +17,7 @@ enum class Op : int {
   Sin,
   Cos,
   Equal,
+  Diff,
 };
 
 struct OpInfo {

@@ -21,10 +21,9 @@ void BacMinusCab() {
   auto c1 = Var("c1");
   auto c2 = Var("c2");
   auto c3 = Var("c3");
-    auto q = Var("q");
 
   auto a = Var("a");
-  a = Vector3(a1*a1, a2/q, a3);
+  a = Vector3(a1, a2, a3);
   std::wcout << a.Print() << "\n";
 
   auto b = Var("b");
@@ -81,8 +80,8 @@ int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
-  BacMinusCab();
-  return 0;
+  // BacMinusCab();
+  // return 0;
   auto a = Var("a");
   auto b = Var("b");
   auto c = Var("c");
@@ -95,6 +94,6 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = a* (b /c);
+  Variable t = Diff(Sin(x)/ (x+2) + x, x);
   std::wcout << t.Print(true) << "\n";
 }

@@ -1,6 +1,7 @@
 ﻿#include "OpInfo.h"
 
 #include "CompareOperation.h"
+#include "DiffOperation.h"
 #include "Exception.h"
 #include "VectorScalarProduct.h"
 
@@ -25,6 +26,7 @@ constexpr OpInfo kOps[] = {
     {Op::Equal, 5, L" == ",
      [](double lh, double rh) -> double { return (lh == rh) ? 1.0 : 0.0; },
      true, 2, CompareEqual},
+    {Op::Diff, 5, L" x/dx ", nullptr, true, 2, Differential},
 };
 }
 

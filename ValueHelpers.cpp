@@ -3,6 +3,7 @@
 #include "Brackets.h"
 #include "CompareOperation.h"
 #include "Constant.h"
+#include "DiffOperation.h"
 #include "DivOperation.h"
 #include "INode.h"
 #include "INodeHelper.h"
@@ -14,6 +15,7 @@
 #include "PowOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
+#include "VariableRef.h"
 #include "Vector.h"
 #include "VectorMultOperation.h"
 
@@ -147,6 +149,10 @@ std::unique_ptr<INode> Cos(std::unique_ptr<INode> value) {
 std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,
                                   std::unique_ptr<INode> rh) {
   return INodeHelper::MakeVectorMult(std::move(lh), std::move(rh));
+}
+
+std::unique_ptr<INode> Diff(std::unique_ptr<INode> lh, const Variable& var) {
+  return INodeHelper::MakeDiff(std::move(lh), var);
 }
 
 //=============================================================================

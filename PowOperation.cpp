@@ -45,7 +45,6 @@ PrintSize PowOperation::Render(Canvas* canvas,
     {
       // Render base
       PrintBox base_box = print_box.ShrinkTop(pow_print_size_.height);
-      base_box.base_line = base_box.y + base_print_size_.base_line;
       auto base_size2 = RenderOperand(Base(), canvas, base_box, dry_run,
                                       base_render_behaviour, false);
       assert(base_size2 == base_print_size_);
@@ -54,6 +53,7 @@ PrintSize PowOperation::Render(Canvas* canvas,
       // Render exp
       PrintBox exp_box = print_box.ShrinkLeft(base_print_size_.width);
       exp_box.height = pow_print_size_.height;
+      exp_box.y = print_box.base_line - base_print_size_.base_line - pow_print_size_.height;
       exp_box.base_line = exp_box.y + pow_print_size_.base_line;
       auto exp_size2 = RenderOperand(Exp(), canvas, exp_box, dry_run,
                                      exp_render_behaviour, false);
@@ -62,6 +62,7 @@ PrintSize PowOperation::Render(Canvas* canvas,
   }
   auto total_size = pow_print_size_.GrowDown(base_print_size_, true);
   total_size.width = pow_print_size_.width + base_print_size_.width;
+  total_size.base_line = pow_print_size_.height + base_print_size_.base_line;
   return print_size_ = total_size;
 }
 

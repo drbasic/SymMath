@@ -9,6 +9,8 @@ enum class BracketType;
 enum class SubSuperBehaviour;
 
 struct PrintSize {
+  PrintSize() {}
+  PrintSize(size_t width, size_t heigh, size_t base_line);
   bool operator==(const PrintSize& rh) const;
   bool operator!=(const PrintSize& rh) const;
 

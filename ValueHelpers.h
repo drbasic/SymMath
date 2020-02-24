@@ -57,4 +57,6 @@ std::unique_ptr<INode> Cos(std::unique_ptr<INode> value);
 std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,
                                   std::unique_ptr<INode> rh);
 
+std::unique_ptr<INode> Diff(std::unique_ptr<INode> lh, const Variable& var);
+
 std::ostream& operator<<(std::ostream& out, const Variable& v);

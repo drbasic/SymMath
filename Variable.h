@@ -9,7 +9,7 @@ class Variable : public INodeImpl {
   Variable(std::unique_ptr<INode> value);
   Variable(std::string name, std::unique_ptr<INode> value);
 
-  std::wstring Print(bool with_calc = false) const;
+  std::wstring Print(bool with_calc = false, size_t base_line = 0) const;
   void Simplify();
   void OpenBrackets();
   std::string GetName() const;

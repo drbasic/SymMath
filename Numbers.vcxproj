@@ -153,6 +153,7 @@
     <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="CompareOperation.cpp" />
     <ClCompile Include="Constant.cpp" />
+    <ClCompile Include="DiffOperation.cpp" />
     <ClCompile Include="DivOperation.cpp" />
     <ClCompile Include="ErrorNode.cpp" />
     <ClCompile Include="Exception.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="CompareOperation.h" />
     <ClInclude Include="Constant.h" />
+    <ClInclude Include="DiffOperation.h" />
     <ClInclude Include="DivOperation.h" />
     <ClInclude Include="ErrorNode.h" />
     <ClInclude Include="Exception.h" />

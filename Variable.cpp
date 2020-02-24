@@ -24,7 +24,7 @@ Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 Variable::Variable(std::string name, std::unique_ptr<INode> value)
     : name_(std::move(name)), value_(std::move(value)) {}
 
-std::wstring Variable::Print(bool with_calc) const {
+std::wstring Variable::Print(bool with_calc, size_t base_line) const {
   RenderBehaviour render_behaviour;
 
   Canvas canvas;
@@ -47,6 +47,10 @@ std::wstring Variable::Print(bool with_calc) const {
     total_size = value_size.GrowWidth(arrow_size, true)
                      .GrowWidth(calculated_value_size, true);
   }
+  if (base_line > total_size.base_line) {
+    total_size.height += base_line - total_size.base_line;
+    total_size.base_line = base_line;
+  }
   canvas.Resize(total_size);
   canvas.SetDryRun(false);
   PrintBox print_box(0, 0, total_size);
@@ -64,7 +68,8 @@ std::wstring Variable::Print(bool with_calc) const {
     total_size2 = value_size.GrowWidth(arrow_size, true)
                       .GrowWidth(calculated_value_size, true);
   }
-  assert(total_size == total_size2);
+  if (base_line == 0)
+    assert(total_size == total_size2);
   return canvas.ToString();
 }
 

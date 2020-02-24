@@ -96,6 +96,9 @@ PrintBox PrintBox::ShrinkLeft(size_t delta_width) const {
   return result;
 }
 
+PrintSize::PrintSize(size_t width, size_t height, size_t base_line)
+    : width(width), height(height), base_line(base_line) {}
+
 //=============================================================================
 bool PrintSize::operator==(const PrintSize& rh) const {
   return width == rh.width && height == rh.height && base_line == rh.base_line;

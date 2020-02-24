@@ -14,6 +14,7 @@ class Brackets;
 class Canvas;
 class CompareOperation;
 class Constant;
+class DiffOperation;
 class DivOperation;
 class Imaginary;
 class INode;
@@ -25,6 +26,7 @@ class PowOperation;
 class TrigonometricOperation;
 class UnMinusOperation;
 class Variable;
+class VariableRef;
 class Vector;
 class VectorMultOperation;
 
@@ -113,4 +115,6 @@ class INodeHelper {
                                             std::unique_ptr<INode> c);
   static std::unique_ptr<Vector> MakeVector(
       std::vector<std::unique_ptr<INode>> values);
+  static std::unique_ptr<DiffOperation> MakeDiff(std::unique_ptr<INode> lh,
+                                                const Variable& var);
 };

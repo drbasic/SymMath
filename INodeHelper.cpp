@@ -6,6 +6,7 @@
 #include "Brackets.h"
 #include "CompareOperation.h"
 #include "Constant.h"
+#include "DiffOperation.h"
 #include "DivOperation.h"
 #include "ErrorNode.h"
 #include "INode.h"
@@ -18,8 +19,13 @@
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
+#include "VariableRef.h"
 #include "Vector.h"
 #include "VectorMultOperation.h"
+
+namespace {
+Variable kErrorVar("<error variable>");
+}
 
 // static
 Constant* INodeHelper::AsConstant(INode* lh) {
@@ -255,6 +261,9 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::Equal:
       return MakeCompare(op, MakeError(), MakeError());
       break;
+    case Op::Diff:
+      return MakeDiff(MakeError(), kErrorVar);
+      break;
   }
   assert(false);
   return nullptr;
@@ -445,4 +454,10 @@ std::unique_ptr<Vector> INodeHelper::MakeVector(std::unique_ptr<INode> a,
 std::unique_ptr<Vector> INodeHelper::MakeVector(
     std::vector<std::unique_ptr<INode>> values) {
   return std::make_unique<Vector>(std::move(values));
+}
+
+std::unique_ptr<DiffOperation> INodeHelper::MakeDiff(std::unique_ptr<INode> lh,
+                                                    const Variable& var) {
+  return std::make_unique<DiffOperation>(std::move(lh),
+                                        std::make_unique<VariableRef>(&var));
 }
