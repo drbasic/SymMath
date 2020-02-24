@@ -4,6 +4,7 @@
 
 #include "Constant.h"
 #include "INodeHelper.h"
+#include "MultOperation.h"
 #include "OpInfo.h"
 #include "PlusOperation.h"
 
@@ -86,8 +87,20 @@ std::optional<CanonicMult> UnMinusOperation::GetCanonicMult() {
 void UnMinusOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyUnMinus(nullptr);
 
-  Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get());
-  if (!sub_un_minus)
+  if (Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get())) {
+    *new_node = sub_un_minus->TakeOperand(0);
     return;
-  *new_node = sub_un_minus->TakeOperand(0);
+  }
+
+  if (Operation* sub_mult = INodeHelper::AsMult(operands_[0].get())) {
+    for (size_t i = 0; i < sub_mult->OperandsCount(); ++i) {
+      if (auto* as_const = INodeHelper::AsConstant(sub_mult->Operand(i))) {
+        if (!as_const->Name().empty())
+          continue;
+       sub_mult->SetOperand(i, INodeHelper::MakeConst(- as_const->Value()));
+       *new_node = TakeOperand(0);
+       return;
+      }
+    }
+  }
 }

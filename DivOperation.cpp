@@ -7,6 +7,7 @@
 #include "INodeHelper.h"
 #include "MultOperation.h"
 #include "OpInfo.h"
+#include "PlusOperation.h"
 #include "SimplifyHelpers.h"
 #include "UnMinusOperation.h"
 
@@ -74,6 +75,12 @@ PrintSize DivOperation::Render(Canvas* canvas,
 
   lh_size = lh_size.GrowDown(div_size, true).GrowDown(rh_size, false);
   return print_size_ = prefix_size.GrowWidth(lh_size, true);
+}
+
+bool DivOperation::HasFrontMinus() const {
+  bool lh_minus = Top()->HasFrontMinus();
+  bool rh_minus = Bottom()->HasFrontMinus();
+  return lh_minus ^ rh_minus;
 }
 
 std::optional<CanonicMult> DivOperation::GetCanonicMult() {
@@ -164,6 +171,14 @@ void DivOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
 void DivOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyTheSame(nullptr);
 
+  SimplifyCanonicConstants(new_node);
+  if (*new_node)
+    return;
+
+  SimplifyMultipliers(new_node);
+}
+
+void DivOperation::SimplifyCanonicConstants(std::unique_ptr<INode>* new_node) {
   CanonicPow canonic_top = INodeHelper::GetCanonicPow(operands_[0]);
   CanonicPow canonic_bottom = INodeHelper::GetCanonicPow(operands_[1]);
   for (auto& node_info : canonic_bottom.base_nodes)
@@ -183,24 +198,27 @@ void DivOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
   operands_[1] = INodeHelper::MakeMultIfNeeded(std::move(new_bottom_nodes));
 }
 
-INodeImpl* DivOperation::Top() {
-  return Operand(0);
-}
+void DivOperation::SimplifyMultipliers(std::unique_ptr<INode>* new_node) {
+  auto* as_plus = INodeHelper::AsPlus(Top());
+  if (!as_plus)
+    return;
 
-const INodeImpl* DivOperation::Top() const {
-  return Operand(0);
-}
+  auto divider_multipliers = ExtractMultipliers(Bottom());
+  for (size_t i = 0; i < as_plus->OperandsCount(); ++i) {
+    auto multipliers = ExtractMultipliers(as_plus->Operand(i));
+    divider_multipliers = TakeEqualNodes(&divider_multipliers, &multipliers);
+    if (divider_multipliers.empty())
+      return;
+  }
 
-INodeImpl* DivOperation::Bottom() {
-  return Operand(1);
-}
+  for (size_t i = 0; i < as_plus->OperandsCount(); ++i) {
+    auto multipliers = ExtractMultipliers(as_plus->Operand(i));
+    multipliers = RemoveEqualNodes(divider_multipliers, &multipliers);
+    as_plus->SetOperand(i,
+                        INodeHelper::MakeMultIfNeeded(std::move(multipliers)));
+  }
 
-const INodeImpl* DivOperation::Bottom() const {
-  return Operand(1);
-}
-
-bool DivOperation::HasFrontMinus() const {
-  bool lh_minus = Top()->HasFrontMinus();
-  bool rh_minus = Bottom()->HasFrontMinus();
-  return lh_minus ^ rh_minus;
+  auto new_divider = ExtractMultipliers(Bottom());
+  new_divider = RemoveEqualNodes(divider_multipliers, &new_divider);
+  SetOperand(Divider, INodeHelper::MakeMultIfNeeded(std::move(new_divider)));
 }

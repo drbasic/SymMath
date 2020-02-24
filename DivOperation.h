@@ -33,8 +33,11 @@ class DivOperation : public Operation {
  private:
   friend class Tests;
 
-  INodeImpl* Top();
-  const INodeImpl* Top() const;
-  INodeImpl* Bottom();
-  const INodeImpl* Bottom() const;
+  INodeImpl* Top() { return Operand(Dividend); }
+  const INodeImpl* Top() const { return Operand(Dividend); }
+  INodeImpl* Bottom() { return Operand(Divider); }
+  const INodeImpl* Bottom() const { return Operand(Divider); }
+
+  void SimplifyCanonicConstants(std::unique_ptr<INode>* new_node);
+  void SimplifyMultipliers(std::unique_ptr<INode>* new_node);
 };

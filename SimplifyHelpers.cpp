@@ -67,6 +67,35 @@ std::string GetBaseName(const INode* node) {
   return std::string();
 }
 
+std::optional<double> Factorize(double val,
+                                double max_val,
+                                std::vector<std::unique_ptr<INode>>* result) {
+  bool found = false;
+  if (val < 0) {
+    val = -val;
+    found = true;
+    result->push_back(INodeHelper::MakeConst(-1.0));
+  }
+  max_val = std::max(std::abs(max_val), sqrt(val));
+
+  double v = 2;
+  for (; v <= max_val;) {
+    if (std::remainder(val, v) == 0.0) {
+      result->push_back(INodeHelper::MakeConst(v));
+      val /= v;
+      found = true;
+      continue;
+    }
+    if (v == 2)
+      v += 1;
+    else
+      v += 2;
+  }
+  if (found)
+    return v;
+  return std::nullopt;
+}
+
 }  // namespace
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
@@ -119,6 +148,45 @@ bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
     return result;
   };
   return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
+}
+
+std::vector<std::unique_ptr<INode>> TakeEqualNodes(
+    std::vector<std::unique_ptr<INode>>* lhs,
+    std::vector<std::unique_ptr<INode>>* rhs) {
+  std::vector<std::unique_ptr<INode>> result;
+
+  for (size_t i = 0; i < lhs->size(); ++i) {
+    if (!(*lhs)[i])
+      continue;
+    for (size_t j = 0; j < rhs->size(); ++j) {
+      if (!(*rhs)[j])
+        continue;
+      if (!(*lhs)[i]->IsEqual((*rhs)[j].get()))
+        continue;
+      result.push_back(std::move((*lhs)[i]));
+      (*lhs)[i].reset();
+      (*rhs)[j].reset();
+      break;
+    }
+  }
+  return result;
+}
+
+std::vector<std::unique_ptr<INode>> RemoveEqualNodes(
+    const std::vector<std::unique_ptr<INode>>& lhs,
+    std::vector<std::unique_ptr<INode>>* rhs) {
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    for (size_t j = 0; j < rhs->size(); ++j) {
+      if (!(*rhs)[j])
+        continue;
+      if (lhs[i]->IsEqual((*rhs)[j].get())) {
+        (*rhs)[j].reset();
+        break;
+      }
+    }
+  }
+  INodeHelper::RemoveEmptyOperands(rhs);
+  return std::move(*rhs);
 }
 
 void ExctractNodesWithOp(Op op,
@@ -384,4 +452,35 @@ void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
     };
     std::stable_sort(operands->begin(), operands->end(), const_to_front);
   }
+}
+
+std::vector<std::unique_ptr<INode>> ExtractMultipliers(const INode* node) {
+  std::vector<std::unique_ptr<INode>> result;
+  if (auto* as_mult = INodeHelper::AsMult(node)) {
+    result.reserve(as_mult->OperandsCount());
+    for (size_t i = 0; i < as_mult->OperandsCount(); ++i) {
+      result.push_back(as_mult->Operand(i)->Clone());
+    }
+  } else if (auto* as_pow = INodeHelper::AsPow(node)) {
+    result.push_back(as_pow->Base()->Clone());
+  } else if (auto* as_un_minus = INodeHelper::AsUnMinus(node)) {
+    result.push_back(INodeHelper::MakeConst(-1.0));
+    auto nodes = ExtractMultipliers(as_un_minus->Operand(0));
+    for (auto& n : nodes)
+      result.push_back(std::move(n));
+  } else {
+    result.push_back(node->Clone());
+  }
+
+  for (size_t i = 0, n = result.size(); i < n; ++i) {
+    if (auto* as_const = INodeHelper::AsConstant(result[i].get())) {
+      std::optional<double> max_f =
+          Factorize(as_const->Value(), as_const->Value(), &result);
+      if (max_f) {
+        result[i] = std::move(result.back());
+        result.pop_back();
+      }
+    }
+  }
+  return result;
 }

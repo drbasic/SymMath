@@ -30,6 +30,7 @@ class Constant : public INodeImpl {
   const Constant* AsConstant() const override { return this; }
 
   double Value() const { return value_; }
+  const std::string& Name() const { return name_; }
 
  private:
   mutable PrintSize print_size_;

@@ -76,11 +76,36 @@ void BacMinusCab() {
   std::wcout << abc_bac_cab.Print(true) << "\n";
 }
 
+void EulerEquation() {
+  auto x = Var("x");
+  Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
+  std::wcout << t.Print(true) << "\n";
+  t.ConvertToComplex();
+  t.OpenBrackets();
+  std::wcout << t.Print(true) << "\n";
+
+  Variable t1 = 2 * Sin(x) * Cos(x);
+  std::wcout << t1.Print(true) << "\n";
+  t1.ConvertToComplex();
+  t1.OpenBrackets();
+  t1.Simplify();
+
+  Variable t2 = Sin(2 * x);
+  std::wcout << t2.Print(true) << "\n";
+  t2.ConvertToComplex();
+  t2.OpenBrackets();
+  t2.Simplify();
+
+  Variable t12 = t1 == t2;
+  std::wcout << t12.Print(true) << "\n";
+}
+
 int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
-  // BacMinusCab();
+  BacMinusCab();
+  EulerEquation();
   // return 0;
   auto a = Var("a");
   auto b = Var("b");
@@ -94,25 +119,12 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
+
   /*
-  Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
-  t.ConvertToComplex();
-  t.OpenBrackets();
-  std::wcout << t.Print(true) << "\n";
-  */
+  Variable t3 = (4 * a * b + 8 * b * c) / (64* 3* b * d);
+  t3.ConvertToComplex();
+  t3.OpenBrackets();
 
-  Variable t1 = 2 * Sin(x) * Cos(x);
-  t1.ConvertToComplex();
-  t1.OpenBrackets();
-
-  Variable t2 = Sin(2 * x);
-  t2.ConvertToComplex();
-  t2.OpenBrackets();
-  std::wcout << t1.Print(true) << "\n";
-  std::wcout << t2.Print(true) << "\n";
-
-  Variable t3 = (2 * Pow(Constants::MakeE(), x * Imag() + x * Imag()) -
-                 2 * Pow(Constants::MakeE(), -x * Imag() - x * Imag())) /
-                (4 * Imag());
   std::wcout << t3.Print(true) << "\n";
+  */
 }

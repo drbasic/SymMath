@@ -351,6 +351,10 @@ std::unique_ptr<INode> Operation::TakeOperand(size_t indx) {
   return std::move(operands_[indx]);
 }
 
+void Operation::SetOperand(size_t indx, std::unique_ptr<INode> node) {
+  operands_[indx] = std::move(node);
+}
+
 std::vector<std::unique_ptr<INode>> Operation::TakeAllOperands() {
   is_dead_ = true;
   return std::move(operands_);

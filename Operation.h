@@ -50,6 +50,7 @@ class Operation : public IOperation {
   INodeImpl* Operand(size_t indx);
   const INodeImpl* Operand(size_t indx) const;
   std::unique_ptr<INode> TakeOperand(size_t indx);
+  void SetOperand(size_t indx, std::unique_ptr<INode> node);
   std::vector<std::unique_ptr<INode>> TakeAllOperands();
   void CheckIntegrity() const;
 

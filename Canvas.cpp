@@ -26,12 +26,12 @@ const wchar_t kFigureBrackets[BracketsParts::Last + 1] = L"{}╭╮│╰╯╮�
 const wchar_t kStrightBrackets[BracketsParts::Last + 1] = L"│││││││││";
 const wchar_t kDivider = L'─';
 
-// ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz";
-const wchar_t kN[] = L"0123456789+-∙=()ae";
-//ᴬᴮCᴰᴱᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿᵀᵁᵂᵇᶜᵈⁱᵏᵐⁿᵖᵗᵘᵛⁱⁿʰʳʷʸˡˢˣ";
-const wchar_t kU[] = L"⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻·⁼⁽⁾ᵃᵉ";
-//ₒₓₔᵢᵣᵤᵥ";
-const wchar_t kD[] = L"₀₁₂₃₄₅₆₇₈₉₊₋․₌₍₎ₐₑ";
+// ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghklmnopqrstuvwyz";
+const wchar_t kN[] = L"0123456789+-∙=()aeix";
+//ᴬᴮCᴰᴱᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿᵀᵁᵂᵇᶜᵈⁱᵏᵐⁿᵖᵗᵘᵛⁿʰʳʷʸˡˢ";
+const wchar_t kU[] = L"⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻·⁼⁽⁾ᵃᵉⁱˣ";
+//ₒₓₔᵣᵤᵥ";
+const wchar_t kD[] = L"₀₁₂₃₄₅₆₇₈₉₊₋․₌₍₎ₐₑᵢₓ";
 
 wchar_t GetSubScript(wchar_t sym) {
   assert(std::size(kN) == std::size(kU));
