@@ -231,6 +231,15 @@ void Operation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   }
 }
 
+void Operation::ConvertToComplexImpl(std::unique_ptr<INode>* new_node) {
+  for (auto& node : operands_) {
+    std::unique_ptr<INode> temp_node;
+    node->AsNodeImpl()->ConvertToComplexImpl(&temp_node);
+    if (temp_node)
+      node = std::move(temp_node);
+  }
+}
+
 void Operation::CheckIntegrity() const {
   assert(op_info_);
   if (op_info_->operands_count >= 0) {

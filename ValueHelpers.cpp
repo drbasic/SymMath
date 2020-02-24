@@ -34,6 +34,10 @@ const Constant* E() {
   return kE.get();
 }
 
+std::unique_ptr<Constant> MakeE() {
+  return INodeHelper::MakeConst(M_E);
+}
+
 const Constant* PI() {
   static const auto kPi = INodeHelper::MakeConst(M_PI);
   return kPi.get();
@@ -140,6 +144,10 @@ std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh) {
 std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh) {
   return INodeHelper::MakePow(std::move(lh), std::move(rh));
+}
+
+std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh, double rh) {
+  return INodeHelper::MakePow(std::move(lh), INodeHelper::MakeConst(rh));
 }
 
 std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh,

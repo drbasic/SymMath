@@ -50,4 +50,5 @@ class INodeImpl : public INode {
 
   virtual void SimplifyImpl(std::unique_ptr<INode>* new_node) {}
   virtual void OpenBracketsImpl(std::unique_ptr<INode>* new_node) {}
+  virtual void ConvertToComplexImpl(std::unique_ptr<INode>* new_node) {}
 };

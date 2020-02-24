@@ -135,6 +135,15 @@ void Variable::OpenBrackets() {
     value_ = std::move(temp_node);
 }
 
+void Variable::ConvertToComplex() {
+  if (!value_)
+    return;
+  std::unique_ptr<INode> temp_node;
+  value_->AsNodeImpl()->ConvertToComplexImpl(&temp_node);
+  if (temp_node)
+    value_ = std::move(temp_node);
+}
+
 void Variable::operator=(std::unique_ptr<INode> value) {
   if (value->AsNodeImpl()->CheckCircular(this)) {
     value_ = std::make_unique<ErrorNode>(

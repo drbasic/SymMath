@@ -2,7 +2,9 @@
 
 #include <cassert>
 
+#include "Constant.h"
 #include "OpInfo.h"
+#include "ValueHelpers.h"
 
 TrigonometricOperation::TrigonometricOperation(const OpInfo* op_info,
                                                std::unique_ptr<INode> lh)
@@ -23,4 +25,23 @@ PrintSize TrigonometricOperation::Render(
   render_behaviour.SetBrackets(BracketsBehaviour::Force);
   return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
                                      render_behaviour, true);
+}
+
+void TrigonometricOperation::ConvertToComplexImpl(
+    std::unique_ptr<INode>* new_node) {
+  Operation::ConvertToComplexImpl(nullptr);
+
+  auto x = Operand(0);
+  if (op_info_->op == Op::Sin) {
+    *new_node = (Pow(Constants::MakeE(), Imag() * x->Clone()) -
+                 Pow(Constants::MakeE(), -Imag() * x->Clone())) /
+                (2 * Imag());
+    return;
+  }
+  if (op_info_->op == Op::Cos) {
+    *new_node = (Pow(Constants::MakeE(), Imag() * x->Clone()->Clone()) +
+                 Pow(Constants::MakeE(), -Imag() * x->Clone())) /
+                2;
+    return;
+  }
 }

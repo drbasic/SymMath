@@ -46,10 +46,6 @@ void PlusOperation::UnfoldChains() {
   CheckIntegrity();
 }
 
-void PlusOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyChains(nullptr);
-}
-
 void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   Operation::SimplifyConsts(new_node);
   if (*new_node)

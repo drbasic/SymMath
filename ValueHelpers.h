@@ -11,6 +11,7 @@ class INode;
 namespace Constants {
   const Constant* Zero();
   const Constant* E();
+  std::unique_ptr<Constant> MakeE();
   const Constant* PI();
 }
 
@@ -51,6 +52,8 @@ std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh);
 
 std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh);
+std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
+                                 double rh);
 std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh,
                            std::unique_ptr<INode> rh);
 std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh, double exp);

@@ -108,6 +108,15 @@ void Vector::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   }
 }
 
+void Vector::ConvertToComplexImpl(std::unique_ptr<INode>* new_node) {
+  for (auto& node : values_) {
+    std::unique_ptr<INode> temp_node;
+    node->AsNodeImpl()->ConvertToComplexImpl(&temp_node);
+    if (temp_node)
+      node = std::move(temp_node);
+  }
+}
+
 std::unique_ptr<INode> Vector::TakeValue(size_t indx) {
   return std::move(values_[indx]);
 }

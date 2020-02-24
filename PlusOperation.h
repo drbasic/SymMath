@@ -19,7 +19,6 @@ class PlusOperation : public Operation {
 
   // IOperation implementation
   void UnfoldChains() override;
-  void SimplifyChains(std::unique_ptr<INode>* new_node) override;
   void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
   void OrderOperands() override;

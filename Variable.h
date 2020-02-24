@@ -3,7 +3,7 @@
 #include "INode.h"
 #include "INodeImpl.h"
 
-class Variable : public INodeImpl {
+class Variable : protected INodeImpl {
  public:
   Variable(std::string name);
   Variable(std::unique_ptr<INode> value);
@@ -12,6 +12,7 @@ class Variable : public INodeImpl {
   std::wstring Print(bool with_calc = false, size_t base_line = 0) const;
   void Simplify();
   void OpenBrackets();
+  void ConvertToComplex();
   std::string GetName() const;
 
   void operator=(std::unique_ptr<INode> value);
@@ -24,6 +25,7 @@ class Variable : public INodeImpl {
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc() const override;
 
+ protected:
   // INodeImpl interface
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,

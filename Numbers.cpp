@@ -94,6 +94,8 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  Variable t = Log((x^y)*(b+1) /a);
+  Variable t = (Sin(x)^2) + (Cos(x)^2);
+  t.ConvertToComplex();
+  t.OpenBrackets();
   std::wcout << t.Print(true) << "\n";
 }
