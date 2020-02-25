@@ -1,6 +1,22 @@
 #pragma once
 #include <stdint.h>
 
+class Operation;
+class HotToken;
+
+class ScopedParamsCounter {
+ public:
+  ~ScopedParamsCounter();
+
+ private:
+  friend class HotToken;
+  ScopedParamsCounter(HotToken* token, const Operation* operation);
+
+  HotToken* token_;
+  const Operation* operation_;
+  const size_t params_count_;
+};
+
 class HotToken {
  public:
   HotToken() {}
@@ -9,6 +25,7 @@ class HotToken {
   ~HotToken();
   void SetChanged();
   uint32_t GetChangesCount() { return changes_count_; }
+  ScopedParamsCounter CountParamsChanged(const Operation* operation);
 
  private:
   friend class Constant;

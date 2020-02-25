@@ -15,9 +15,14 @@ std::unique_ptr<INode> CompareEqual(
     operand->AsNodeImpl()->OpenBracketsImpl({}, &new_sub_node);
     if (new_sub_node)
       operand = std::move(new_sub_node);
-    operand->AsNodeImpl()->SimplifyImpl({}, &new_sub_node);
-    if (new_sub_node)
-      operand = std::move(new_sub_node);
+    while (true) {
+      HotToken token;
+      operand->AsNodeImpl()->SimplifyImpl({&token}, &new_sub_node);
+      if (new_sub_node)
+        operand = std::move(new_sub_node);
+      else if (token.GetChangesCount() == 0)
+        break;
+    }
   }
   bool is_equal = (*operands)[0]->IsEqual((*operands)[1].get());
   return INodeHelper::MakeConst(is_equal);

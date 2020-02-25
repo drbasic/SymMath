@@ -160,6 +160,7 @@ std::unique_ptr<INode> MultOperation::ProcessImaginary(
 
 void MultOperation::UnfoldChains(HotToken token) {
   Operation::UnfoldChains({&token});
+  auto params_change_counter = token.CountParamsChanged(this);
 
   std::vector<std::unique_ptr<INode>> new_nodes;
   ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
@@ -169,7 +170,8 @@ void MultOperation::UnfoldChains(HotToken token) {
 void MultOperation::SimplifyUnMinus(HotToken token,
                                     std::unique_ptr<INode>* new_node) {
   Operation::SimplifyUnMinus({&token}, nullptr);
-  CheckIntegrity();
+
+  auto params_change_counter = token.CountParamsChanged(this);
 
   bool is_positive = true;
   for (auto& node : operands_) {
@@ -188,6 +190,7 @@ void MultOperation::SimplifyUnMinus(HotToken token,
 void MultOperation::SimplifyChains(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
   Operation::SimplifyChains({&token}, nullptr);
+  auto params_change_counter = token.CountParamsChanged(this);
 
   auto i_node = ProcessImaginary(&operands_);
   if (i_node) {
@@ -199,6 +202,7 @@ void MultOperation::SimplifyChains(HotToken token,
 void MultOperation::SimplifyDivMul(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
   Operation::SimplifyDivMul({&token}, nullptr);
+  auto params_change_counter = token.CountParamsChanged(this);
 
   std::vector<std::unique_ptr<INode>> new_bottom;
   for (auto& node : operands_) {
@@ -219,6 +223,7 @@ void MultOperation::SimplifyConsts(HotToken token,
   Operation::SimplifyConsts({&token}, new_node);
   if (*new_node)
     return;
+  auto params_change_counter = token.CountParamsChanged(this);
 
   size_t const_count = 0;
   double mult_total = 0;
@@ -282,6 +287,7 @@ void MultOperation::OpenPlusBrackets(HotToken& token,
                                      std::unique_ptr<INode>* new_node) {
   if (!INodeHelper::HasAnyOperation(Op::Plus, operands_))
     return;
+  auto params_change_counter = token.CountParamsChanged(this);
 
   std::vector<std::unique_ptr<INode>> ordinal_nodes;
   std::vector<std::vector<std::unique_ptr<INode>>> plus_nodes;
@@ -317,6 +323,8 @@ void MultOperation::OpenPlusBrackets(HotToken& token,
 
 void MultOperation::SimplifyTheSameMult(HotToken& token,
                                         std::unique_ptr<INode>* new_node) {
+  auto params_change_counter = token.CountParamsChanged(this);
+
   bool need_try = true;
   while (need_try) {
     need_try = false;
@@ -361,6 +369,8 @@ void MultOperation::SimplifyTheSameMult(HotToken& token,
 
 void MultOperation::SimplifyTheSamePow(HotToken& token,
                                        std::unique_ptr<INode>* new_node) {
+  auto params_change_counter = token.CountParamsChanged(this);
+
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;

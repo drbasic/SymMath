@@ -68,6 +68,7 @@ void UnMinusOperation::OpenBracketsImpl(HotToken token,
   if (!as_plus)
     return;
 
+  token.SetChanged();
   auto new_operands = as_plus->TakeAllOperands();
   for (auto& node : new_operands) {
     node = INodeHelper::Negate(std::move(node));
@@ -90,6 +91,7 @@ void UnMinusOperation::SimplifyUnMinus(HotToken token,
   Operation::SimplifyUnMinus({&token}, nullptr);
 
   if (Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get())) {
+    token.SetChanged();
     *new_node = sub_un_minus->TakeOperand(0);
     return;
   }
@@ -100,6 +102,7 @@ void UnMinusOperation::SimplifyUnMinus(HotToken token,
         if (!as_const->Name().empty())
           continue;
         sub_mult->SetOperand(i, INodeHelper::MakeConst(-as_const->Value()));
+        token.SetChanged();
         *new_node = TakeOperand(0);
         return;
       }

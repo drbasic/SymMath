@@ -41,9 +41,12 @@ bool PlusOperation::HasFrontMinus() const {
 void PlusOperation::UnfoldChains(HotToken token) {
   Operation::UnfoldChains({&token});
 
+  auto operands_count = OperandsCount();
   std::vector<std::unique_ptr<INode>> new_nodes;
   ExctractNodesWithOp(Op::Plus, &operands_, &new_nodes);
   operands_.swap(new_nodes);
+  if (operands_count != OperandsCount())
+    token.SetChanged();
   CheckIntegrity();
 }
 
@@ -52,6 +55,7 @@ void PlusOperation::SimplifyConsts(HotToken token,
   Operation::SimplifyConsts({&token}, new_node);
   if (*new_node)
     return;
+  auto params_change_counter = token.CountParamsChanged(this);
 
   size_t const_count = 0;
   double total_summ = 0;
@@ -75,6 +79,7 @@ void PlusOperation::SimplifyConsts(HotToken token,
       first_const->reset();
     node.reset();
   }
+
   INodeHelper::RemoveEmptyOperands(&operands_);
   if (operands_.empty()) {
     *new_node = INodeHelper::MakeConst(total_summ);
@@ -91,6 +96,7 @@ void PlusOperation::SimplifyConsts(HotToken token,
 void PlusOperation::SimplifyTheSame(HotToken token,
                                     std::unique_ptr<INode>* new_node) {
   Operation::SimplifyTheSame({&token}, nullptr);
+  auto params_change_counter = token.CountParamsChanged(this);
 
   bool need_try = true;
   while (need_try) {
@@ -151,6 +157,7 @@ void PlusOperation::OpenBracketsImpl(HotToken token,
 
   if (!INodeHelper::HasAnyOperation(Op::Div, operands_))
     return;
+  auto params_change_counter = token.CountParamsChanged(this);
 
   std::vector<std::pair<size_t, std::unique_ptr<INode>>> dividers;
   for (size_t i = 0; i < OperandsCount(); ++i) {

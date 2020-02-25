@@ -3,6 +3,19 @@
 #include <cassert>
 #include <memory>
 
+#include "Operation.h"
+
+ScopedParamsCounter::ScopedParamsCounter(HotToken* token,
+                                         const Operation* operation)
+    : token_(token),
+      operation_(operation),
+      params_count_(operation->OperandsCount()) {}
+
+ScopedParamsCounter::~ScopedParamsCounter() {
+  if (params_count_ != operation_->OperandsCount())
+    token_->SetChanged();
+}
+
 HotToken::HotToken(HotToken* parent) : parent_(parent) {
   parent->Disarm();
   generation_and_armed_ = -(parent->Generation() + 1);
@@ -19,6 +32,10 @@ HotToken::~HotToken() {
 
 void HotToken::SetChanged() {
   ++changes_count_;
+}
+
+ScopedParamsCounter HotToken::CountParamsChanged(const Operation* operation) {
+  return ScopedParamsCounter(this, operation);
 }
 
 void HotToken::Disarm() {
