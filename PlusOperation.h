@@ -21,7 +21,7 @@ class PlusOperation : public Operation {
   void UnfoldChains(HotToken token) override;
   void SimplifyConsts(HotToken token, std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(HotToken token, std::unique_ptr<INode>* new_node) override;
-  void OrderOperands() override;
+  void OrderOperands(HotToken token) override;
   PlusOperation* AsPlusOperation() override { return this; }
   const PlusOperation* AsPlusOperation() const override { return this; }
   void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;

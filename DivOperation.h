@@ -41,6 +41,7 @@ class DivOperation : public Operation {
   INodeImpl* Bottom() { return Operand(Divider); }
   const INodeImpl* Bottom() const { return Operand(Divider); }
 
-  void SimplifyCanonicConstants(std::unique_ptr<INode>* new_node);
-  void SimplifyMultipliers(std::unique_ptr<INode>* new_node);
+  void SimplifyCanonicConstants(HotToken& token,
+                                std::unique_ptr<INode>* new_node);
+  void SimplifyMultipliers(HotToken& token, std::unique_ptr<INode>* new_node);
 };

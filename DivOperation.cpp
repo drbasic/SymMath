@@ -103,7 +103,7 @@ std::optional<CanonicPow> DivOperation::GetCanonicPow() {
 
 void DivOperation::SimplifyUnMinus(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyUnMinus(std::move(token), nullptr);
+  Operation::SimplifyUnMinus({&token}, nullptr);
 
   bool is_positve = true;
   for (auto& node : operands_) {
@@ -119,7 +119,7 @@ void DivOperation::SimplifyUnMinus(HotToken token,
 }
 
 void DivOperation::SimplifyDivDiv(HotToken token) {
-  Operation::SimplifyDivDiv(std::move(token));
+  Operation::SimplifyDivDiv({&token});
 
   auto* top = INodeHelper::AsDiv(Top());
   auto* bottom = INodeHelper::AsDiv(Bottom());
@@ -148,7 +148,7 @@ void DivOperation::SimplifyDivDiv(HotToken token) {
 
 void DivOperation::SimplifyConsts(HotToken token,
                                   std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyConsts(std::move(token), new_node);
+  Operation::SimplifyConsts({&token}, new_node);
   if (*new_node)
     return;
 
@@ -172,23 +172,24 @@ void DivOperation::SimplifyConsts(HotToken token,
 
 void DivOperation::SimplifyTheSame(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyTheSame(std::move(token), nullptr);
+  Operation::SimplifyTheSame({&token}, nullptr);
 
-  SimplifyCanonicConstants(new_node);
+  SimplifyCanonicConstants(token, new_node);
   if (*new_node)
     return;
 
-  SimplifyMultipliers(new_node);
+  SimplifyMultipliers(token, new_node);
 }
 
-void DivOperation::SimplifyCanonicConstants(std::unique_ptr<INode>* new_node) {
+void DivOperation::SimplifyCanonicConstants(HotToken& token,
+                                            std::unique_ptr<INode>* new_node) {
   CanonicPow canonic_top = INodeHelper::GetCanonicPow(operands_[0]);
   CanonicPow canonic_bottom = INodeHelper::GetCanonicPow(operands_[1]);
   for (auto& node_info : canonic_bottom.base_nodes)
     node_info.exp *= -1.0;
   std::vector<std::unique_ptr<INode>> new_top_nodes;
   std::vector<std::unique_ptr<INode>> new_bottom_nodes;
-  bool is_combined = MergeCanonicToPow(canonic_top, canonic_bottom,
+  bool is_combined = MergeCanonicToPow(token, canonic_top, canonic_bottom,
                                        &new_top_nodes, &new_bottom_nodes);
   if (!is_combined)
     return;
@@ -201,7 +202,8 @@ void DivOperation::SimplifyCanonicConstants(std::unique_ptr<INode>* new_node) {
   operands_[1] = INodeHelper::MakeMultIfNeeded(std::move(new_bottom_nodes));
 }
 
-void DivOperation::SimplifyMultipliers(std::unique_ptr<INode>* new_node) {
+void DivOperation::SimplifyMultipliers(HotToken& token,
+                                       std::unique_ptr<INode>* new_node) {
   auto* as_plus = INodeHelper::AsPlus(Top());
   if (!as_plus)
     return;

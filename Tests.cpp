@@ -47,7 +47,7 @@ bool Tests::TestSimplifyMultChain() {
   auto e = Var("e", 5);
   Variable s = a * b * (-c) * (-d) * (-e);
   auto* op = s.AsOperation();
-  op->UnfoldChains(HotToken::Make());
+  op->UnfoldChains({});
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-120);
@@ -66,7 +66,7 @@ bool Tests::TestSimplifyPlusChain() {
   auto e = Var("e", 5);
   Variable s = a + b - c - d - e;
   auto* op = s.AsOperation();
-  op->UnfoldChains(HotToken::Make());
+  op->UnfoldChains({});
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-9);
@@ -84,7 +84,7 @@ bool Tests::TestSimplifyChainRecursive() {
   auto e = Var("e", 5);
   Variable s = (a + b + c) * (a + b + c) * (a + b + c);
   auto* op = s.AsOperation();
-  op->UnfoldChains(HotToken::Make());
+  op->UnfoldChains({});
   if (op->operands_.size() != 3)
     return false;
   for (auto& sub : op->operands_) {
@@ -107,7 +107,7 @@ bool Tests::TestSimplifyDivDiv() {
   auto e = Var("e", 5);
   Variable s = (a / b) / c / d / e;
   auto* op = s.AsOperation();
-  op->SimplifyDivDiv(HotToken::Make());
+  op->SimplifyDivDiv({});
   auto* div = INodeHelper::AsDiv(op);
   if (!div)
     return false;
@@ -143,7 +143,7 @@ bool Tests::TestOpenBrackets() {
   auto e = Var("e", 5);
   Variable s = (a + b) * (b + c + d) * (a + b) * e;
   std::unique_ptr<INode> new_node;
-  s.AsOperation()->SimplifyChains(HotToken::Make(), &new_node);
+  s.AsOperation()->SimplifyChains({}, &new_node);
   s.OpenBrackets();
   auto* plus = INodeHelper::AsPlus(s.AsOperation());
   if (!plus)

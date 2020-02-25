@@ -82,17 +82,17 @@ const Operation* Brackets::AsOperation() const {
 }
 
 void Brackets::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
-  Value()->SimplifyImpl(std::move(token), new_node);
+  Value()->SimplifyImpl({&token}, new_node);
 }
 
 void Brackets::OpenBracketsImpl(HotToken token,
                                 std::unique_ptr<INode>* new_node) {
-  Value()->OpenBracketsImpl(std::move(token), new_node);
+  Value()->OpenBracketsImpl({&token}, new_node);
 }
 
 void Brackets::ConvertToComplexImpl(HotToken token,
                                     std::unique_ptr<INode>* new_node) {
-  Value()->ConvertToComplexImpl(std::move(token), new_node);
+  Value()->ConvertToComplexImpl({&token}, new_node);
 }
 
 INodeImpl* Brackets::Value() {

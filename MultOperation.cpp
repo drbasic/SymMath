@@ -71,25 +71,25 @@ ValueType MultOperation::GetValueType() const {
 
 void MultOperation::OpenBracketsImpl(HotToken token,
                                      std::unique_ptr<INode>* new_node) {
-  Operation::OpenBracketsImpl(std::move(token), nullptr);
+  Operation::OpenBracketsImpl({&token}, nullptr);
   std::unique_ptr<INode> temp_node;
-  SimplifyUnMinus(std::move(token), &temp_node);
+  SimplifyUnMinus({&token}, &temp_node);
   if (temp_node) {
-    temp_node->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), new_node);
+    temp_node->AsNodeImpl()->OpenBracketsImpl({&token}, new_node);
     if (!*new_node)
       *new_node = std::move(temp_node);
     return;
   }
 
-  SimplifyDivMul(HotToken::Make(), &temp_node);
+  SimplifyDivMul({&token}, &temp_node);
   if (temp_node) {
-    temp_node->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), new_node);
+    temp_node->AsNodeImpl()->OpenBracketsImpl({&token}, new_node);
     if (!*new_node)
       *new_node = std::move(temp_node);
     return;
   }
 
-  OpenPlusBrackets(new_node);
+  OpenPlusBrackets(token, new_node);
 }
 
 std::optional<CanonicMult> MultOperation::GetCanonicMult() {
@@ -159,7 +159,7 @@ std::unique_ptr<INode> MultOperation::ProcessImaginary(
 }
 
 void MultOperation::UnfoldChains(HotToken token) {
-  Operation::UnfoldChains(std::move(token));
+  Operation::UnfoldChains({&token});
 
   std::vector<std::unique_ptr<INode>> new_nodes;
   ExctractNodesWithOp(Op::Mult, &operands_, &new_nodes);
@@ -168,7 +168,7 @@ void MultOperation::UnfoldChains(HotToken token) {
 
 void MultOperation::SimplifyUnMinus(HotToken token,
                                     std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyUnMinus(std::move(token), nullptr);
+  Operation::SimplifyUnMinus({&token}, nullptr);
   CheckIntegrity();
 
   bool is_positive = true;
@@ -187,7 +187,7 @@ void MultOperation::SimplifyUnMinus(HotToken token,
 
 void MultOperation::SimplifyChains(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyChains(std::move(token), nullptr);
+  Operation::SimplifyChains({&token}, nullptr);
 
   auto i_node = ProcessImaginary(&operands_);
   if (i_node) {
@@ -198,7 +198,7 @@ void MultOperation::SimplifyChains(HotToken token,
 
 void MultOperation::SimplifyDivMul(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyDivMul(std::move(token), nullptr);
+  Operation::SimplifyDivMul({&token}, nullptr);
 
   std::vector<std::unique_ptr<INode>> new_bottom;
   for (auto& node : operands_) {
@@ -216,7 +216,7 @@ void MultOperation::SimplifyDivMul(HotToken token,
 
 void MultOperation::SimplifyConsts(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyConsts(std::move(token), new_node);
+  Operation::SimplifyConsts({&token}, new_node);
   if (*new_node)
     return;
 
@@ -264,21 +264,22 @@ void MultOperation::SimplifyConsts(HotToken token,
 
 void MultOperation::SimplifyTheSame(HotToken token,
                                     std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyTheSame(std::move(token), nullptr);
+  Operation::SimplifyTheSame({&token}, nullptr);
 
-  SimplifyTheSamePow(new_node);
+  SimplifyTheSamePow(token, new_node);
   if (*new_node)
     return;
-  SimplifyTheSameMult(new_node);
+  SimplifyTheSameMult(token, new_node);
 }
 
-void MultOperation::OrderOperands() {
-  Operation::OrderOperands();
+void MultOperation::OrderOperands(HotToken token) {
+  Operation::OrderOperands({&token});
 
   ReorderOperands(&operands_, true);
 }
 
-void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {
+void MultOperation::OpenPlusBrackets(HotToken& token,
+                                     std::unique_ptr<INode>* new_node) {
   if (!INodeHelper::HasAnyOperation(Op::Plus, operands_))
     return;
 
@@ -309,12 +310,13 @@ void MultOperation::OpenPlusBrackets(std::unique_ptr<INode>* new_node) {
   } while (NextPermutation(&permutation_indexes));
 
   auto temp_node = INodeHelper::MakePlus(std::move(new_plus_nodes));
-  temp_node->OpenBracketsImpl(HotToken::Make(), new_node);
+  temp_node->OpenBracketsImpl({&token}, new_node);
   if (!*new_node)
     *new_node = std::move(temp_node);
 }
 
-void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
+void MultOperation::SimplifyTheSameMult(HotToken& token,
+                                        std::unique_ptr<INode>* new_node) {
   bool need_try = true;
   while (need_try) {
     need_try = false;
@@ -334,7 +336,7 @@ void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
         if (canonic_2.nodes.empty())
           continue;
 
-        bool is_combined = MergeCanonicToMult(canonic_1, canonic_2,
+        bool is_combined = MergeCanonicToMult(token, canonic_1, canonic_2,
                                               &operands_[i], &operands_[j]);
         if (!operands_[i])
           break;
@@ -345,7 +347,7 @@ void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
       }
     }
     INodeHelper::RemoveEmptyOperands(&operands_);
-    SimplifyConsts(HotToken::Make(), new_node);
+    SimplifyConsts({&token}, new_node);
     if (*new_node)
       return;
   }
@@ -357,7 +359,8 @@ void MultOperation::SimplifyTheSameMult(std::unique_ptr<INode>* new_node) {
   }
 }
 
-void MultOperation::SimplifyTheSamePow(std::unique_ptr<INode>* new_node) {
+void MultOperation::SimplifyTheSamePow(HotToken& token,
+                                       std::unique_ptr<INode>* new_node) {
   for (size_t i = 0; i < operands_.size(); ++i) {
     if (!operands_[i])
       continue;
@@ -375,15 +378,14 @@ void MultOperation::SimplifyTheSamePow(std::unique_ptr<INode>* new_node) {
         continue;
 
       std::vector<std::unique_ptr<INode>> new_sub_nodes;
-      bool is_combined = MergeCanonicToPow(canonic_1, std::move(canonic_2),
-                                           &new_sub_nodes, nullptr);
+      bool is_combined = MergeCanonicToPow(
+          token, canonic_1, std::move(canonic_2), &new_sub_nodes, nullptr);
       if (is_combined) {
         operands_[i].reset();
         operands_[j].reset();
         for (size_t k = 0; k < new_sub_nodes.size(); ++k) {
           std::unique_ptr<INode> new_sub_node;
-          new_sub_nodes[k]->AsNodeImpl()->SimplifyImpl(HotToken::Make(),
-                                                       &new_sub_node);
+          new_sub_nodes[k]->AsNodeImpl()->SimplifyImpl({&token}, &new_sub_node);
           if (!new_sub_node)
             new_sub_node = std::move(new_sub_nodes[k]);
           if (k == 0)

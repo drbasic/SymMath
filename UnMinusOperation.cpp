@@ -62,7 +62,7 @@ ValueType UnMinusOperation::GetValueType() const {
 
 void UnMinusOperation::OpenBracketsImpl(HotToken token,
                                         std::unique_ptr<INode>* new_node) {
-  Operation::OpenBracketsImpl(std::move(token), nullptr);
+  Operation::OpenBracketsImpl({&token}, nullptr);
 
   auto* as_plus = INodeHelper::AsPlus(Operand(0));
   if (!as_plus)
@@ -74,7 +74,7 @@ void UnMinusOperation::OpenBracketsImpl(HotToken token,
   }
 
   auto temp_node = INodeHelper::MakePlus(std::move(new_operands));
-  temp_node->OpenBracketsImpl(HotToken::Make(), new_node);
+  temp_node->OpenBracketsImpl({&token}, new_node);
   if (!*new_node)
     *new_node = std::move(temp_node);
 }
@@ -87,7 +87,7 @@ std::optional<CanonicMult> UnMinusOperation::GetCanonicMult() {
 
 void UnMinusOperation::SimplifyUnMinus(HotToken token,
                                        std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyUnMinus(std::move(token), nullptr);
+  Operation::SimplifyUnMinus({&token}, nullptr);
 
   if (Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get())) {
     *new_node = sub_un_minus->TakeOperand(0);

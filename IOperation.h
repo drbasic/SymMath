@@ -66,5 +66,5 @@ class IOperation : public INodeImpl {
                               std::unique_ptr<INode>* new_node) = 0;
   virtual void SimplifyTheSame(HotToken token,
                                std::unique_ptr<INode>* new_node) = 0;
-  virtual void OrderOperands() = 0;
+  virtual void OrderOperands(HotToken token) = 0;
 };

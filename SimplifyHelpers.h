@@ -4,6 +4,8 @@
 #include <optional>
 #include <vector>
 
+#include "HotToken.h"
+
 enum class Op;
 struct CanonicMult;
 struct CanonicPow;
@@ -33,17 +35,20 @@ void ExctractNodesWithOp(Op op,
                          std::vector<std::unique_ptr<INode>>* positive_nodes,
                          std::vector<std::unique_ptr<INode>>* negative_nodes);
 
-bool MergeCanonicToPlus(const CanonicMult& lh,
+bool MergeCanonicToPlus(HotToken& token,
+                        const CanonicMult& lh,
                         const CanonicMult& rh,
                         std::unique_ptr<INode>* lh_node,
                         std::unique_ptr<INode>* rh_node);
 
-bool MergeCanonicToMult(const CanonicMult& lh,
+bool MergeCanonicToMult(HotToken& token,
+                        const CanonicMult& lh,
                         const CanonicMult& rh,
                         std::unique_ptr<INode>* lh_node,
                         std::unique_ptr<INode>* rh_node);
 
-bool MergeCanonicToPow(CanonicPow lh,
+bool MergeCanonicToPow(HotToken& token,
+                       CanonicPow lh,
                        CanonicPow rh,
                        std::vector<std::unique_ptr<INode>>* top,
                        std::vector<std::unique_ptr<INode>>* bottom);

@@ -3,6 +3,7 @@
 #include "Canvas.h"
 #include "INode.h"
 #include "RenderBehaviour.h"
+#include "HotToken.h"
 
 class Constant;
 class ErrorNode;
@@ -16,24 +17,6 @@ enum class ValueType {
   Vector = 1,
   Matrix = 2,
   Last = Matrix,
-};
-
-class HotToken {
- public:
-  ~HotToken();
-  HotToken(HotToken&& rh);
-  static HotToken Make() { return {}; }
-  static HotToken MakeOrMove(HotToken&& rh);
-
- private:
-  friend class Constant;
-  friend class Imaginary;
-  friend class Operation;
-  friend class Variable;
-  friend class ErrorNode;
-  HotToken() {}
-  void Disarm() { armed_ = false; }
-  bool armed_ = true;
 };
 
 class INodeImpl : public INode {

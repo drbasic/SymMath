@@ -12,10 +12,10 @@ std::unique_ptr<INode> CompareEqual(
   assert(operands->size() == 2);
   for (auto& operand : *operands) {
     std::unique_ptr<INode> new_sub_node;
-    operand->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), &new_sub_node);
+    operand->AsNodeImpl()->OpenBracketsImpl({}, &new_sub_node);
     if (new_sub_node)
       operand = std::move(new_sub_node);
-    operand->AsNodeImpl()->SimplifyImpl(HotToken::Make(), &new_sub_node);
+    operand->AsNodeImpl()->SimplifyImpl({}, &new_sub_node);
     if (new_sub_node)
       operand = std::move(new_sub_node);
   }

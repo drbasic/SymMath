@@ -19,44 +19,42 @@
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 
+class HotTokenHelper {
+ public:
+  static void Disarm(HotToken* token) { token->Disarm(); }
+};
+
 namespace {
 
-using SimplificatorFunc = void (*)(Operation* operation,
+using SimplificatorFunc = void (*)(HotToken& token,
+                                   Operation* operation,
                                    std::unique_ptr<INode>* new_node);
-void ApplySimplification(SimplificatorFunc simplificator,
+void ApplySimplification(HotToken token,
+                         SimplificatorFunc simplificator,
                          std::vector<std::unique_ptr<INode>>* operands) {
   for (auto& node : *operands) {
     if (Operation* operation = INodeHelper::AsOperation(node.get())) {
       operation->CheckIntegrity();
       std::unique_ptr<INode> new_sub_node;
-      simplificator(operation, &new_sub_node);
+      simplificator(token, operation, &new_sub_node);
       if (new_sub_node)
         node = std::move(new_sub_node);
       if (Operation* op = INodeHelper::AsOperation(node.get()))
         op->CheckIntegrity();
     }
   }
-}
-using SymplificatorF = void (*)(Operation* operation);
-void ApplySimplification(SymplificatorF simplificator,
-                         std::vector<std::unique_ptr<INode>>* operands) {
-  for (auto& node : *operands) {
-    if (Operation* operation = INodeHelper::AsOperation(node.get())) {
-      operation->CheckIntegrity();
-      simplificator(operation);
-      operation->CheckIntegrity();
-    }
-  }
+  HotTokenHelper::Disarm(&token);
 }
 
-void ApplySimplifications(const SimplificatorFunc* begin,
+void ApplySimplifications(HotToken token,
+                          const SimplificatorFunc* begin,
                           const SimplificatorFunc* end,
                           Operation* current,
                           std::unique_ptr<INode>* new_node) {
   current->CheckIntegrity();
   for (const SimplificatorFunc* it = begin; it != end; ++it) {
     std::unique_ptr<INode> temp_node;
-    (*it)(current, &temp_node);
+    (*it)(token, current, &temp_node);
     if (temp_node) {
       *new_node = std::move(temp_node);
       current = INodeHelper::AsOperation(new_node->get());
@@ -191,51 +189,57 @@ bool Operation::IsEqual(const INode* rh) const {
 }
 
 void Operation::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
-  token.Disarm();
-  constexpr SimplificatorFunc simplificators[] = {
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyUnMinus(HotToken::Make(), new_node);
+  SimplificatorFunc simplificators[] = {
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyUnMinus({&token}, new_node);
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyDivDiv(HotToken::Make());
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivDiv({&token});
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->UnfoldChains(HotToken::Make());
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) { current->UnfoldChains({&token}); },
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyChains({&token}, new_node);
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyChains(HotToken::Make(), new_node);
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivMul({&token}, new_node);
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyDivMul(HotToken::Make(), new_node);
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivDiv({&token});
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyDivDiv(HotToken::Make());
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyConsts({&token}, new_node);
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyConsts(HotToken::Make(), new_node);
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyTheSame({&token}, new_node);
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyTheSame(HotToken::Make(), new_node);
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyConsts({&token}, new_node);
       },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->SimplifyConsts(HotToken::Make(), new_node);
-      },
-      [](Operation* current, std::unique_ptr<INode>* new_node) {
-        current->OrderOperands();
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->OrderOperands({&token});
       },
   };
-  ApplySimplifications(std::begin(simplificators), std::end(simplificators),
-                       this, new_node);
+  ApplySimplifications({&token}, std::begin(simplificators),
+                       std::end(simplificators), this, new_node);
 }
 
 void Operation::OpenBracketsImpl(HotToken token,
                                  std::unique_ptr<INode>* new_node) {
-  token.Disarm();
-  UnfoldChains(HotToken::Make());
+  UnfoldChains({&token});
 
   for (auto& node : operands_) {
     std::unique_ptr<INode> temp_node;
-    node->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), &temp_node);
+    node->AsNodeImpl()->OpenBracketsImpl({&token}, &temp_node);
     if (temp_node)
       node = std::move(temp_node);
   }
@@ -245,8 +249,7 @@ void Operation::ConvertToComplexImpl(HotToken token,
                                      std::unique_ptr<INode>* new_node) {
   for (auto& node : operands_) {
     std::unique_ptr<INode> temp_node;
-    node->AsNodeImpl()->ConvertToComplexImpl(
-        HotToken::MakeOrMove(std::move(token)), &temp_node);
+    node->AsNodeImpl()->ConvertToComplexImpl({&token}, &temp_node);
     if (temp_node)
       node = std::move(temp_node);
   }
@@ -284,28 +287,31 @@ bool Operation::IsAllOperandsConst(
 }
 
 void Operation::UnfoldChains(HotToken token) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation) { operation->UnfoldChains(HotToken::Make()); },
+      {&token},
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) { current->UnfoldChains({&token}); },
       &operands_);
 }
 
 void Operation::SimplifyUnMinus(HotToken token,
                                 std::unique_ptr<INode>* new_node) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation, std::unique_ptr<INode>* new_node) {
-        operation->SimplifyUnMinus(HotToken::Make(), new_node);
+      {&token},
+      [](HotToken& token, Operation* operation,
+         std::unique_ptr<INode>* new_node) {
+        operation->SimplifyUnMinus({&token}, new_node);
       },
       &operands_);
 }
 
 void Operation::SimplifyChains(HotToken token,
                                std::unique_ptr<INode>* new_node) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation, std::unique_ptr<INode>* new_node) {
-        operation->SimplifyChains(HotToken::Make(), new_node);
+      {&token},
+      [](HotToken& token, Operation* operation,
+         std::unique_ptr<INode>* new_node) {
+        operation->SimplifyChains({&token}, new_node);
       },
       &operands_);
   if (operands_.size() == 1 && op_info_->operands_count == -1)
@@ -313,28 +319,33 @@ void Operation::SimplifyChains(HotToken token,
 }
 
 void Operation::SimplifyDivDiv(HotToken token) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation) { operation->SimplifyDivDiv(HotToken::Make()); },
+      {&token},
+      [](HotToken& token, Operation* current,
+         std::unique_ptr<INode>* new_node) {
+        current->SimplifyDivDiv({&token});
+      },
       &operands_);
 }
 
 void Operation::SimplifyDivMul(HotToken token,
                                std::unique_ptr<INode>* new_node) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation, std::unique_ptr<INode>* new_node) {
-        operation->SimplifyDivMul(HotToken::Make(), new_node);
+      {&token},
+      [](HotToken& token, Operation* operation,
+         std::unique_ptr<INode>* new_node) {
+        operation->SimplifyDivMul({&token}, new_node);
       },
       &operands_);
 }
 
 void Operation::SimplifyConsts(HotToken token,
                                std::unique_ptr<INode>* new_node) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation, std::unique_ptr<INode>* new_node) {
-        operation->SimplifyConsts(HotToken::Make(), new_node);
+      {&token},
+      [](HotToken& token, Operation* operation,
+         std::unique_ptr<INode>* new_node) {
+        operation->SimplifyConsts({&token}, new_node);
       },
       &operands_);
   if (IsAllOperandsConst(operands_)) {
@@ -345,17 +356,23 @@ void Operation::SimplifyConsts(HotToken token,
 
 void Operation::SimplifyTheSame(HotToken token,
                                 std::unique_ptr<INode>* new_node) {
-  token.Disarm();
   ApplySimplification(
-      [](Operation* operation, std::unique_ptr<INode>* new_node) {
-        operation->SimplifyTheSame(HotToken::Make(), new_node);
+      {&token},
+      [](HotToken& token, Operation* operation,
+         std::unique_ptr<INode>* new_node) {
+        operation->SimplifyTheSame({&token}, new_node);
       },
       &operands_);
 }
 
-void Operation::OrderOperands() {
-  ApplySimplification([](Operation* operation) { operation->OrderOperands(); },
-                      &operands_);
+void Operation::OrderOperands(HotToken token) {
+  ApplySimplification(
+      {&token},
+      [](HotToken& token, Operation* operation,
+         std::unique_ptr<INode>* new_node) {
+        operation->OrderOperands({&token});
+      },
+      &operands_);
 }
 
 Op Operation::op() const {

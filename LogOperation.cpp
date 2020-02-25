@@ -65,7 +65,7 @@ PrintSize LogOperation::Render(Canvas* canvas,
 
 void LogOperation::OpenBracketsImpl(HotToken token,
                                     std::unique_ptr<INode>* new_node) {
-  Operation::OpenBracketsImpl(std::move(token), nullptr);
+  Operation::OpenBracketsImpl({&token}, nullptr);
 
   if (auto* as_mult = INodeHelper::AsMult(Value())) {
     std::vector<std::unique_ptr<INode>> sum_operands;
@@ -75,7 +75,7 @@ void LogOperation::OpenBracketsImpl(HotToken token,
                                                as_mult->TakeOperand(i));
       {
         std::unique_ptr<INode> new_node;
-        node->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), &new_node);
+        node->AsNodeImpl()->OpenBracketsImpl({&token}, &new_node);
         if (new_node)
           node = std::move(new_node);
       }
@@ -92,7 +92,7 @@ void LogOperation::OpenBracketsImpl(HotToken token,
           INodeHelper::MakeLogIfNeeded(Base()->Clone(), as_div->TakeOperand(i));
       {
         std::unique_ptr<INode> new_node;
-        node->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), &new_node);
+        node->AsNodeImpl()->OpenBracketsImpl({&token}, &new_node);
         if (new_node)
           node = std::move(new_node);
       }

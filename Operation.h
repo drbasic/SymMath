@@ -48,7 +48,7 @@ class Operation : public IOperation {
                       std::unique_ptr<INode>* new_node) override;
   void SimplifyTheSame(HotToken token,
                        std::unique_ptr<INode>* new_node) override;
-  void OrderOperands() override;
+  void OrderOperands(HotToken token) override;
 
   Op op() const;
   size_t OperandsCount() const;

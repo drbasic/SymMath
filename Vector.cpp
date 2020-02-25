@@ -93,8 +93,7 @@ bool Vector::CheckCircular(const INodeImpl* other) const {
 void Vector::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
   for (auto& val : values_) {
     std::unique_ptr<INode> new_sub_node;
-    val->AsNodeImpl()->SimplifyImpl(HotToken::MakeOrMove(std::move(token)),
-                                    &new_sub_node);
+    val->AsNodeImpl()->SimplifyImpl({&token}, &new_sub_node);
     if (new_sub_node)
       val = std::move(new_sub_node);
   }
@@ -104,8 +103,7 @@ void Vector::OpenBracketsImpl(HotToken token,
                               std::unique_ptr<INode>* new_node) {
   for (auto& val : values_) {
     std::unique_ptr<INode> temp_node;
-    val->AsNodeImpl()->OpenBracketsImpl(HotToken::MakeOrMove(std::move(token)),
-                                        &temp_node);
+    val->AsNodeImpl()->OpenBracketsImpl({&token}, &temp_node);
     if (temp_node)
       val = std::move(temp_node);
   }
@@ -115,8 +113,7 @@ void Vector::ConvertToComplexImpl(HotToken token,
                                   std::unique_ptr<INode>* new_node) {
   for (auto& node : values_) {
     std::unique_ptr<INode> temp_node;
-    node->AsNodeImpl()->ConvertToComplexImpl(
-        HotToken::MakeOrMove(std::move(token)), &temp_node);
+    node->AsNodeImpl()->ConvertToComplexImpl({&token}, &temp_node);
     if (temp_node)
       node = std::move(temp_node);
   }

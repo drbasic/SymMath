@@ -55,26 +55,31 @@ std::pair<RH, LH> Swap(Int2Type<true>, LH lh, RH rh) {
   return std::pair<RH, LH>(std::move(rh), std::move(lh));
 }
 
-std::unique_ptr<INode> DoMult(std::unique_ptr<INode> lh,
+std::unique_ptr<INode> DoMult(HotToken token,
+                              std::unique_ptr<INode> lh,
                               std::unique_ptr<INode> rh);
-std::unique_ptr<INode> DoMult(std::unique_ptr<INode> lh,
+std::unique_ptr<INode> DoMult(HotToken token,
+                              std::unique_ptr<INode> lh,
                               std::unique_ptr<Vector> rh);
-std::unique_ptr<INode> DoMult(std::unique_ptr<Vector> lh,
+std::unique_ptr<INode> DoMult(HotToken token,
+                              std::unique_ptr<Vector> lh,
                               std::unique_ptr<Vector> rh);
 
 template <typename LhType, typename RhType, typename SwapType>
-std::unique_ptr<INode> DoTemplateMult(std::unique_ptr<INode> lh,
+std::unique_ptr<INode> DoTemplateMult(HotToken token,
+                                      std::unique_ptr<INode> lh,
                                       std::unique_ptr<INode> rh) {
   auto converted_lh = Convert(LhType(), std::move(lh));
   auto converted_rh = Convert(RhType(), std::move(rh));
   auto swaped =
       Swap(SwapType(), std::move(converted_lh), std::move(converted_rh));
 
-  return DoMult(std::move(swaped.first), std::move(swaped.second));
+  return DoMult({&token}, std::move(swaped.first), std::move(swaped.second));
 }
 
 struct MultInfo {
-  using MultF = std::unique_ptr<INode> (*)(std::unique_ptr<INode> lh,
+  using MultF = std::unique_ptr<INode> (*)(HotToken token,
+                                           std::unique_ptr<INode> lh,
                                            std::unique_ptr<INode> rh);
   ValueType result_type;
   MultF mult_f;
@@ -117,26 +122,29 @@ const MultInfo kMultResult[3][3]{
     },
 };
 
-std::unique_ptr<INode> DoMult(std::unique_ptr<INode> lh,
+std::unique_ptr<INode> DoMult(HotToken token,
+                              std::unique_ptr<INode> lh,
                               std::unique_ptr<INode> rh) {
   auto result = INodeHelper::MakeMult(std::move(lh), std::move(rh));
-  result->UnfoldChains(HotToken::Make());
+  result->UnfoldChains({&token});
   return result->SymCalc();
 }
 
-std::unique_ptr<INode> DoMult(std::unique_ptr<INode> lh,
+std::unique_ptr<INode> DoMult(HotToken token,
+                              std::unique_ptr<INode> lh,
                               std::unique_ptr<Vector> rh) {
   std::vector<std::unique_ptr<INode>> values;
   values.reserve(rh->Size());
   for (size_t i = 0; i < rh->Size(); ++i) {
     auto value = INodeHelper::MakeMult(lh->Clone(), rh->TakeValue(i));
-    value->UnfoldChains(HotToken::Make());
+    value->UnfoldChains({&token});
     values.push_back(value->SymCalc());
   }
   return INodeHelper::MakeVector(std::move(values));
 }
 
-std::unique_ptr<INode> DoMult(std::unique_ptr<Vector> lh,
+std::unique_ptr<INode> DoMult(HotToken token,
+                              std::unique_ptr<Vector> lh,
                               std::unique_ptr<Vector> rh) {
   if (lh->Size() != rh->Size()) {
     return INodeHelper::MakeError("Vector sizes not match " +
@@ -148,7 +156,7 @@ std::unique_ptr<INode> DoMult(std::unique_ptr<Vector> lh,
   values.reserve(rh->Size());
   for (size_t i = 0; i < rh->Size(); ++i) {
     auto value = INodeHelper::MakeMult(lh->TakeValue(i), rh->TakeValue(i));
-    value->UnfoldChains(HotToken::Make());
+    value->UnfoldChains({&token});
     values.push_back(value->SymCalc());
   }
   return INodeHelper::MakePlus(std::move(values))->SymCalc();
@@ -168,13 +176,14 @@ std::unique_ptr<INode> ScalarProduct(
     return nullptr;
   if (operands->size() < 2)
     return nullptr;
+  HotToken token;
   std::unique_ptr<INode> lh = std::move((*operands)[0]);
   for (size_t i = 1; i < operands->size(); ++i) {
     std::unique_ptr<INode> rh = std::move((*operands)[i]);
     const auto& mult_info =
         kMultResult[GetValueTypeIndex(lh->AsNodeImpl()->GetValueType())]
                    [GetValueTypeIndex(rh->AsNodeImpl()->GetValueType())];
-    lh = mult_info.mult_f(std::move(lh), std::move(rh));
+    lh = mult_info.mult_f({&token}, std::move(lh), std::move(rh));
   }
   return lh;
 }

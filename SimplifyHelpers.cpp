@@ -245,7 +245,8 @@ void ExctractNodesWithOp(Op op,
   }
 }
 
-bool MergeCanonicToPlus(const CanonicMult& lh,
+bool MergeCanonicToPlus(HotToken& token,
+                        const CanonicMult& lh,
                         const CanonicMult& rh,
                         std::unique_ptr<INode>* lh_node,
                         std::unique_ptr<INode>* rh_node) {
@@ -265,7 +266,8 @@ bool MergeCanonicToPlus(const CanonicMult& lh,
   return true;
 }
 
-bool MergeCanonicToMult(const CanonicMult& lh,
+bool MergeCanonicToMult(HotToken& token,
+                        const CanonicMult& lh,
                         const CanonicMult& rh,
                         std::unique_ptr<INode>* lh_node,
                         std::unique_ptr<INode>* rh_node) {
@@ -289,7 +291,7 @@ bool MergeCanonicToMult(const CanonicMult& lh,
       INodeHelper::MakePow(INodeHelper::MakeMultIfNeeded(std::move(base_nodes)),
                            INodeHelper::MakeConst(2.0));
   std::unique_ptr<INode> new_pow;
-  pow->SimplifyImpl(HotToken::Make(), &new_pow);
+  pow->SimplifyImpl({&token}, &new_pow);
   if (!new_pow)
     new_pow = std::move(pow);
   if (dividend == divider) {
@@ -303,7 +305,8 @@ bool MergeCanonicToMult(const CanonicMult& lh,
   return true;
 }
 
-bool MergeCanonicToPow(CanonicPow lh,
+bool MergeCanonicToPow(HotToken& token,
+                       CanonicPow lh,
                        CanonicPow rh,
                        std::vector<std::unique_ptr<INode>>* top,
                        std::vector<std::unique_ptr<INode>>* bottom) {
