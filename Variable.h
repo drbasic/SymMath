@@ -43,7 +43,11 @@ class Variable : protected INodeImpl {
   const Variable* AsVariable() const override { return this; }
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
-  void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
+
+  void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
 
  private:
   friend class VariableRef;

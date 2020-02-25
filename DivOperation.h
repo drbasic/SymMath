@@ -23,10 +23,13 @@ class DivOperation : public Operation {
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;
   std::optional<CanonicPow> GetCanonicPow() override;
-  void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
-  void SimplifyDivDiv() override;
-  void SimplifyConsts(std::unique_ptr<INode>* new_node) override;
-  void SimplifyTheSame(std::unique_ptr<INode>* new_node) override;
+  void SimplifyUnMinus(HotToken token,
+                       std::unique_ptr<INode>* new_node) override;
+  void SimplifyDivDiv(HotToken token) override;
+  void SimplifyConsts(HotToken token,
+                      std::unique_ptr<INode>* new_node) override;
+  void SimplifyTheSame(HotToken token,
+                       std::unique_ptr<INode>* new_node) override;
   DivOperation* AsDivOperation() override { return this; }
   const DivOperation* AsDivOperation() const override { return this; }
 

@@ -41,6 +41,21 @@ bool Constant::HasFrontMinus() const {
   return name_.empty() && !bool_value_ && value_ < 0;
 }
 
+void Constant::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node)
+{
+  token.Disarm();
+}
+
+void Constant::OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node)
+{
+  token.Disarm();
+}
+
+void Constant::ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node)
+{
+  token.Disarm();
+}
+
 bool Constant::IsEqual(const INode* rh) const {
   const Constant* rh_const = rh->AsNodeImpl()->AsConstant();
   if (!rh_const)

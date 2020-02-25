@@ -29,6 +29,11 @@ class Constant : public INodeImpl {
   Constant* AsConstant() override { return this; }
   const Constant* AsConstant() const override { return this; }
 
+  void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+
   double Value() const { return value_; }
   const std::string& Name() const { return name_; }
 

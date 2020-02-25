@@ -81,6 +81,20 @@ const Operation* Brackets::AsOperation() const {
   return transparent_ ? Value()->AsOperation() : nullptr;
 }
 
+void Brackets::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
+  Value()->SimplifyImpl(std::move(token), new_node);
+}
+
+void Brackets::OpenBracketsImpl(HotToken token,
+                                std::unique_ptr<INode>* new_node) {
+  Value()->OpenBracketsImpl(std::move(token), new_node);
+}
+
+void Brackets::ConvertToComplexImpl(HotToken token,
+                                    std::unique_ptr<INode>* new_node) {
+  Value()->ConvertToComplexImpl(std::move(token), new_node);
+}
+
 INodeImpl* Brackets::Value() {
   return value_ ? value_->AsNodeImpl() : nullptr;
 }

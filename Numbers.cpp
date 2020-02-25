@@ -106,13 +106,15 @@ void EulerEquation() {
     std::wcout << t3.Print(true) << "\n";
     t3.ConvertToComplex();
     t3.OpenBrackets();
-    t3.Simplify();
+    // t3.Simplify();
+    std::wcout << t3.Print(true) << "\n";
 
     Variable t4 = Cos(2 * x);
     std::wcout << t4.Print(true) << "\n";
     t4.ConvertToComplex();
     t4.OpenBrackets();
-    t4.Simplify();
+    // t4.Simplify();
+    std::wcout << t4.Print(true) << "\n";
 
     Variable t34 = t3 == t4;
     std::wcout << t34.Print(true) << "\n";
@@ -123,8 +125,8 @@ int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
-  BacMinusCab();
-  EulerEquation();
+  // BacMinusCab();
+   EulerEquation();
   // return 0;
   auto a = Var("a");
   auto b = Var("b");
@@ -139,11 +141,19 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  /*
-  Variable t3 = (4 * a * b + 8 * b * c) / (64* 3* b * d);
+  Variable t3 = Pow(Cos(x), 2) - Pow(Sin(x), 2);
   t3.ConvertToComplex();
   t3.OpenBrackets();
+  std::wcout << t3.Print(false) << "\n";
+  t3.Simplify();
+  std::wcout << t3.Print(false) << "\n";
+  t3.Simplify();
+  std::wcout << t3.Print(false) << "\n";
+  /*
+   Variable t3 = (4 * a * b + 8 * b * c) / (64* 3* b * d);
+   t3.ConvertToComplex();
+   t3.OpenBrackets();
 
-  std::wcout << t3.Print(true) << "\n";
-  */
+   std::wcout << t3.Print(true) << "\n";
+   */
 }

@@ -18,6 +18,24 @@ enum class ValueType {
   Last = Matrix,
 };
 
+class HotToken {
+ public:
+  ~HotToken();
+  HotToken(HotToken&& rh);
+  static HotToken Make() { return {}; }
+  static HotToken MakeOrMove(HotToken&& rh);
+
+ private:
+  friend class Constant;
+  friend class Imaginary;
+  friend class Operation;
+  friend class Variable;
+  friend class ErrorNode;
+  HotToken() {}
+  void Disarm() { armed_ = false; }
+  bool armed_ = true;
+};
+
 class INodeImpl : public INode {
  public:
   // INode implementation
@@ -48,7 +66,10 @@ class INodeImpl : public INode {
   virtual Operation* AsOperation() { return nullptr; }
   virtual const Operation* AsOperation() const { return nullptr; }
 
-  virtual void SimplifyImpl(std::unique_ptr<INode>* new_node) {}
-  virtual void OpenBracketsImpl(std::unique_ptr<INode>* new_node) {}
-  virtual void ConvertToComplexImpl(std::unique_ptr<INode>* new_node) {}
+  virtual void SimplifyImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) = 0;
+  virtual void OpenBracketsImpl(HotToken token,
+                                std::unique_ptr<INode>* new_node) = 0;
+  virtual void ConvertToComplexImpl(HotToken token,
+                                    std::unique_ptr<INode>* new_node) = 0;
 };

@@ -28,8 +28,9 @@ PrintSize TrigonometricOperation::Render(
 }
 
 void TrigonometricOperation::ConvertToComplexImpl(
+    HotToken token,
     std::unique_ptr<INode>* new_node) {
-  Operation::ConvertToComplexImpl(nullptr);
+  Operation::ConvertToComplexImpl(std::move(token), nullptr);
 
   auto x = Operand(0);
   if (op_info_->op == Op::Sin) {

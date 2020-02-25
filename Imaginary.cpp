@@ -26,3 +26,17 @@ PrintSize Imaginary::Render(Canvas* canvas,
 PrintSize Imaginary::LastPrintSize() const {
   return print_size_;
 }
+
+void Imaginary::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
+  token.Disarm();
+}
+
+void Imaginary::OpenBracketsImpl(HotToken token,
+                                 std::unique_ptr<INode>* new_node) {
+  token.Disarm();
+}
+
+void Imaginary::ConvertToComplexImpl(HotToken token,
+                                     std::unique_ptr<INode>* new_node) {
+  token.Disarm();
+}

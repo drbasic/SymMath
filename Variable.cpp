@@ -111,15 +111,33 @@ std::string Variable::GetName() const {
   return name_;
 }
 
-void Variable::SimplifyImpl(std::unique_ptr<INode>* new_node) {
+void Variable::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
   if (Value())
-    Value()->SimplifyImpl(new_node);
+    Value()->SimplifyImpl(std::move(token), new_node);
+  else
+    token.Disarm();
+}
+
+void Variable::OpenBracketsImpl(HotToken token,
+                                std::unique_ptr<INode>* new_node) {
+  if (Value())
+    Value()->OpenBracketsImpl(std::move(token), new_node);
+  else
+    token.Disarm();
+}
+
+void Variable::ConvertToComplexImpl(HotToken token,
+                                    std::unique_ptr<INode>* new_node) {
+  if (Value())
+    Value()->ConvertToComplexImpl(std::move(token), new_node);
+  else
+    token.Disarm();
 }
 
 void Variable::Simplify() {
   while (true) {
     std::unique_ptr<INode> new_node;
-    SimplifyImpl(&new_node);
+    SimplifyImpl(HotToken::Make(), &new_node);
     if (!new_node)
       return;
     value_ = std::move(new_node);
@@ -130,7 +148,7 @@ void Variable::OpenBrackets() {
   if (!value_)
     return;
   std::unique_ptr<INode> temp_node;
-  value_->AsNodeImpl()->OpenBracketsImpl(&temp_node);
+  value_->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), &temp_node);
   if (temp_node)
     value_ = std::move(temp_node);
 }
@@ -139,7 +157,7 @@ void Variable::ConvertToComplex() {
   if (!value_)
     return;
   std::unique_ptr<INode> temp_node;
-  value_->AsNodeImpl()->ConvertToComplexImpl(&temp_node);
+  value_->AsNodeImpl()->ConvertToComplexImpl(HotToken::Make(), &temp_node);
   if (temp_node)
     value_ = std::move(temp_node);
 }

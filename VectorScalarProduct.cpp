@@ -120,7 +120,7 @@ const MultInfo kMultResult[3][3]{
 std::unique_ptr<INode> DoMult(std::unique_ptr<INode> lh,
                               std::unique_ptr<INode> rh) {
   auto result = INodeHelper::MakeMult(std::move(lh), std::move(rh));
-  result->UnfoldChains();
+  result->UnfoldChains(HotToken::Make());
   return result->SymCalc();
 }
 
@@ -130,7 +130,7 @@ std::unique_ptr<INode> DoMult(std::unique_ptr<INode> lh,
   values.reserve(rh->Size());
   for (size_t i = 0; i < rh->Size(); ++i) {
     auto value = INodeHelper::MakeMult(lh->Clone(), rh->TakeValue(i));
-    value->UnfoldChains();
+    value->UnfoldChains(HotToken::Make());
     values.push_back(value->SymCalc());
   }
   return INodeHelper::MakeVector(std::move(values));
@@ -148,7 +148,7 @@ std::unique_ptr<INode> DoMult(std::unique_ptr<Vector> lh,
   values.reserve(rh->Size());
   for (size_t i = 0; i < rh->Size(); ++i) {
     auto value = INodeHelper::MakeMult(lh->TakeValue(i), rh->TakeValue(i));
-    value->UnfoldChains();
+    value->UnfoldChains(HotToken::Make());
     values.push_back(value->SymCalc());
   }
   return INodeHelper::MakePlus(std::move(values))->SymCalc();

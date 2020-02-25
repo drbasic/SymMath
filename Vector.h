@@ -31,9 +31,9 @@ class Vector : public INodeImpl {
   bool CheckCircular(const INodeImpl* other) const override;
   Vector* AsVector() override { return this; }
   const Vector* AsVector() const override { return this; }
-  void SimplifyImpl(std::unique_ptr<INode>* new_node) override;
-  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
-  void ConvertToComplexImpl(std::unique_ptr<INode>* new_node) override;
+  void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
 
   size_t Size() const { return values_.size(); }
   std::unique_ptr<INode> TakeValue(size_t indx);

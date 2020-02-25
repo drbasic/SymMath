@@ -60,8 +60,9 @@ ValueType UnMinusOperation::GetValueType() const {
   return Operand(0)->GetValueType();
 }
 
-void UnMinusOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
-  Operation::OpenBracketsImpl(nullptr);
+void UnMinusOperation::OpenBracketsImpl(HotToken token,
+                                        std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(std::move(token), nullptr);
 
   auto* as_plus = INodeHelper::AsPlus(Operand(0));
   if (!as_plus)
@@ -73,7 +74,7 @@ void UnMinusOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   }
 
   auto temp_node = INodeHelper::MakePlus(std::move(new_operands));
-  temp_node->OpenBracketsImpl(new_node);
+  temp_node->OpenBracketsImpl(HotToken::Make(), new_node);
   if (!*new_node)
     *new_node = std::move(temp_node);
 }
@@ -84,8 +85,9 @@ std::optional<CanonicMult> UnMinusOperation::GetCanonicMult() {
   return result;
 }
 
-void UnMinusOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyUnMinus(nullptr);
+void UnMinusOperation::SimplifyUnMinus(HotToken token,
+                                       std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyUnMinus(std::move(token), nullptr);
 
   if (Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get())) {
     *new_node = sub_un_minus->TakeOperand(0);
@@ -97,9 +99,9 @@ void UnMinusOperation::SimplifyUnMinus(std::unique_ptr<INode>* new_node) {
       if (auto* as_const = INodeHelper::AsConstant(sub_mult->Operand(i))) {
         if (!as_const->Name().empty())
           continue;
-       sub_mult->SetOperand(i, INodeHelper::MakeConst(- as_const->Value()));
-       *new_node = TakeOperand(0);
-       return;
+        sub_mult->SetOperand(i, INodeHelper::MakeConst(-as_const->Value()));
+        *new_node = TakeOperand(0);
+        return;
       }
     }
   }

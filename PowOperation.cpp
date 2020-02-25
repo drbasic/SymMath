@@ -82,8 +82,9 @@ PrintSize PowOperation::Render(Canvas* canvas,
   return print_size_ = total_size;
 }
 
-void PowOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
-  Operation::OpenBracketsImpl(nullptr);
+void PowOperation::OpenBracketsImpl(HotToken token,
+                                    std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(std::move(token), nullptr);
 
   auto* as_const = INodeHelper::AsConstant(Exp());
   if (!as_const || as_const->Value() > kMaxPowUnfold)
@@ -107,7 +108,7 @@ void PowOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   std::unique_ptr<INode> new_temp_node;
   {
     auto temp_node = INodeHelper::MakeMultIfNeeded(std::move(operands_));
-    temp_node->AsNodeImpl()->OpenBracketsImpl(&new_temp_node);
+    temp_node->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), &new_temp_node);
     if (!new_temp_node)
       new_temp_node = std::move(temp_node);
     if (negative_exp)
@@ -126,8 +127,9 @@ std::optional<CanonicPow> PowOperation::GetCanonicPow() {
   return result;
 }
 
-void PowOperation::SimplifyChains(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyChains(nullptr);
+void PowOperation::SimplifyChains(HotToken token,
+                                  std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyChains(std::move(token), nullptr);
 
   SimplifyExp(new_node);
 }

@@ -54,12 +54,17 @@ class IOperation : public INodeImpl {
   virtual LogOperation* AsLogOperation() { return nullptr; }
   virtual const LogOperation* AsLogOperation() const { return nullptr; }
 
-  virtual void UnfoldChains() = 0;
-  virtual void SimplifyUnMinus(std::unique_ptr<INode>* new_node) = 0;
-  virtual void SimplifyChains(std::unique_ptr<INode>* new_node) = 0;
-  virtual void SimplifyDivDiv() = 0;
-  virtual void SimplifyDivMul(std::unique_ptr<INode>* new_node) = 0;
-  virtual void SimplifyConsts(std::unique_ptr<INode>* new_node) = 0;
-  virtual void SimplifyTheSame(std::unique_ptr<INode>* new_node) = 0;
+  virtual void UnfoldChains(HotToken token) = 0;
+  virtual void SimplifyUnMinus(HotToken token,
+                               std::unique_ptr<INode>* new_node) = 0;
+  virtual void SimplifyChains(HotToken token,
+                              std::unique_ptr<INode>* new_node) = 0;
+  virtual void SimplifyDivDiv(HotToken token) = 0;
+  virtual void SimplifyDivMul(HotToken token,
+                              std::unique_ptr<INode>* new_node) = 0;
+  virtual void SimplifyConsts(HotToken token,
+                              std::unique_ptr<INode>* new_node) = 0;
+  virtual void SimplifyTheSame(HotToken token,
+                               std::unique_ptr<INode>* new_node) = 0;
   virtual void OrderOperands() = 0;
 };

@@ -44,6 +44,11 @@ class Brackets : public INodeImpl {
   Operation* AsOperation() override;
   const Operation* AsOperation() const override;
 
+  void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+
   INodeImpl* Value();
   const INodeImpl* Value() const;
 

@@ -289,7 +289,7 @@ bool MergeCanonicToMult(const CanonicMult& lh,
       INodeHelper::MakePow(INodeHelper::MakeMultIfNeeded(std::move(base_nodes)),
                            INodeHelper::MakeConst(2.0));
   std::unique_ptr<INode> new_pow;
-  pow->SimplifyImpl(&new_pow);
+  pow->SimplifyImpl(HotToken::Make(), &new_pow);
   if (!new_pow)
     new_pow = std::move(pow);
   if (dividend == divider) {

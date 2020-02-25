@@ -25,7 +25,7 @@ class LogOperation : public Operation {
   // IOperation implementation
   LogOperation* AsLogOperation() override { return this; }
   const LogOperation* AsLogOperation() const override { return this; }
-  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
 
   INodeImpl* Base() { return Operand(BaseIndex); }
   const INodeImpl* Base() const { return Operand(BaseIndex); }

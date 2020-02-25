@@ -38,8 +38,8 @@ bool PlusOperation::HasFrontMinus() const {
   return false;
 }
 
-void PlusOperation::UnfoldChains() {
-  Operation::UnfoldChains();
+void PlusOperation::UnfoldChains(HotToken token) {
+  Operation::UnfoldChains(std::move(token));
 
   std::vector<std::unique_ptr<INode>> new_nodes;
   ExctractNodesWithOp(Op::Plus, &operands_, &new_nodes);
@@ -47,8 +47,9 @@ void PlusOperation::UnfoldChains() {
   CheckIntegrity();
 }
 
-void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyConsts(new_node);
+void PlusOperation::SimplifyConsts(HotToken token,
+                                   std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyConsts(std::move(token), new_node);
   if (*new_node)
     return;
 
@@ -87,8 +88,9 @@ void PlusOperation::SimplifyConsts(std::unique_ptr<INode>* new_node) {
   }
 }
 
-void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyTheSame(nullptr);
+void PlusOperation::SimplifyTheSame(HotToken token,
+                                    std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyTheSame(std::move(token), nullptr);
 
   bool need_try = true;
   while (need_try) {
@@ -122,7 +124,7 @@ void PlusOperation::SimplifyTheSame(std::unique_ptr<INode>* new_node) {
     INodeHelper::RemoveEmptyOperands(&operands_);
     if (operands_.empty())
       break;
-    SimplifyConsts(new_node);
+    SimplifyConsts(HotToken::Make(), new_node);
     if (*new_node)
       return;
   }
@@ -143,8 +145,9 @@ void PlusOperation::OrderOperands() {
   ReorderOperands(&operands_, false);
 }
 
-void PlusOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
-  Operation::OpenBracketsImpl(nullptr);
+void PlusOperation::OpenBracketsImpl(HotToken token,
+                                     std::unique_ptr<INode>* new_node) {
+  Operation::OpenBracketsImpl(std::move(token), nullptr);
 
   if (!INodeHelper::HasAnyOperation(Op::Div, operands_))
     return;
@@ -183,7 +186,7 @@ void PlusOperation::OpenBracketsImpl(std::unique_ptr<INode>* new_node) {
   std::unique_ptr<INode> new_div = INodeHelper::MakeDiv(
       INodeHelper::MakePlusIfNeeded(std::move(new_dividents)),
       INodeHelper::MakeMultIfNeeded(std::move(new_dividerss)));
-  new_div->AsNodeImpl()->OpenBracketsImpl(new_node);
+  new_div->AsNodeImpl()->OpenBracketsImpl(HotToken::Make(), new_node);
   if (!*new_node)
     *new_node = std::move(new_div);
 }

@@ -22,10 +22,15 @@ class Imaginary : public INodeImpl {
                    RenderBehaviour render_behaviour) const override;
   PrintSize LastPrintSize() const override;
   int Priority() const override { return 100; }
-  bool HasFrontMinus() const override {return false;}
+  bool HasFrontMinus() const override { return false; }
   bool CheckCircular(const INodeImpl* other) const override { return false; }
   Imaginary* AsImaginary() override { return this; }
   const Imaginary* AsImaginary() const override { return this; }
+
+  void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
 
  private:
   mutable PrintSize print_size_;

@@ -16,11 +16,11 @@ class UnMinusOperation : public Operation {
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override;
   ValueType GetValueType() const override;
-  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override;
-  void SimplifyUnMinus(std::unique_ptr<INode>* new_node) override;
+  void SimplifyUnMinus(HotToken token, std::unique_ptr<INode>* new_node) override;
   UnMinusOperation* AsUnMinusOperation() override { return this; }
   const UnMinusOperation* AsUnMinusOperation() const override { return this; }
 };

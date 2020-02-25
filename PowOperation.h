@@ -22,13 +22,13 @@ class PowOperation : public Operation {
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override { return false; }
-  void OpenBracketsImpl(std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicPow> GetCanonicPow() override;
   PowOperation* AsPowOperation() override { return this; }
   const PowOperation* AsPowOperation() const override { return this; }
-  void SimplifyChains(std::unique_ptr<INode>* new_node) override;
+  void SimplifyChains(HotToken token, std::unique_ptr<INode>* new_node) override;
 
   INodeImpl* Base();
   const INodeImpl* Base() const;

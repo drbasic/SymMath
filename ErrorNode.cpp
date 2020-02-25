@@ -22,6 +22,20 @@ PrintSize ErrorNode::LastPrintSize() const {
   return print_size_;
 }
 
+void ErrorNode::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
+  token.Disarm();
+}
+
+void ErrorNode::OpenBracketsImpl(HotToken token,
+                                 std::unique_ptr<INode>* new_node) {
+  token.Disarm();
+}
+
+void ErrorNode::ConvertToComplexImpl(HotToken token,
+                                     std::unique_ptr<INode>* new_node) {
+  token.Disarm();
+}
+
 bool ErrorNode::IsEqual(const INode* rh) const {
   const ErrorNode* rh_error = rh->AsNodeImpl()->AsError();
   return rh_error && (error_ == rh_error->error_);

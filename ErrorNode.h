@@ -22,6 +22,11 @@ class ErrorNode : public INodeImpl {
   bool HasFrontMinus() const override { return false; }
   bool CheckCircular(const INodeImpl* other) const override { return false; }
 
+  void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+
  protected:
  private:
   mutable PrintSize print_size_;

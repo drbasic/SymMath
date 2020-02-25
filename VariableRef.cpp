@@ -73,6 +73,17 @@ const Operation* VariableRef::AsOperation() const {
   return var_->AsOperation();
 }
 
-void VariableRef::SimplifyImpl(std::unique_ptr<INode>* new_node) {
-  const_cast<Variable*>(var_)->SimplifyImpl(new_node);
+void VariableRef::SimplifyImpl(HotToken token,
+                               std::unique_ptr<INode>* new_node) {
+  const_cast<Variable*>(var_)->SimplifyImpl(std::move(token), new_node);
+}
+
+void VariableRef::OpenBracketsImpl(HotToken token,
+                                   std::unique_ptr<INode>* new_node) {
+  const_cast<Variable*>(var_)->OpenBracketsImpl(std::move(token), new_node);
+}
+
+void VariableRef::ConvertToComplexImpl(HotToken token,
+                                       std::unique_ptr<INode>* new_node) {
+  const_cast<Variable*>(var_)->ConvertToComplexImpl(std::move(token), new_node);
 }
