@@ -40,11 +40,14 @@ PrintSize PowOperation::Render(Canvas* canvas,
                                bool dry_run,
                                RenderBehaviour render_behaviour) const {
   auto base_render_behaviour = render_behaviour;
-  if (Base()->Priority() < Priority())
+  render_behaviour.TakeMinus();
+  auto* is_base_pow = INodeHelper::AsPow(Base());
+  auto* is_exp_pow = INodeHelper::AsPow(Exp());
+  if (Base()->Priority() < Priority() || is_base_pow)
     base_render_behaviour.SetBrackets(BracketsBehaviour::Force);
   auto exp_render_behaviour = render_behaviour;
-  exp_render_behaviour.TakeMinus();
-  exp_render_behaviour.SetBrackets(BracketsBehaviour::Ommit);
+  exp_render_behaviour.SetBrackets(is_exp_pow ? BracketsBehaviour::Force
+                                              : BracketsBehaviour::Ommit);
   exp_render_behaviour.SetSubSuper(SubSuperBehaviour::Superscript);
 
   base_print_size_ = dry_run
