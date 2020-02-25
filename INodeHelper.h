@@ -36,6 +36,8 @@ class INodeHelper {
   static bool IsUnMinus(const INode* lh);
   static Constant* AsConstant(INode* lh);
   static const Constant* AsConstant(const INode* lh);
+  static Imaginary* AsImaginary(INode* lh);
+  static const Imaginary* AsImaginary(const INode* lh);
   static Operation* AsOperation(INode* lh);
   static const Operation* AsOperation(const INode* lh);
   static UnMinusOperation* AsUnMinus(INode* lh);
@@ -123,6 +125,7 @@ class INodeHelper {
                                             std::unique_ptr<INode> c);
   static std::unique_ptr<Vector> MakeVector(
       std::vector<std::unique_ptr<INode>> values);
-  static std::unique_ptr<DiffOperation> MakeDiff(std::unique_ptr<INode> lh,
-                                                 const Variable& var);
+  static std::unique_ptr<DiffOperation> MakeDiff(
+      std::unique_ptr<INode> lh,
+      std::unique_ptr<VariableRef> var_ref);
 };

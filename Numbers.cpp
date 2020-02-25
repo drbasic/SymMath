@@ -78,14 +78,14 @@ void BacMinusCab() {
 
 void EulerEquation() {
   auto x = Var("x");
-  if (false){
+  {
     Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
     std::wcout << t.Print(true) << "\n";
     t.ConvertToComplex();
     t.OpenBrackets();
     std::wcout << t.Print(true) << "\n";
   }
-  if (false){
+  {
     Variable t1 = 2 * Sin(x) * Cos(x);
     t1.ConvertToComplex();
     t1.OpenBrackets();
@@ -113,6 +113,14 @@ void EulerEquation() {
     Variable t34 = t3 == t4;
     std::wcout << t34.Print(true) << "\n";
   }
+  {
+    Variable t = Diff(Sin(x), x);
+    t.ConvertToComplex();
+    Variable dt = Cos(x);
+    dt.ConvertToComplex();
+    Variable cmp = t == dt;
+    std::wcout << cmp.Print(true) << "\n";
+  }
 }
 
 int main() {
@@ -120,8 +128,8 @@ int main() {
   // Tests::Run();
 
   // BacMinusCab();
-  EulerEquation();
-   return 0;
+  //EulerEquation();
+  //return 0;
   auto a = Var("a");
   auto b = Var("b");
   auto c = Var("c");
@@ -134,20 +142,7 @@ int main() {
   auto v3 = Var("v3");
   auto pi = Var("PI");
   pi = 3.1415926;
-  /*
-  Variable t3 = Pow(Cos(x), 2) - Pow(Sin(x), 2);
-  t3.ConvertToComplex();
-  t3.OpenBrackets();
-  std::wcout << t3.Print(false) << "\n";
-  t3.Simplify();
-  std::wcout << t3.Print(false) << "\n";
-  t3.Simplify();
-  std::wcout << t3.Print(false) << "\n";
 
-   Variable t3 = (4 * a * b + 8 * b * c) / (64* 3* b * d);
-   t3.ConvertToComplex();
-   t3.OpenBrackets();
-
-   std::wcout << t3.Print(true) << "\n";
-   */
+  Variable t = Diff((Sin(x)) ^ 10, x);
+  std::wcout << t.Print(true) << "\n";
 }

@@ -24,6 +24,8 @@ Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 Variable::Variable(std::string name, std::unique_ptr<INode> value)
     : name_(std::move(name)), value_(std::move(value)) {}
 
+Variable::~Variable() {}
+
 std::wstring Variable::Print(bool with_calc, size_t base_line) const {
   RenderBehaviour render_behaviour;
 

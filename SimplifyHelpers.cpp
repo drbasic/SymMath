@@ -455,6 +455,15 @@ void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
     };
     std::stable_sort(operands->begin(), operands->end(), const_to_front);
   }
+  {
+    auto i_to_back = [](const std::unique_ptr<INode>& lh,
+                        const std::unique_ptr<INode>& rh) {
+      auto lh_as_i = INodeHelper::AsImaginary(lh.get());
+      auto rh_as_i = INodeHelper::AsImaginary(rh.get());
+      return lh_as_i < rh_as_i;
+    };
+    std::stable_sort(operands->begin(), operands->end(), i_to_back);
+  }
 }
 
 std::vector<std::unique_ptr<INode>> ExtractMultipliers(const INode* node) {

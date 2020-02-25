@@ -43,6 +43,7 @@ PrintSize PowOperation::Render(Canvas* canvas,
   if (Base()->Priority() < Priority())
     base_render_behaviour.SetBrackets(BracketsBehaviour::Force);
   auto exp_render_behaviour = render_behaviour;
+  exp_render_behaviour.TakeMinus();
   exp_render_behaviour.SetBrackets(BracketsBehaviour::Ommit);
   exp_render_behaviour.SetSubSuper(SubSuperBehaviour::Superscript);
 

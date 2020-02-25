@@ -40,6 +40,16 @@ const Constant* INodeHelper::AsConstant(const INode* lh) {
 }
 
 // static
+Imaginary* INodeHelper::AsImaginary(INode* lh) {
+  return lh->AsNodeImpl()->AsImaginary();
+}
+
+// static
+const Imaginary* INodeHelper::AsImaginary(const INode* lh) {
+  return lh->AsNodeImpl()->AsImaginary();
+}
+
+// static
 Operation* INodeHelper::AsOperation(INode* lh) {
   return lh->AsNodeImpl()->AsOperation();
 }
@@ -269,7 +279,7 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
       return MakeCompare(op, MakeError(), MakeError());
       break;
     case Op::Diff:
-      return MakeDiff(MakeError(), kErrorVar);
+      return MakeDiff(MakeError(), std::make_unique<VariableRef>(&kErrorVar));
       break;
   }
   assert(false);
@@ -354,7 +364,8 @@ std::unique_ptr<PlusOperation> INodeHelper::MakePlus(
 // static
 std::unique_ptr<INode> INodeHelper::MakePlusIfNeeded(
     std::vector<std::unique_ptr<INode>> nodes) {
-  assert(nodes.size() > 0);
+  if (nodes.size() == 0)
+    return Const(0.0);
   if (nodes.size() == 1)
     return std::move(nodes[0]);
 
@@ -497,8 +508,8 @@ std::unique_ptr<Vector> INodeHelper::MakeVector(
   return std::make_unique<Vector>(std::move(values));
 }
 
-std::unique_ptr<DiffOperation> INodeHelper::MakeDiff(std::unique_ptr<INode> lh,
-                                                     const Variable& var) {
-  return std::make_unique<DiffOperation>(std::move(lh),
-                                         std::make_unique<VariableRef>(&var));
+std::unique_ptr<DiffOperation> INodeHelper::MakeDiff(
+    std::unique_ptr<INode> lh,
+    std::unique_ptr<VariableRef> var_ref) {
+  return std::make_unique<DiffOperation>(std::move(lh), std::move(var_ref));
 }

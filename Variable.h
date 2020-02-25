@@ -8,6 +8,7 @@ class Variable : protected INodeImpl {
   Variable(std::string name);
   Variable(std::unique_ptr<INode> value);
   Variable(std::string name, std::unique_ptr<INode> value);
+  ~Variable()override;
 
   std::wstring Print(bool with_calc = false, size_t base_line = 0) const;
   void Simplify();

@@ -117,8 +117,8 @@ std::unique_ptr<INode> DoDiffDivOperation(const Operation* operation,
   auto f = operation->Operand(0);
   auto g = operation->Operand(1);
 
-  return (DoDiffNode(f, by_var) * g->Clone() -
-          f->Clone() * DoDiffNode(g, by_var)) /
+  return (INodeHelper::MakeMultIfNeeded(DoDiffNode(f, by_var), g->Clone()) -
+          INodeHelper::MakeMultIfNeeded(f->Clone(), DoDiffNode(g, by_var))) /
          Pow(g->Clone(), 2);
 }
 
@@ -145,11 +145,11 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
 
   if (derivative_f->IsEqual(Constants::Zero())) {
     // 10^x = 10^x * log(10);
-    return operation->Clone() * Log(f->Clone());
+    return std::move(derivative_g) * operation->Clone() * Log(f->Clone());
   }
   if (derivative_g->IsEqual(Constants::Zero())) {
     // x ^ a = a *( x ^ (a-1))
-    return g->Clone() * Pow(f->Clone(), g->Clone() - 1.0);
+    return std::move(derivative_f) * g->Clone() * Pow(f->Clone(), g->Clone() - 1.0);
   }
 
   // (f(x)^g(x))' = f(x) ^ (g(x)-1) * (g(x)*f'(x) + f(x)*log(f(x)*g'(x)))
@@ -165,7 +165,8 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
         INodeHelper::MakeLogIfNeeded(Constants::E()->Clone(), f->Clone()) *
         std::move(derivative_g));
   }
-  return std::move(a) * (INodeHelper::MakePlusIfNeeded(std::move(b)));
+  return INodeHelper::MakeMultIfNeeded(
+      std::move(a), (INodeHelper::MakePlusIfNeeded(std::move(b))));
 }
 
 std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
@@ -202,7 +203,9 @@ DiffOperation::DiffOperation(std::unique_ptr<INode> lh,
     : Operation(GetOpInfo(Op::Diff), std::move(lh), std::move(rh)) {}
 
 std::unique_ptr<INode> DiffOperation::Clone() const {
-  return INodeHelper::MakeDiff(Operand(0)->Clone(), Operand(1)->Clone());
+  auto lh = Operand(0)->Clone();
+  auto rh = std::make_unique<VariableRef>(Operand(1)->AsVariable());
+  return INodeHelper::MakeDiff(std::move(lh), std::move(rh));
 }
 
 PrintSize DiffOperation::Render(Canvas* canvas,

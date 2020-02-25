@@ -204,7 +204,8 @@ std::unique_ptr<INode> VectorMult(std::unique_ptr<INode> lh,
 }
 
 std::unique_ptr<INode> Diff(std::unique_ptr<INode> lh, const Variable& var) {
-  return INodeHelper::MakeDiff(std::move(lh), var);
+  return INodeHelper::MakeDiff(std::move(lh),
+                               std::make_unique<VariableRef>(&var));
 }
 
 //=============================================================================

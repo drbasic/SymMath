@@ -1,8 +1,12 @@
 #include "VariableRef.h"
 
+#include <cassert>
+
 #include "Variable.h"
 
-VariableRef::VariableRef(const Variable* var) : var_(var) {}
+VariableRef::VariableRef(const Variable* var) : var_(var) {
+  assert(var_);
+}
 
 int VariableRef::Priority() const {
   return var_->Priority();
