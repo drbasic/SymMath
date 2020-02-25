@@ -2,7 +2,7 @@
 
 ErrorNode::ErrorNode(std::string error) : error_(error) {}
 
-std::unique_ptr<INode> ErrorNode::SymCalc() const {
+std::unique_ptr<INode> ErrorNode::SymCalc(SymCalcSettings settings) const {
   return std::make_unique<ErrorNode>(error_);
 }
 

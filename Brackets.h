@@ -26,7 +26,7 @@ class Brackets : public INodeImpl {
   // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl implementation
   PrintSize Render(Canvas* canvas,
@@ -47,7 +47,8 @@ class Brackets : public INodeImpl {
   void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
-  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) override;
 
   INodeImpl* Value();
   const INodeImpl* Value() const;

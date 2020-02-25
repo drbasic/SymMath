@@ -47,11 +47,11 @@ std::unique_ptr<INode> Vector::Clone() const {
   return result;
 }
 
-std::unique_ptr<INode> Vector::SymCalc() const {
+std::unique_ptr<INode> Vector::SymCalc(SymCalcSettings settings) const {
   auto result = std::make_unique<Vector>();
   result->values_.reserve(values_.size());
   for (const auto& val : values_)
-    result->values_.push_back(val->SymCalc());
+    result->values_.push_back(val->SymCalc(settings));
   return result;
 }
 

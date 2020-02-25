@@ -10,7 +10,7 @@ class VariableRef : public INodeImpl {
   // INode interface
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
   PrintSize Render(Canvas* canvas,
@@ -34,7 +34,8 @@ class VariableRef : public INodeImpl {
   void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
-  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) override;
 
  private:
   const Variable* var_ = nullptr;

@@ -10,12 +10,12 @@ class Constant : public INodeImpl {
  public:
   explicit Constant(double val);
   explicit Constant(bool val);
-  Constant(double val, std::string name);
+  Constant(double val, std::wstring name);
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
   PrintSize Render(Canvas* canvas,
@@ -32,14 +32,16 @@ class Constant : public INodeImpl {
   void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
-  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) override;
 
   double Value() const { return value_; }
-  const std::string& Name() const { return name_; }
+  const std::wstring& Name() const { return name_; }
+  bool IsNamed() const { return !name_.empty(); }
 
  private:
   mutable PrintSize print_size_;
   std::optional<bool> bool_value_;
   double value_ = 0;
-  std::string name_;
+  std::wstring name_;
 };

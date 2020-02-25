@@ -28,8 +28,8 @@ PrintSize Brackets::RenderBrackets(const INodeImpl* node,
   return result;
 }
 
-std::unique_ptr<INode> Brackets::SymCalc() const {
-  return value_->SymCalc();
+std::unique_ptr<INode> Brackets::SymCalc(SymCalcSettings settings) const {
+  return value_->SymCalc(settings);
 }
 
 bool Brackets::IsEqual(const INode* rh) const {

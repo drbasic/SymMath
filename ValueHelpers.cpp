@@ -1,4 +1,4 @@
-#include "ValueHelpers.h"
+﻿#include "ValueHelpers.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -30,17 +30,20 @@ const Constant* Zero() {
 }
 
 const Constant* E() {
-  static const auto kE = INodeHelper::MakeConst(M_E, "e");
+  static const auto kE = MakeE();
   return kE.get();
 }
 
 std::unique_ptr<Constant> MakeE() {
-  return INodeHelper::MakeConst(M_E, "e");
+  return INodeHelper::MakeConst(M_E, L"e");
 }
 
 const Constant* PI() {
-  static const auto kPi = INodeHelper::MakeConst(M_PI, "Pi");
+  static const auto kPi = MakePI();
   return kPi.get();
+}
+std::unique_ptr<Constant> MakePI() {
+  return INodeHelper::MakeConst(M_PI, L"π");
 }
 
 const Imaginary* Imag() {
@@ -62,7 +65,7 @@ std::unique_ptr<INode> Const(double val) {
   return INodeHelper::MakeConst(val);
 }
 
-std::unique_ptr<INode> Const(double val, std::string name) {
+std::unique_ptr<INode> Const(double val, std::wstring name) {
   return INodeHelper::MakeConst(val, std::move(name));
 }
 

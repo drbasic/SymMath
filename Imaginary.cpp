@@ -11,7 +11,7 @@ std::unique_ptr<INode> Imaginary::Clone() const {
   return std::make_unique<Imaginary>();
 }
 
-std::unique_ptr<INode> Imaginary::SymCalc() const {
+std::unique_ptr<INode> Imaginary::SymCalc(SymCalcSettings settings) const {
   return std::make_unique<Imaginary>();
 }
 

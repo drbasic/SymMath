@@ -73,7 +73,7 @@ class INodeHelper {
   static std::unique_ptr<INode> MakeError();
   static std::unique_ptr<INode> MakeError(std::string err);
   static std::unique_ptr<Constant> MakeConst(double value);
-  static std::unique_ptr<Constant> MakeConst(double value, std::string name);
+  static std::unique_ptr<Constant> MakeConst(double value, std::wstring name);
   static std::unique_ptr<Constant> MakeConst(bool value);
   static std::unique_ptr<Imaginary> MakeImaginary();
   static std::unique_ptr<UnMinusOperation> MakeUnMinus(

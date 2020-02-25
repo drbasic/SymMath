@@ -300,7 +300,7 @@ std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
 }
 
 std::unique_ptr<Constant> INodeHelper::MakeConst(double value,
-                                                 std::string name) {
+                                                 std::wstring name) {
   return std::make_unique<Constant>(std::move(value), std::move(name));
 }
 

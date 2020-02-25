@@ -6,7 +6,7 @@ Constant::Constant(double val) : value_(val) {}
 
 Constant::Constant(bool val) : bool_value_(val), value_(val ? 1.0 : 0.0) {}
 
-Constant::Constant(double val, std::string name)
+Constant::Constant(double val, std::wstring name)
     : value_(val), name_(std::move(name)) {}
 
 PrintSize Constant::Render(Canvas* canvas,
@@ -16,7 +16,7 @@ PrintSize Constant::Render(Canvas* canvas,
   bool has_front_minus = HasFrontMinus();
   auto minus_behaviour = render_behaviour.TakeMinus();
 
-  std::stringstream ss;
+  std::wstringstream ss;
   if (!bool_value_ && name_.empty()) {
     double for_print =
         ((has_front_minus && minus_behaviour == MinusBehaviour::Ommit) ||
@@ -27,7 +27,7 @@ PrintSize Constant::Render(Canvas* canvas,
   } else if (!name_.empty()) {
     ss << name_;
   } else {
-    ss << ((*bool_value_) ? "true" : "false");
+    ss << ((*bool_value_) ? L"True" : L"False");
   }
   return print_size_ = canvas->PrintAt(print_box, ss.str(),
                                        render_behaviour.GetSubSuper(), dry_run);
@@ -41,18 +41,17 @@ bool Constant::HasFrontMinus() const {
   return name_.empty() && !bool_value_ && value_ < 0;
 }
 
-void Constant::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node)
-{
+void Constant::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {
   token.Disarm();
 }
 
-void Constant::OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node)
-{
+void Constant::OpenBracketsImpl(HotToken token,
+                                std::unique_ptr<INode>* new_node) {
   token.Disarm();
 }
 
-void Constant::ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node)
-{
+void Constant::ConvertToComplexImpl(HotToken token,
+                                    std::unique_ptr<INode>* new_node) {
   token.Disarm();
 }
 
@@ -67,7 +66,7 @@ bool Constant::IsEqual(const INode* rh) const {
   return Value() == rh_const->Value();
 }
 
-std::unique_ptr<INode> Constant::SymCalc() const {
+std::unique_ptr<INode> Constant::SymCalc(SymCalcSettings settings) const {
   return Clone();
 }
 

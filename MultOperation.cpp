@@ -95,8 +95,8 @@ void MultOperation::OpenBracketsImpl(HotToken token,
 std::optional<CanonicMult> MultOperation::GetCanonicMult() {
   CanonicMult result;
   for (auto& op : operands_) {
-    Constant* constant = op->AsNodeImpl()->AsConstant();
-    if (constant)
+    Constant* constant = INodeHelper::AsConstant(op.get());
+    if (constant && !constant->IsNamed())
       result.a = op_info_->trivial_f(result.a, constant->Value());
     else
       result.nodes.push_back(&op);
@@ -230,6 +230,8 @@ void MultOperation::SimplifyConsts(HotToken token,
   for (auto& node : operands_) {
     Constant* constant = INodeHelper::AsConstant(node.get());
     if (!constant)
+      continue;
+    if (constant->IsNamed())
       continue;
     // x * 0.0
     if (constant->Value() == 0.0) {

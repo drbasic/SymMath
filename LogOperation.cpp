@@ -33,6 +33,8 @@ PrintSize LogOperation::Render(Canvas* canvas,
                                PrintBox print_box,
                                bool dry_run,
                                RenderBehaviour render_behaviour) const {
+  render_behaviour.TakeMinus();
+  render_behaviour.TakeBrackets();
   // Render "log".
   auto log_size = canvas->PrintAt(print_box, op_info_->name,
                                   render_behaviour.GetSubSuper(), dry_run);

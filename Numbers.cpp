@@ -143,12 +143,7 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  Variable t1 = Pow(a, Pow(b, c));
-  Variable t2 = Pow(Pow(a, b), c);
-  Variable t3 = Pow(a, Pow(b, Pow(c, d)));
-  Variable t4 = Pow(Pow(Pow(a, b), c), d);
+  Variable t1 = 10 * Constants::MakeE() * 5 * Constants::MakePI() *
+                Constants::MakePI() / Constants::MakePI();
   std::wcout << t1.Print(true) << "\n";
-  std::wcout << t2.Print(true) << "\n";
-  std::wcout << t3.Print(true) << "\n";
-  std::wcout << t4.Print(true) << "\n";
 }

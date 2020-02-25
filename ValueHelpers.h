@@ -13,6 +13,7 @@ namespace Constants {
   const Constant* E();
   std::unique_ptr<Constant> MakeE();
   const Constant* PI();
+  std::unique_ptr<Constant> MakePI();
   const Imaginary* Imag();
 }
 

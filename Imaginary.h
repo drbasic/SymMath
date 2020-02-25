@@ -13,7 +13,7 @@ class Imaginary : public INodeImpl {
   // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
   PrintSize Render(Canvas* canvas,

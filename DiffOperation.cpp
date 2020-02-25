@@ -149,11 +149,14 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
   }
   if (derivative_g->IsEqual(Constants::Zero())) {
     // x ^ a = a *( x ^ (a-1))
-    return std::move(derivative_f) * g->Clone() * Pow(f->Clone(), g->Clone() - 1.0);
+    return std::move(derivative_f) * g->Clone() *
+           Pow(f->Clone(), g->Clone() - 1.0);
   }
 
   // (f(x)^g(x))' = f(x) ^ (g(x)-1) * (g(x)*f'(x) + f(x)*log(f(x)*g'(x)))
-  auto a = Pow(f->Clone(), (g->Clone() - 1.0)->SymCalc());
+  auto a =
+      Pow(f->Clone(),
+          (g->Clone() - 1.0)->SymCalc(SymCalcSettings::KeepNamedConstants));
 
   std::vector<std::unique_ptr<INode>> b;
   b.push_back(

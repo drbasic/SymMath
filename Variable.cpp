@@ -38,7 +38,7 @@ std::wstring Variable::Print(bool with_calc, size_t base_line) const {
 
   Variable calculated_value = Const(0);
   if (with_calc) {
-    calculated_value = SymCalc();
+    calculated_value = SymCalc(SymCalcSettings::KeepNamedConstants);
     calculated_value.OpenBrackets();
     calculated_value.Simplify();
 
@@ -192,10 +192,10 @@ void Variable::operator=(double val) {
   value_ = Const(val);
 }
 
-std::unique_ptr<INode> Variable::SymCalc() const {
+std::unique_ptr<INode> Variable::SymCalc(SymCalcSettings settings) const {
   if (!value_)
     return std::make_unique<VariableRef>(this);
-  return value_->SymCalc();
+  return value_->SymCalc(settings);
 }
 
 std::unique_ptr<INode> Variable::Clone() const {

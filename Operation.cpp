@@ -67,11 +67,12 @@ void ApplySimplifications(HotToken token,
 }
 
 std::vector<std::unique_ptr<INode>> CalcOperands(
+    SymCalcSettings settings,
     const std::vector<std::unique_ptr<INode>>& operands) {
   std::vector<std::unique_ptr<INode>> result;
   result.reserve(operands.size());
   for (const auto& operand : operands) {
-    result.push_back(operand->SymCalc());
+    result.push_back(operand->SymCalc(settings));
   }
   return result;
 }
@@ -104,9 +105,9 @@ int Operation::Priority() const {
   return op_info_->priority;
 }
 
-std::unique_ptr<INode> Operation::SymCalc() const {
+std::unique_ptr<INode> Operation::SymCalc(SymCalcSettings settings) const {
   std::vector<std::unique_ptr<INode>> calculated_operands =
-      CalcOperands(operands_);
+      CalcOperands(settings, operands_);
 
   if (op_info_->op == Op::Mult) {
     auto i_node = MultOperation::ProcessImaginary(&calculated_operands);
@@ -121,7 +122,7 @@ std::unique_ptr<INode> Operation::SymCalc() const {
       return result;
   }
 
-  if (!IsAllOperandsConst(calculated_operands) || !op_info_->trivial_f) {
+  if (!IsAllOperandsConst(settings, operands_) || !op_info_->trivial_f) {
     auto result = INodeHelper::MakeEmpty(op_info_->op);
     INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
     return result;
@@ -277,7 +278,10 @@ void Operation::CheckIntegrity() const {
 }
 
 bool Operation::IsAllOperandsConst(
+    SymCalcSettings settings,
     const std::vector<std::unique_ptr<INode>>& operands) const {
+  if (settings == SymCalcSettings::KeepNamedConstants)
+    return false;
   for (const auto& operand : operands) {
     Constant* constant = operand->AsNodeImpl()->AsConstant();
     if (!constant)
@@ -348,8 +352,9 @@ void Operation::SimplifyConsts(HotToken token,
         operation->SimplifyConsts({&token}, new_node);
       },
       &operands_);
-  if (IsAllOperandsConst(operands_)) {
-    *new_node = SymCalc();
+  auto settings = SymCalcSettings::KeepNamedConstants;
+  if (IsAllOperandsConst(settings, operands_)) {
+    *new_node = SymCalc(settings);
     return;
   }
 }

@@ -443,7 +443,11 @@ void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
                               const std::unique_ptr<INode>& lh,
                               const std::unique_ptr<INode>& rh) {
       auto lh_as_const = INodeHelper::AsConstant(lh.get());
+      if (lh_as_const && lh_as_const->IsNamed())
+        lh_as_const = nullptr;
       auto rh_as_const = INodeHelper::AsConstant(rh.get());
+      if (rh_as_const && rh_as_const->IsNamed())
+        rh_as_const = nullptr;
       if (!lh_as_const && !rh_as_const)
         return false;
       if (lh_as_const && rh_as_const) {

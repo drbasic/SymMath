@@ -24,8 +24,8 @@ bool VariableRef::CheckCircular(const INodeImpl* other) const {
   return var_->CheckCircular(other);
 }
 
-std::unique_ptr<INode> VariableRef::SymCalc() const {
-  return var_->SymCalc();
+std::unique_ptr<INode> VariableRef::SymCalc(SymCalcSettings settings) const {
+  return var_->SymCalc(settings);
 }
 
 bool VariableRef::IsEqual(const INode* rh) const {

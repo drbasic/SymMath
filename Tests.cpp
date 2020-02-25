@@ -51,7 +51,7 @@ bool Tests::TestSimplifyMultChain() {
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-120);
-  auto result = s.SymCalc();
+  auto result = s.SymCalc(SymCalcSettings::Full);
   if (!result->IsEqual(expected_result.get()))
     return false;
   return true;
@@ -70,7 +70,7 @@ bool Tests::TestSimplifyPlusChain() {
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-9);
-  if (!s.SymCalc()->IsEqual(expected_result.get()))
+  if (!s.SymCalc(SymCalcSettings::Full)->IsEqual(expected_result.get()))
     return false;
   return true;
 }
@@ -93,7 +93,7 @@ bool Tests::TestSimplifyChainRecursive() {
       return false;
   }
   auto expected_result = Const(216);
-  if (!s.SymCalc()->IsEqual(expected_result.get()))
+  if (!s.SymCalc(SymCalcSettings::Full)->IsEqual(expected_result.get()))
     return false;
   return true;
 }
@@ -116,7 +116,7 @@ bool Tests::TestSimplifyDivDiv() {
   if (div->Bottom()->AsOperation()->operands_.size() != 4)
     return false;
   auto expected_result = Const(2);
-  auto result = s.SymCalc();
+  auto result = s.SymCalc(SymCalcSettings::Full);
   if (!result->IsEqual(expected_result.get()))
     return false;
   return true;
@@ -128,7 +128,7 @@ bool Tests::TestSimplifyImaginary() {
   auto b = Var("b", 2);
   Variable s = Imag() * Imag() + a;
   auto expected_result = Const(-1 + 100);
-  auto result = s.SymCalc();
+  auto result = s.SymCalc(SymCalcSettings::Full);
   if (!result->IsEqual(expected_result.get()))
     return false;
   return true;
@@ -151,7 +151,7 @@ bool Tests::TestOpenBrackets() {
   if (plus->operands_.size() != 12)
     return false;
   auto expected_result = Const(405);
-  auto result = s.SymCalc();
+  auto result = s.SymCalc(SymCalcSettings::Full);
   if (!result->IsEqual(expected_result.get()))
     return false;
   return true;

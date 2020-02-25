@@ -20,7 +20,7 @@ class Operation : public IOperation {
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
   PrintSize LastPrintSize() const override;
@@ -30,8 +30,10 @@ class Operation : public IOperation {
   Operation* AsOperation() override { return this; }
   const Operation* AsOperation() const override { return this; }
   void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
-  void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
-  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicMult> GetCanonicMult() override { return std::nullopt; }
@@ -74,6 +76,7 @@ class Operation : public IOperation {
                           bool with_op) const;
 
   bool IsAllOperandsConst(
+      SymCalcSettings settings,
       const std::vector<std::unique_ptr<INode>>& operands) const;
 
   bool is_dead_ = false;

@@ -127,7 +127,7 @@ std::unique_ptr<INode> DoMult(HotToken token,
                               std::unique_ptr<INode> rh) {
   auto result = INodeHelper::MakeMult(std::move(lh), std::move(rh));
   result->UnfoldChains({&token});
-  return result->SymCalc();
+  return result->SymCalc(SymCalcSettings::KeepNamedConstants);
 }
 
 std::unique_ptr<INode> DoMult(HotToken token,
@@ -138,7 +138,7 @@ std::unique_ptr<INode> DoMult(HotToken token,
   for (size_t i = 0; i < rh->Size(); ++i) {
     auto value = INodeHelper::MakeMult(lh->Clone(), rh->TakeValue(i));
     value->UnfoldChains({&token});
-    values.push_back(value->SymCalc());
+    values.push_back(value->SymCalc(SymCalcSettings::KeepNamedConstants));
   }
   return INodeHelper::MakeVector(std::move(values));
 }
@@ -157,9 +157,10 @@ std::unique_ptr<INode> DoMult(HotToken token,
   for (size_t i = 0; i < rh->Size(); ++i) {
     auto value = INodeHelper::MakeMult(lh->TakeValue(i), rh->TakeValue(i));
     value->UnfoldChains({&token});
-    values.push_back(value->SymCalc());
+    values.push_back(value->SymCalc(SymCalcSettings::KeepNamedConstants));
   }
-  return INodeHelper::MakePlus(std::move(values))->SymCalc();
+  return INodeHelper::MakePlus(std::move(values))
+      ->SymCalc(SymCalcSettings::KeepNamedConstants);
 }
 
 }  // namespace

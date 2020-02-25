@@ -8,7 +8,7 @@ class Variable : protected INodeImpl {
   Variable(std::string name);
   Variable(std::unique_ptr<INode> value);
   Variable(std::string name, std::unique_ptr<INode> value);
-  ~Variable()override;
+  ~Variable() override;
 
   std::wstring Print(bool with_calc = false, size_t base_line = 0) const;
   void Simplify();
@@ -24,7 +24,7 @@ class Variable : protected INodeImpl {
   // INode implementation
   bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
-  std::unique_ptr<INode> SymCalc() const override;
+  std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
  protected:
   // INodeImpl interface
@@ -48,7 +48,8 @@ class Variable : protected INodeImpl {
   void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
-  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) override;
 
  private:
   friend class VariableRef;
