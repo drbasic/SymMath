@@ -126,7 +126,7 @@ int main() {
   // Tests::Run();
 
   // BacMinusCab();
-   EulerEquation();
+  EulerEquation();
   // return 0;
   auto a = Var("a");
   auto b = Var("b");

@@ -135,13 +135,14 @@ void Variable::ConvertToComplexImpl(HotToken token,
 }
 
 void Variable::Simplify() {
-  HotToken token;
   while (true) {
+    HotToken token;
     std::unique_ptr<INode> new_node;
     SimplifyImpl({&token}, &new_node);
-    if (!new_node)
-      return;
-    value_ = std::move(new_node);
+    if (new_node)
+      value_ = std::move(new_node);
+    else if (token.GetChangesCount() == 0)
+      break;
   }
 }
 
