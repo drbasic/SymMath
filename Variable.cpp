@@ -12,16 +12,16 @@
 #include "VariableRef.h"
 
 namespace {
-const std::string_view kAnonimous("<anonimous>");
+const std::wstring_view kAnonimous(L"<anonimous>");
 const std::string_view kNull("<null>");
 const std::string_view kArrow(" -> ");
 }  // namespace
 
-Variable::Variable(std::string name) : name_(std::move(name)) {}
+Variable::Variable(std::wstring name) : name_(std::move(name)) {}
 
 Variable::Variable(std::unique_ptr<INode> value) : value_(std::move(value)) {}
 
-Variable::Variable(std::string name, std::unique_ptr<INode> value)
+Variable::Variable(std::wstring name, std::unique_ptr<INode> value)
     : name_(std::move(name)), value_(std::move(value)) {}
 
 Variable::~Variable() {}
@@ -34,6 +34,7 @@ std::wstring Variable::Print(bool with_calc, size_t base_line) const {
   PrintBox initial_print_box(0, 0, 10000, 10000, 0);
 
   auto value_size = Render(&canvas, initial_print_box, true, render_behaviour);
+  assert(value_size == LastPrintSize());
   auto total_size(value_size);
 
   Variable calculated_value = Const(0);
@@ -44,6 +45,7 @@ std::wstring Variable::Print(bool with_calc, size_t base_line) const {
 
     auto calculated_value_size = calculated_value.Render(
         &canvas, initial_print_box, true, render_behaviour);
+    assert(calculated_value_size == calculated_value.LastPrintSize());
     auto arrow_size = canvas.PrintAt(initial_print_box, kArrow,
                                      render_behaviour.GetSubSuper(), true);
     total_size = value_size.GrowWidth(arrow_size, true)
@@ -59,6 +61,7 @@ std::wstring Variable::Print(bool with_calc, size_t base_line) const {
   auto value_size2 = Render(&canvas, print_box, false, render_behaviour);
   auto total_size2(value_size2);
   assert(value_size == value_size2);
+  assert(value_size == LastPrintSize());
 
   if (with_calc) {
     print_box = print_box.ShrinkLeft(value_size.width);
@@ -67,6 +70,7 @@ std::wstring Variable::Print(bool with_calc, size_t base_line) const {
     print_box = print_box.ShrinkLeft(arrow_size.width);
     auto calculated_value_size =
         calculated_value.Render(&canvas, print_box, false, render_behaviour);
+    assert(calculated_value_size == calculated_value.LastPrintSize());
     total_size2 = value_size.GrowWidth(arrow_size, true)
                       .GrowWidth(calculated_value_size, true);
   }
@@ -109,7 +113,7 @@ bool Variable::IsEqual(const INode* rh) const {
   return false;
 }
 
-std::string Variable::GetName() const {
+std::wstring Variable::GetName() const {
   return name_;
 }
 
@@ -171,7 +175,8 @@ void Variable::ConvertToComplex() {
 void Variable::operator=(std::unique_ptr<INode> value) {
   if (value->AsNodeImpl()->CheckCircular(this)) {
     value_ = std::make_unique<ErrorNode>(
-        "Circular deps on [" + (name_.empty() ? "<unonimous>" : name_) + "]");
+        L"Circular deps on [" + (name_.empty() ? L"<unonimous>" : name_) +
+        L"]");
   } else {
     value_ = std::move(value);
   }
@@ -182,7 +187,8 @@ void Variable::operator=(const Variable& var) {
     return;
   if (var.CheckCircular(this)) {
     value_ = std::make_unique<ErrorNode>(
-        "Circular deps on [" + (name_.empty() ? "<unonimous>" : name_) + "]");
+        L"Circular deps on [" + (name_.empty() ? L"<unonimous>" : name_) +
+        L"]");
   } else {
     value_ = std::make_unique<VariableRef>(&var);
   }
@@ -274,9 +280,10 @@ PrintSize Variable::RenderName(Canvas* canvas,
                                bool dry_run,
                                RenderBehaviour render_behaviour,
                                bool equal_sign) const {
-  std::string printable_name = !name_.empty() ? name_ : std::string(kAnonimous);
+  std::wstring printable_name =
+      !name_.empty() ? name_ : std::wstring(kAnonimous);
   auto name_size = canvas->PrintAt(
-      print_box, equal_sign ? printable_name + " = " : printable_name,
+      print_box, equal_sign ? printable_name + L" = " : printable_name,
       render_behaviour.GetSubSuper(), dry_run);
 
   ValueType value_type =
@@ -339,6 +346,6 @@ Variable::operator std::unique_ptr<INode>() const {
   if (!name_.empty())
     return std::make_unique<VariableRef>(this);
   if (!value_)
-    return std::make_unique<ErrorNode>("bind to empty unnamed var");
+    return std::make_unique<ErrorNode>(L"bind to empty unnamed var");
   return value_->Clone();
 }

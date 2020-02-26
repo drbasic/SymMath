@@ -27,10 +27,10 @@ struct PrintBox {
   PrintBox(size_t x, size_t y, size_t width, size_t height, size_t base_line);
   PrintBox(size_t x, size_t y, const PrintSize& print_size);
   PrintBox(const PrintBox& rh);
-  PrintBox(PrintBox&& rh);
+  PrintBox(PrintBox&& rh) noexcept;
 
   PrintBox& operator=(const PrintBox& rh);
-  PrintBox& operator=(PrintBox&& rh);
+  PrintBox& operator=(PrintBox&& rh) noexcept;
 
   static PrintBox Infinite();
 

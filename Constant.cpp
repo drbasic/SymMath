@@ -59,6 +59,8 @@ bool Constant::IsEqual(const INode* rh) const {
   const Constant* rh_const = rh->AsNodeImpl()->AsConstant();
   if (!rh_const)
     return false;
+  if (Name() != rh_const->Name())
+    return false;
   if (bool_value_ != rh_const->bool_value_)
     return false;
   if (bool_value_)

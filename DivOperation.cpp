@@ -46,7 +46,10 @@ PrintSize DivOperation::Render(Canvas* canvas,
   auto rh_size = dry_run ? Bottom()->Render(canvas, PrintBox::Infinite(),
                                             dry_run, render_behaviour)
                          : Bottom()->LastPrintSize();
-
+  if (dry_run) {
+    assert(lh_size == Top()->LastPrintSize());
+    assert(rh_size == Bottom()->LastPrintSize());
+  }
   // Render divider
   auto div_size = canvas->RenderDivider(
       print_box, std::max(lh_size.width, rh_size.width), dry_run);
@@ -60,6 +63,7 @@ PrintSize DivOperation::Render(Canvas* canvas,
       lh_box.base_line = lh_box.height - (lh_size.height - lh_size.base_line);
       auto lh_size2 = Top()->Render(canvas, lh_box, dry_run, render_behaviour);
       assert(lh_size2 == lh_size);
+      assert(lh_size == Top()->LastPrintSize());
     }
     {
       // Render bottom
@@ -70,6 +74,7 @@ PrintSize DivOperation::Render(Canvas* canvas,
       auto rh_size2 =
           Bottom()->Render(canvas, rh_box, dry_run, render_behaviour);
       assert(rh_size2 == rh_size);
+      assert(rh_size == Bottom()->LastPrintSize());
     }
   }
 

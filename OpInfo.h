@@ -30,10 +30,10 @@ struct OpInfo {
       const OpInfo* op,
       std::vector<std::unique_ptr<INode>>* operands);
 
-  TrivialF trivial_f;
+  TrivialF trivial_f = nullptr;
   bool is_transitive = true;
   int operands_count = -1;
-  CalcF calc_f;
+  CalcF calc_f = nullptr;
 };
 
 const OpInfo* GetOpInfo(Op op);

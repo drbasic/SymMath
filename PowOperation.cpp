@@ -105,7 +105,7 @@ void PowOperation::OpenBracketsImpl(HotToken token,
   }
 
   operands_.resize(1);
-  operands_.reserve(exp);
+  operands_.reserve(static_cast<size_t>(exp));
   for (size_t i = 1; i < exp; ++i) {
     operands_.push_back(operands_[0]->Clone());
   }
@@ -123,7 +123,7 @@ void PowOperation::OpenBracketsImpl(HotToken token,
 
 std::optional<CanonicPow> PowOperation::GetCanonicPow() {
   auto* exp_const = INodeHelper::AsConstant(operands_[1].get());
-  if (!exp_const)
+  if (!exp_const || exp_const->IsNamed())
     return std::nullopt;
   CanonicPow result = INodeHelper::GetCanonicPow(operands_[0]);
   for (auto& node_info : result.base_nodes)

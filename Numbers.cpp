@@ -12,25 +12,25 @@
 #include "ValueHelpers.h"
 
 void BacMinusCab() {
-  auto a1 = Var("a1");
-  auto a2 = Var("a2");
-  auto a3 = Var("a3");
-  auto b1 = Var("b1");
-  auto b2 = Var("b2");
-  auto b3 = Var("b3");
-  auto c1 = Var("c1");
-  auto c2 = Var("c2");
-  auto c3 = Var("c3");
+  auto a1 = Var(L"a1");
+  auto a2 = Var(L"a2");
+  auto a3 = Var(L"a3");
+  auto b1 = Var(L"b1");
+  auto b2 = Var(L"b2");
+  auto b3 = Var(L"b3");
+  auto c1 = Var(L"c1");
+  auto c2 = Var(L"c2");
+  auto c3 = Var(L"c3");
 
-  auto a = Var("a");
+  auto a = Var(L"a");
   a = Vector3(a1, a2, a3);
   std::wcout << a.Print() << "\n";
 
-  auto b = Var("b");
+  auto b = Var(L"b");
   b = Vector3(b1, b2, b3);
   std::wcout << b.Print() << "\n";
 
-  auto c = Var("c");
+  auto c = Var(L"c");
   c = Vector3(c1, c2, c3);
   std::wcout << c.Print() << "\n";
 
@@ -77,7 +77,7 @@ void BacMinusCab() {
 }
 
 void EulerEquation() {
-  auto x = Var("x");
+  auto x = Var(L"x");
   {
     Variable t = (Sin(x) ^ 2) + (Cos(x) ^ 2);
     std::wcout << t.Print(true) << "\n";
@@ -130,20 +130,20 @@ int main() {
   // BacMinusCab();
   // EulerEquation();
   // return 0;
-  auto a = Var("a");
-  auto b = Var("b");
-  auto c = Var("c");
-  auto d = Var("d");
-  auto e = Var("e");
-  auto y = Var("y");
-  auto x = Var("x");
-  auto v1 = Var("v1");
-  auto v2 = Var("v2");
-  auto v3 = Var("v3");
-  auto pi = Var("PI");
+  auto a = Var(L"a");
+  auto b = Var(L"b");
+  auto c = Var(L"c");
+  auto d = Var(L"d");
+  auto e = Var(L"e");
+  auto y = Var(L"y");
+  auto x = Var(L"x");
+  auto v1 = Var(L"v1");
+  auto v2 = Var(L"v2");
+  auto v3 = Var(L"v3");
+  auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Diff(Diff(Sin(x), x), x);
-  t1.ConvertToComplex();
+  Variable t1 = Diff(Diff(Diff(Sin(c * a), a), a), c);
+   t1.ConvertToComplex();
   std::wcout << t1.Print(true) << "\n";
 }

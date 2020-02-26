@@ -4,6 +4,7 @@
 
 #include "Brackets.h"
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INodeHelper.h"
 #include "LogOperation.h"
 #include "MultOperation.h"
@@ -178,7 +179,7 @@ std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
   auto f = operation->Operand(1);
   auto derivative_base = DoDiffNode(base, by_var);
   if (!INodeHelper::AsConstant(derivative_base.get())) {
-    return INodeHelper::MakeError("base is not constant");
+    return INodeHelper::MakeError(L"base is not constant");
   }
 
   return DoDiffNode(f, by_var) /
@@ -216,54 +217,66 @@ PrintSize DiffOperation::Render(Canvas* canvas,
                                 bool dry_run,
                                 RenderBehaviour render_behaviour) const {
   auto prefix_size = RenderPrefix(canvas, print_box, dry_run, render_behaviour);
+  assert(first_non_diff_operand_ != nullptr);
 
-  auto operand_size = dry_run ? Operand(0)->Render(canvas, PrintBox::Infinite(),
-                                                   dry_run, render_behaviour)
-                              : Operand(0)->LastPrintSize();
+  auto operand_size =
+      dry_run ? first_non_diff_operand_->Render(canvas, PrintBox::Infinite(),
+                                                dry_run, render_behaviour)
+              : first_non_diff_operand_->LastPrintSize();
   print_box = print_box.ShrinkLeft(prefix_size.width);
   PrintBox inner_print_box;
   auto brackets_size = canvas->RenderBrackets(
       print_box, BracketType::Round, operand_size, dry_run, &inner_print_box);
   if (!dry_run) {
-    Operand(0)->Render(canvas, inner_print_box, dry_run, render_behaviour);
+    first_non_diff_operand_->Render(canvas, inner_print_box, dry_run,
+                                    render_behaviour);
   }
 
-  return print_size_ =  prefix_size.GrowWidth(brackets_size, true);
+  return print_size_ = prefix_size.GrowWidth(brackets_size, true);
+}
+
+const INode* DiffOperation::Value() const {
+  return Operand(0);
+}
+
+const Variable* DiffOperation::ByVar() const {
+  return Operand(1)->AsNodeImpl()->AsVariable();
 }
 
 PrintSize DiffOperation::RenderPrefix(Canvas* canvas,
                                       PrintBox print_box,
                                       bool dry_run,
                                       RenderBehaviour render_behaviour) const {
-  std::wstring top_text = L"δ";
-  auto temp = Operand(1)->AsVariable()->GetName();
-  std::wstring bottom_text = L"δ" + std::wstring(temp.begin(), temp.end());
-  PrintSize print_size{bottom_text.size(), 3, 1};
-  if (dry_run)
-    return print_size;
-
-  // Render divider
-  auto div_size = canvas->RenderDivider(print_box, print_size.width, dry_run);
-
-  {
-    // Render top
-    PrintBox lh_box(print_box);
-    lh_box.x = lh_box.x + (print_size.width - top_text.size()) / 2;
-    lh_box.height = print_box.base_line - div_size.base_line;
-    lh_box.base_line = lh_box.height - 1;
-    canvas->PrintAt(lh_box, top_text, render_behaviour.GetSubSuper(), dry_run);
+  if (dry_run) {
+    std::vector<const DiffOperation*> diffs = GetDiffChain();
+    std::unique_ptr<INode> top = INodeHelper::MakePowIfNeeded(
+        INodeHelper::MakeConst(0.0, L"δ"), static_cast<double>(diffs.size()));
+    std::vector<std::unique_ptr<INode>> bottom_nodes;
+    for (auto diff : diffs) {
+      bottom_nodes.push_back(
+          INodeHelper::MakeConst(0.0, L"δ" + diff->ByVar()->GetName()));
+    }
+    std::unique_ptr<INode> bottom =
+        INodeHelper::MakeMultIfNeeded(std::move(bottom_nodes));
+    if (auto* as_op = INodeHelper::AsOperation(bottom.get())) {
+      std::unique_ptr<INode> new_bottom;
+      as_op->SimplifyTheSame({}, &new_bottom);
+      if (new_bottom)
+        bottom = std::move(new_bottom);
+    }
+    prefix_ = INodeHelper::MakeDiv(std::move(top), std::move(bottom));
+    first_non_diff_operand_ = diffs.back()->Operand(0);
   }
-  {
-    // Render bottom
-    PrintBox rh_box(print_box);
-    rh_box.x = rh_box.x + (div_size.width - bottom_text.size()) / 2;
-    rh_box.y = print_box.base_line + (div_size.height - div_size.base_line);
-    rh_box.base_line = rh_box.y;
-    canvas->PrintAt(rh_box, bottom_text, render_behaviour.GetSubSuper(),
-                    dry_run);
-  }
+  return prefix_->Render(canvas, print_box, dry_run, render_behaviour);
+}
 
-  return print_size;
+std::vector<const DiffOperation*> DiffOperation::GetDiffChain() const {
+  if (auto* as_diff = INodeHelper::AsDiff(Value())) {
+    auto result = as_diff->GetDiffChain();
+    result.insert(result.begin(), this);
+    return result;
+  }
+  return {this};
 }
 
 std::unique_ptr<INode> Differential(

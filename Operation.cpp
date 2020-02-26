@@ -259,7 +259,7 @@ void Operation::ConvertToComplexImpl(HotToken token,
 void Operation::CheckIntegrity() const {
   assert(op_info_);
   if (op_info_->operands_count >= 0) {
-    assert(op_info_->operands_count == operands_.size());
+    assert(op_info_->operands_count == static_cast<int>(operands_.size()));
   } else {
     switch (op_info_->op) {
       case Op::Plus:
@@ -490,6 +490,8 @@ PrintSize Operation::RenderOperand(const INodeImpl* node,
       need_br ? Brackets::RenderBrackets(node, BracketType::Round, canvas,
                                          print_box, dry_run, render_behaviour)
               : node->Render(canvas, print_box, dry_run, render_behaviour);
+  if (!need_br)
+    assert(node_size == node->LastPrintSize());
   total_operand_size = total_operand_size.GrowWidth(node_size, true);
 
   return total_operand_size;

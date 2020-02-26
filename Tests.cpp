@@ -40,11 +40,11 @@ void Tests::Run() {
 
 // static
 bool Tests::TestSimplifyMultChain() {
-  auto a = Var("a", 1);
-  auto b = Var("b", 2);
-  auto c = Var("c", 3);
-  auto d = Var("d", 4);
-  auto e = Var("e", 5);
+  auto a = Var(L"a", 1);
+  auto b = Var(L"b", 2);
+  auto c = Var(L"c", 3);
+  auto d = Var(L"d", 4);
+  auto e = Var(L"e", 5);
   Variable s = a * b * (-c) * (-d) * (-e);
   auto* op = s.AsOperation();
   op->UnfoldChains({});
@@ -59,11 +59,11 @@ bool Tests::TestSimplifyMultChain() {
 
 // static
 bool Tests::TestSimplifyPlusChain() {
-  auto a = Var("a", 1);
-  auto b = Var("b", 2);
-  auto c = Var("c", 3);
-  auto d = Var("d", 4);
-  auto e = Var("e", 5);
+  auto a = Var(L"a", 1);
+  auto b = Var(L"b", 2);
+  auto c = Var(L"c", 3);
+  auto d = Var(L"d", 4);
+  auto e = Var(L"e", 5);
   Variable s = a + b - c - d - e;
   auto* op = s.AsOperation();
   op->UnfoldChains({});
@@ -77,11 +77,11 @@ bool Tests::TestSimplifyPlusChain() {
 
 // static
 bool Tests::TestSimplifyChainRecursive() {
-  auto a = Var("a", 1);
-  auto b = Var("b", 2);
-  auto c = Var("c", 3);
-  auto d = Var("d", 4);
-  auto e = Var("e", 5);
+  auto a = Var(L"a", 1);
+  auto b = Var(L"b", 2);
+  auto c = Var(L"c", 3);
+  auto d = Var(L"d", 4);
+  auto e = Var(L"e", 5);
   Variable s = (a + b + c) * (a + b + c) * (a + b + c);
   auto* op = s.AsOperation();
   op->UnfoldChains({});
@@ -100,11 +100,11 @@ bool Tests::TestSimplifyChainRecursive() {
 
 // static
 bool Tests::TestSimplifyDivDiv() {
-  auto a = Var("a", 240);
-  auto b = Var("b", 2);
-  auto c = Var("c", 3);
-  auto d = Var("d", 4);
-  auto e = Var("e", 5);
+  auto a = Var(L"a", 240);
+  auto b = Var(L"b", 2);
+  auto c = Var(L"c", 3);
+  auto d = Var(L"d", 4);
+  auto e = Var(L"e", 5);
   Variable s = (a / b) / c / d / e;
   auto* op = s.AsOperation();
   op->SimplifyDivDiv({});
@@ -124,10 +124,10 @@ bool Tests::TestSimplifyDivDiv() {
 
 // static
 bool Tests::TestSimplifyImaginary() {
-  auto a = Var("a", 100);
-  auto b = Var("b", 2);
+  auto a = Var(L"a", 100);
+  auto b = Var(L"b", 2);
   Variable s = Imag() * Imag() + a;
-  auto expected_result = Const(-1 + 100);
+  auto expected_result = Const(99);
   auto result = s.SymCalc(SymCalcSettings::Full);
   if (!result->IsEqual(expected_result.get()))
     return false;
@@ -136,11 +136,11 @@ bool Tests::TestSimplifyImaginary() {
 
 // static
 bool Tests::TestOpenBrackets() {
-  auto a = Var("a", 1);
-  auto b = Var("b", 2);
-  auto c = Var("c", 3);
-  auto d = Var("d", 4);
-  auto e = Var("e", 5);
+  auto a = Var(L"a", 1);
+  auto b = Var(L"b", 2);
+  auto c = Var(L"c", 3);
+  auto d = Var(L"d", 4);
+  auto e = Var(L"e", 5);
   Variable s = (a + b) * (b + c + d) * (a + b) * e;
   std::unique_ptr<INode> new_node;
   s.AsOperation()->SimplifyChains({}, &new_node);

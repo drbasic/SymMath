@@ -71,11 +71,11 @@ PrintBox::PrintBox(size_t x, size_t y, const PrintSize& print_size)
 
 PrintBox::PrintBox(const PrintBox& rh) = default;
 
-PrintBox::PrintBox(PrintBox&& rh) = default;
+PrintBox::PrintBox(PrintBox&& rh) noexcept = default;
 
 PrintBox& PrintBox::operator=(const PrintBox& rh) = default;
 
-PrintBox& PrintBox::operator=(PrintBox&& rh) = default;
+PrintBox& PrintBox::operator=(PrintBox&& rh) noexcept = default;
 
 PrintBox PrintBox ::Infinite() {
   return PrintBox(0, 0, 1000, 10000, 0);
@@ -233,6 +233,7 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
       break;
     case BracketType::Stright:
       brackets = kStrightBrackets;
+      break;
   }
   if (height == 1) {
     if (!dry_run) {

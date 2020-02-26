@@ -34,9 +34,9 @@ constexpr OpInfo kOps[] = {
 
 const OpInfo* GetOpInfo(Op op) {
   if (static_cast<int>(op) >= std::extent<decltype(kOps)>::value)
-    throw new Exception("Unknown op");
+    throw  Exception("Unknown op");
   auto result = &kOps[static_cast<int>(op)];
   if (result->op != op)
-    throw new Exception("Wrong op order");
+    throw  Exception("Wrong op order");
   return result;
 }

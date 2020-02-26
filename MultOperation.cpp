@@ -72,6 +72,7 @@ ValueType MultOperation::GetValueType() const {
 void MultOperation::OpenBracketsImpl(HotToken token,
                                      std::unique_ptr<INode>* new_node) {
   Operation::OpenBracketsImpl({&token}, nullptr);
+
   std::unique_ptr<INode> temp_node;
   SimplifyUnMinus({&token}, &temp_node);
   if (temp_node) {

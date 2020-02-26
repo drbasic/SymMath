@@ -12,8 +12,11 @@ PrintSize Brackets::RenderBrackets(const INodeImpl* node,
                                    bool dry_run,
                                    RenderBehaviour render_behaviour) {
   PrintSize inner_size =
-      !dry_run ? node->LastPrintSize()
-               : node->Render(canvas, print_box, dry_run, render_behaviour);
+      dry_run ? node->Render(canvas, print_box, dry_run, render_behaviour)
+              : node->LastPrintSize();
+  if (dry_run)
+    assert(inner_size == node->LastPrintSize());
+
   // Render brackets
   PrintBox inner_print_box;
   auto result = canvas->RenderBrackets(print_box, bracket_type, inner_size,
@@ -23,6 +26,7 @@ PrintSize Brackets::RenderBrackets(const INodeImpl* node,
     auto value_size =
         node->Render(canvas, inner_print_box, dry_run, render_behaviour);
     assert(inner_size == value_size);
+    assert(inner_size == node->LastPrintSize());
   }
 
   return result;

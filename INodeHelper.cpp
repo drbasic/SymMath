@@ -26,7 +26,7 @@
 #include "VectorMultOperation.h"
 
 namespace {
-Variable kErrorVar("<error variable>");
+Variable kErrorVar(L"<error variable>");
 }
 
 // static
@@ -120,6 +120,18 @@ PowOperation* INodeHelper::AsPow(INode* lh) {
 const PowOperation* INodeHelper::AsPow(const INode* lh) {
   auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsPowOperation() : nullptr;
+}
+
+// static
+DiffOperation* INodeHelper::AsDiff(INode* lh) {
+  auto result = lh->AsNodeImpl()->AsOperation();
+  return (result) ? result->AsDiffOperation() : nullptr;
+}
+
+// static
+const DiffOperation* INodeHelper::AsDiff(const INode* lh) {
+  auto result = lh->AsNodeImpl()->AsOperation();
+  return (result) ? result->AsDiffOperation() : nullptr;
 }
 
 // static
@@ -287,10 +299,10 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
 }
 
 std::unique_ptr<INode> INodeHelper::MakeError() {
-  return std::make_unique<ErrorNode>(std::string());
+  return std::make_unique<ErrorNode>(std::wstring());
 }
 
-std::unique_ptr<INode> INodeHelper::MakeError(std::string err) {
+std::unique_ptr<INode> INodeHelper::MakeError(std::wstring err) {
   return std::make_unique<ErrorNode>(std::move(err));
 }
 

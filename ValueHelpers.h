@@ -17,10 +17,10 @@ namespace Constants {
   const Imaginary* Imag();
 }
 
-Variable Var(std::string name);
-Variable Var(std::string name, double val);
+Variable Var(std::wstring name);
+Variable Var(std::wstring name, double val);
 std::unique_ptr<INode> Const(double val);
-std::unique_ptr<INode> Const(double val, std::string name);
+std::unique_ptr<INode> Const(double val, std::wstring name);
 std::unique_ptr<INode> iConst(double val);
 std::unique_ptr<INode> Imag();
 std::unique_ptr<INode> Vector2(std::unique_ptr<INode> a,

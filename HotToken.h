@@ -7,6 +7,7 @@ class HotToken;
 class ScopedParamsCounter {
  public:
   ~ScopedParamsCounter();
+  ScopedParamsCounter(const ScopedParamsCounter&) = delete;
 
  private:
   friend class HotToken;

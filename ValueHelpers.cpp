@@ -53,11 +53,11 @@ const Imaginary* Imag() {
 
 }  // namespace Constants
 
-Variable Var(std::string name) {
+Variable Var(std::wstring name) {
   return Variable(std::move(name));
 }
 
-Variable Var(std::string name, double val) {
+Variable Var(std::wstring name, double val) {
   return Variable(std::move(name), Const(val));
 }
 

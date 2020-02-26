@@ -4,6 +4,7 @@
 #include "INodeImpl.h"
 
 struct OpInfo;
+class DiffOperation;
 class DivOperation;
 class LogOperation;
 class MultOperation;
@@ -52,7 +53,9 @@ class IOperation : public INodeImpl {
   virtual CompareOperation* AsCompareOperation() { return nullptr; }
   virtual const CompareOperation* AsCompareOperation() const { return nullptr; }
   virtual LogOperation* AsLogOperation() { return nullptr; }
-  virtual const LogOperation* AsLogOperation() const { return nullptr; }
+  virtual const LogOperation* AsLogOperation() const { return nullptr; } 
+  virtual DiffOperation* AsDiffOperation() { return nullptr; }
+  virtual const DiffOperation* AsDiffOperation() const { return nullptr; }
 
   virtual void UnfoldChains(HotToken token) = 0;
   virtual void SimplifyUnMinus(HotToken token,

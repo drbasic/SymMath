@@ -5,16 +5,16 @@
 
 class Variable : protected INodeImpl {
  public:
-  Variable(std::string name);
+  Variable(std::wstring name);
   Variable(std::unique_ptr<INode> value);
-  Variable(std::string name, std::unique_ptr<INode> value);
+  Variable(std::wstring name, std::unique_ptr<INode> value);
   ~Variable() override;
 
   std::wstring Print(bool with_calc = false, size_t base_line = 0) const;
   void Simplify();
   void OpenBrackets();
   void ConvertToComplex();
-  std::string GetName() const;
+  std::wstring GetName() const;
 
   void operator=(std::unique_ptr<INode> value);
   void operator=(const Variable& var);
@@ -70,6 +70,6 @@ class Variable : protected INodeImpl {
   const INodeImpl* GetVisibleNode() const;
 
   mutable PrintSize print_size_;
-  std::string name_;
+  std::wstring name_;
   std::unique_ptr<INode> value_;
 };

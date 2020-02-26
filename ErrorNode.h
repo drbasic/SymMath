@@ -5,7 +5,7 @@
 
 class ErrorNode : public INodeImpl {
  public:
-  ErrorNode(std::string error);
+  ErrorNode(std::wstring error);
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
@@ -31,6 +31,6 @@ class ErrorNode : public INodeImpl {
  protected:
  private:
   mutable PrintSize print_size_;
-  std::string error_;
+  std::wstring error_;
   std::unique_ptr<INode> value_;
 };

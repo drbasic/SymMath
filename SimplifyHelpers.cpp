@@ -44,7 +44,7 @@ bool ReduceFullMultiplicity(double top,
   return result;
 }
 
-std::string GetBaseName(const INode* node) {
+std::wstring GetBaseName(const INode* node) {
   if (const auto* as_var = INodeHelper::AsVariable(node))
     return as_var->GetName();
   if (const auto* as_un_minus = INodeHelper::AsUnMinus(node))
@@ -53,18 +53,18 @@ std::string GetBaseName(const INode* node) {
     return GetBaseName(as_pow->Base());
   }
   if (const auto* as_mult = INodeHelper::AsMult(node)) {
-    std::string result;
+    std::wstring result;
     for (size_t i = 0; i < as_mult->OperandsCount(); ++i) {
       result += GetBaseName(as_mult->Operand(i));
     }
     return result;
   }
   if (const auto* as_div = INodeHelper::AsDiv(node)) {
-    std::string result =
+    std::wstring result =
         GetBaseName(as_div->Operand(0)) + GetBaseName(as_div->Operand(1));
     return result;
   }
-  return std::string();
+  return std::wstring();
 }
 
 std::optional<double> Factorize(double val,
@@ -261,7 +261,7 @@ bool MergeCanonicToPlus(HotToken& token,
     rh_node->reset();
     return true;
   }
-  *lh_node = INodeHelper::MakeMult(dividend, divider, std::move(lh.nodes));
+  *lh_node = INodeHelper::MakeMult(dividend, divider, lh.nodes);
   rh_node->reset();
   return true;
 }
@@ -429,8 +429,8 @@ void ReorderOperands(std::vector<std::unique_ptr<INode>>* operands,
   {
     auto order_by_name = [](const std::unique_ptr<INode>& lh,
                             const std::unique_ptr<INode>& rh) {
-      std::string lh_name = GetBaseName(lh.get());
-      std::string rh_name = GetBaseName(rh.get());
+      std::wstring lh_name = GetBaseName(lh.get());
+      std::wstring rh_name = GetBaseName(rh.get());
       if (lh_name.empty() || rh_name.empty()) {
         return lh_name.empty() < rh_name.empty();
       }

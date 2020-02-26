@@ -52,6 +52,8 @@ class INodeHelper {
   static const Variable* AsVariable(const INode* lh);
   static PowOperation* AsPow(INode* lh);
   static const PowOperation* AsPow(const INode* lh);
+  static DiffOperation* AsDiff(INode* lh);
+  static const DiffOperation* AsDiff(const INode* lh);
 
   static CanonicMult GetCanonicMult(std::unique_ptr<INode>& node);
   static CanonicPow GetCanonicPow(std::unique_ptr<INode>& node);
@@ -71,7 +73,7 @@ class INodeHelper {
 
   static std::unique_ptr<Operation> MakeEmpty(Op op);
   static std::unique_ptr<INode> MakeError();
-  static std::unique_ptr<INode> MakeError(std::string err);
+  static std::unique_ptr<INode> MakeError(std::wstring err);
   static std::unique_ptr<Constant> MakeConst(double value);
   static std::unique_ptr<Constant> MakeConst(double value, std::wstring name);
   static std::unique_ptr<Constant> MakeConst(bool value);

@@ -36,8 +36,7 @@ std::unique_ptr<INode> Convert(Int2Type<ScalarT>, std::unique_ptr<INode> node) {
 std::unique_ptr<Vector> Convert(Int2Type<VectorT>,
                                 std::unique_ptr<INode> node) {
   if (auto* as_vector = node->AsNodeImpl()->AsVector()) {
-    node.release();
-    return std::unique_ptr<Vector>(as_vector);
+    return std::unique_ptr<Vector>(static_cast<Vector*>(node.release()));
   }
   assert(false);
   return nullptr;
@@ -147,9 +146,9 @@ std::unique_ptr<INode> DoMult(HotToken token,
                               std::unique_ptr<Vector> lh,
                               std::unique_ptr<Vector> rh) {
   if (lh->Size() != rh->Size()) {
-    return INodeHelper::MakeError("Vector sizes not match " +
-                                  std::to_string(lh->Size()) +
-                                  " != " + std::to_string(rh->Size()));
+    return INodeHelper::MakeError(L"Vector sizes not match " +
+                                  std::to_wstring(lh->Size()) + L" != " +
+                                  std::to_wstring(rh->Size()));
   }
 
   std::vector<std::unique_ptr<INode>> values;
@@ -194,16 +193,16 @@ std::unique_ptr<INode> VectorProduct(
     std::vector<std::unique_ptr<INode>>* operands) {
   assert(op->op == Op::VectorMult);
   if (operands->size() != 2)
-    return INodeHelper::MakeError("Must have 2 operands");
+    return INodeHelper::MakeError(L"Must have 2 operands");
   if (!INodeHelper::HasAllValueType(*operands, ValueType::Vector))
-    return INodeHelper::MakeError("All operands must be vectors");
+    return INodeHelper::MakeError(L"All operands must be vectors");
 
   auto lh = Convert(Int2Type<VectorT>(), std::move((*operands)[0]));
   assert(lh);
   auto rh = Convert(Int2Type<VectorT>(), std::move((*operands)[1]));
   assert(rh);
   if (lh->Size() != 3 || rh->Size() != 3)
-    return INodeHelper::MakeError("All operands must be Vector3");
+    return INodeHelper::MakeError(L"All operands must be Vector3");
 
   constexpr size_t X = 0;
   constexpr size_t Y = 1;
