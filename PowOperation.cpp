@@ -94,6 +94,9 @@ void PowOperation::OpenBracketsImpl(HotToken token,
   if (!as_const || as_const->Value() > kMaxPowUnfold)
     return;
   auto exp = as_const->Value();
+  double int_part;
+  if (std::modf(exp, &int_part) != 0.0)
+    return;
   if (exp == 0) {
     *new_node = INodeHelper::MakeConst(1.0);
     return;

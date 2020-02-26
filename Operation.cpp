@@ -424,7 +424,7 @@ PrintSize Operation::RenderOperandChain(
   PrintBox operand_box{print_box};
   for (size_t i = 0; i < operands_.size(); ++i) {
     bool with_op = i != 0;
-    if (i == operands_.size() - 1 &&
+    if (op_info_->op == Op::Mult && i == operands_.size() - 1 &&
         operands_[i]->AsNodeImpl()->AsImaginary()) {
       with_op = false;
     }

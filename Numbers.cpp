@@ -143,7 +143,7 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Diff(Diff(Diff(Sin(c * a), a), a), c);
-   t1.ConvertToComplex();
+  Variable t1 = Pow(Imag() + 1, 0.5);
+  // t1.ConvertToComplex();
   std::wcout << t1.Print(true) << "\n";
 }
