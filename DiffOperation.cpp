@@ -228,7 +228,7 @@ PrintSize DiffOperation::Render(Canvas* canvas,
     Operand(0)->Render(canvas, inner_print_box, dry_run, render_behaviour);
   }
 
-  return prefix_size.GrowWidth(brackets_size, true);
+  return print_size_ =  prefix_size.GrowWidth(brackets_size, true);
 }
 
 PrintSize DiffOperation::RenderPrefix(Canvas* canvas,

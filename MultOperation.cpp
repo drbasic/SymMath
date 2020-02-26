@@ -226,7 +226,7 @@ void MultOperation::SimplifyConsts(HotToken token,
   auto params_change_counter = token.CountParamsChanged(this);
 
   size_t const_count = 0;
-  double mult_total = 0;
+  double mult_total = 1.0;
   for (auto& node : operands_) {
     Constant* constant = INodeHelper::AsConstant(node.get());
     if (!constant)

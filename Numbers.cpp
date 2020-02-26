@@ -143,7 +143,7 @@ int main() {
   auto pi = Var("PI");
   pi = 3.1415926;
 
-  Variable t1 = 10 * Constants::MakeE() * 5 * Constants::MakePI() *
-                Constants::MakePI() / Constants::MakePI();
+  Variable t1 = Diff(Diff(Sin(x), x), x);
+  t1.ConvertToComplex();
   std::wcout << t1.Print(true) << "\n";
 }

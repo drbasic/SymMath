@@ -280,11 +280,11 @@ void Operation::CheckIntegrity() const {
 bool Operation::IsAllOperandsConst(
     SymCalcSettings settings,
     const std::vector<std::unique_ptr<INode>>& operands) const {
-  if (settings == SymCalcSettings::KeepNamedConstants)
-    return false;
   for (const auto& operand : operands) {
     Constant* constant = operand->AsNodeImpl()->AsConstant();
     if (!constant)
+      return false;
+    if (settings == SymCalcSettings::KeepNamedConstants && constant->IsNamed())
       return false;
   }
   return true;
