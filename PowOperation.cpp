@@ -97,20 +97,21 @@ void PowOperation::OpenBracketsImpl(HotToken token,
   double int_part;
   if (std::modf(exp, &int_part) != 0.0)
     return;
-  if (exp == 0.0) {
+  int int_exp = static_cast<int>(exp);
+  if (int_exp == 0) {
     *new_node = INodeHelper::MakeConst(1.0);
     return;
   }
   bool negative_exp = false;
-  if (exp < 0) {
-    exp = -exp;
+  if (int_exp < 0) {
+    int_exp = -int_exp;
     negative_exp = true;
   }
 
   operands_.resize(1);
-  operands_.reserve(static_cast<size_t>(exp));
-  for (size_t i = 1; i < exp; ++i) {
-    operands_.push_back(operands_[0]->Clone());
+  operands_.reserve(int_exp);
+  for (int i = 1; i < int_exp; ++i) {
+    operands_.push_back(Operand(0)->Clone());
   }
   std::unique_ptr<INode> new_temp_node;
   {

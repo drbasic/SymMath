@@ -111,9 +111,9 @@ bool Tests::TestSimplifyDivDiv() {
   auto* div = INodeHelper::AsDiv(op);
   if (!div)
     return false;
-  if (!div->Top()->AsVariable())
+  if (!div->Dividend()->AsVariable())
     return false;
-  if (div->Bottom()->AsOperation()->operands_.size() != 4)
+  if (div->Divider()->AsOperation()->operands_.size() != 4)
     return false;
   auto expected_result = Const(2);
   auto result = s.SymCalc(SymCalcSettings::Full);

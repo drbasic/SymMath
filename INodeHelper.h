@@ -53,6 +53,8 @@ class INodeHelper {
   static const Variable* AsVariable(const INode* lh);
   static PowOperation* AsPow(INode* lh);
   static const PowOperation* AsPow(const INode* lh);
+  static SqrtOperation* AsSqrt(INode* lh);
+  static const SqrtOperation* AsSqrt(const INode* lh);
   static DiffOperation* AsDiff(INode* lh);
   static const DiffOperation* AsDiff(const INode* lh);
 

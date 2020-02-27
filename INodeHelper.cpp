@@ -124,6 +124,18 @@ const PowOperation* INodeHelper::AsPow(const INode* lh) {
 }
 
 // static
+SqrtOperation* INodeHelper::AsSqrt(INode* lh) {
+  auto result = lh->AsNodeImpl()->AsOperation();
+  return (result) ? result->AsSqrtOperation() : nullptr;
+}
+
+// static
+const SqrtOperation* INodeHelper::AsSqrt(const INode* lh) {
+  auto result = lh->AsNodeImpl()->AsOperation();
+  return (result) ? result->AsSqrtOperation() : nullptr;
+}
+
+// static
 DiffOperation* INodeHelper::AsDiff(INode* lh) {
   auto result = lh->AsNodeImpl()->AsOperation();
   return (result) ? result->AsDiffOperation() : nullptr;

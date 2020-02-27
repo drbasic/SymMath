@@ -29,7 +29,7 @@ struct PrintBox {
            uint32_t width,
            uint32_t height,
            uint32_t base_line);
-  PrintBox(const PrintSize& print_size,uint32_t x, uint32_t y);
+  PrintBox(const PrintSize& print_size, uint32_t x, uint32_t y);
   PrintBox(const PrintBox& rh);
   PrintBox(PrintBox&& rh) noexcept;
 

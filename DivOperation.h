@@ -5,8 +5,8 @@
 class DivOperation : public Operation {
  public:
   enum : size_t {
-    Dividend = 0,
-    Divider = 1,
+    DividendIndex = 0,
+    DividerIndex = 1,
   };
   DivOperation(std::unique_ptr<INode> top, std::unique_ptr<INode> bottom);
 
@@ -33,13 +33,13 @@ class DivOperation : public Operation {
   DivOperation* AsDivOperation() override { return this; }
   const DivOperation* AsDivOperation() const override { return this; }
 
+  INodeImpl* Dividend() { return Operand(DividendIndex); }
+  const INodeImpl* Dividend() const { return Operand(DividendIndex); }
+  INodeImpl* Divider() { return Operand(DividerIndex); }
+  const INodeImpl* Divider() const { return Operand(DividerIndex); }
+
  private:
   friend class Tests;
-
-  INodeImpl* Top() { return Operand(Dividend); }
-  const INodeImpl* Top() const { return Operand(Dividend); }
-  INodeImpl* Bottom() { return Operand(Divider); }
-  const INodeImpl* Bottom() const { return Operand(Divider); }
 
   void SimplifyCanonicConstants(HotToken& token,
                                 std::unique_ptr<INode>* new_node);

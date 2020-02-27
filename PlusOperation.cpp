@@ -162,7 +162,7 @@ void PlusOperation::OpenBracketsImpl(HotToken token,
   std::vector<std::pair<size_t, std::unique_ptr<INode>>> dividers;
   for (size_t i = 0; i < OperandsCount(); ++i) {
     if (auto* as_div = INodeHelper::AsDiv(Operand(i))) {
-      dividers.emplace_back(i, as_div->TakeOperand(DivOperation::Divider));
+      dividers.emplace_back(i, as_div->TakeOperand(DivOperation::DividerIndex));
     }
   }
 
@@ -170,7 +170,7 @@ void PlusOperation::OpenBracketsImpl(HotToken token,
   for (size_t i = 0; i < OperandsCount(); ++i) {
     std::unique_ptr<INode> node;
     if (auto* as_div = INodeHelper::AsDiv(Operand(i)))
-      node = as_div->TakeOperand(DivOperation::Dividend);
+      node = as_div->TakeOperand(DivOperation::DividendIndex);
     else
       node = TakeOperand(i);
 

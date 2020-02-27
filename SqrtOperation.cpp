@@ -6,7 +6,11 @@
 
 #include "Brackets.h"
 #include "Constant.h"
+#include "DivOperation.h"
 #include "INodeHelper.h"
+#include "MultOperation.h"
+#include "PowOperation.h"
+#include "SimplifyHelpers.h"
 
 double TrivialSqrt(double lh, double rh) {
   if (rh == 2.0)
@@ -37,7 +41,7 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
   PrintSize exp_size;
   bool print_exp = true;
   if (auto* exp_const = Exp()->AsConstant()) {
-    if (exp_const->Value() == 2 && !exp_const->IsNamed())
+    if (exp_const->Value() == 2.0 && !exp_const->IsNamed())
       print_exp = false;
   }
 
@@ -57,6 +61,7 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
       assert(exp_size == exp_size2);
       print_box = print_box.ShrinkLeft(exp_size.width - 1);
     }
+    exp_size.width -= 1;
   }
 
   auto value_render_behaviour = render_behaviour;
@@ -65,7 +70,7 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
   auto value_size = dry_run ? Value()->Render(canvas, print_box, dry_run,
                                               value_render_behaviour)
                             : Value()->LastPrintSize();
-  value_size.height = std::max(value_size.height, exp_size.height + 1);
+  value_size.height = std::max(value_size.height, exp_size.height);
 
   PrintBox value_print_box;
   auto sqrt_size = canvas->RenderBrackets(
@@ -91,6 +96,47 @@ std::optional<CanonicPow> SqrtOperation::GetCanonicPow() {
 void SqrtOperation::SimplifyChains(HotToken token,
                                    std::unique_ptr<INode>* new_node) {
   Operation::SimplifyChains({&token}, nullptr);
+
+  if (auto* as_sqrt = INodeHelper::AsSqrt(Value())) {
+    SetOperand(ExpIndex, INodeHelper::MakeMult(TakeOperand(ExpIndex),
+                                               as_sqrt->TakeOperand(ExpIndex)));
+    SetOperand(ValueIndex, as_sqrt->TakeOperand(ValueIndex));
+  }
+
+  if (auto* as_pow = INodeHelper::AsPow(Value())) {
+    auto down = ExtractMultipliers(Exp()->Clone().get());
+    auto up = ExtractMultipliers(as_pow->Exp()->Clone().get());
+    auto eq_nodes = TakeEqualNodes(&up, &down);
+    if (!eq_nodes.empty()) {
+      INodeHelper::RemoveEmptyOperands(&down);
+      INodeHelper::RemoveEmptyOperands(&up);
+      if (!up.empty()) {
+        as_pow->SetOperand(PowOperation::PowIndex,
+                           INodeHelper::MakeMultIfNeeded(std::move(up)));
+      } else {
+        SetOperand(ValueIndex, as_pow->TakeOperand(PowOperation::BaseIndex));
+      }
+      if (!down.empty()) {
+        SetOperand(ExpIndex, INodeHelper::MakeMultIfNeeded(std::move(down)));
+      } else {
+        SetOperand(ExpIndex, INodeHelper::MakeConst(1.0));
+      }
+    }
+  }
+
+  if (auto* as_const = INodeHelper::AsConstant(Exp())) {
+    if (!as_const->IsNamed()) {
+      double exp = as_const->Value();
+      if (exp == 0.0) {
+        *new_node = INodeHelper::MakeConst(1.0);
+        return;
+      }
+      if (exp == 1.0) {
+        *new_node = TakeOperand(ValueIndex);
+        return;
+      }
+    }
+  }
 }
 
 void SqrtOperation::SimplifyExp(std::unique_ptr<INode>* new_node) {}

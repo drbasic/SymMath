@@ -16,7 +16,8 @@ DivOperation::DivOperation(std::unique_ptr<INode> top,
     : Operation(GetOpInfo(Op::Div), std::move(top), std::move(bottom)) {}
 
 std::unique_ptr<INode> DivOperation::Clone() const {
-  return std::make_unique<DivOperation>(Top()->Clone(), Bottom()->Clone());
+  return std::make_unique<DivOperation>(Dividend()->Clone(),
+                                        Divider()->Clone());
 }
 
 PrintSize DivOperation::Render(Canvas* canvas,
@@ -40,15 +41,15 @@ PrintSize DivOperation::Render(Canvas* canvas,
     prefix_size = un_minus_size.GrowWidth({1, 1, 0}, true);
   }
 
-  auto lh_size = dry_run ? Top()->Render(canvas, PrintBox::Infinite(), dry_run,
-                                         render_behaviour)
-                         : Top()->LastPrintSize();
-  auto rh_size = dry_run ? Bottom()->Render(canvas, PrintBox::Infinite(),
-                                            dry_run, render_behaviour)
-                         : Bottom()->LastPrintSize();
+  auto lh_size = dry_run ? Dividend()->Render(canvas, PrintBox::Infinite(),
+                                              dry_run, render_behaviour)
+                         : Dividend()->LastPrintSize();
+  auto rh_size = dry_run ? Divider()->Render(canvas, PrintBox::Infinite(),
+                                             dry_run, render_behaviour)
+                         : Divider()->LastPrintSize();
   if (dry_run) {
-    assert(lh_size == Top()->LastPrintSize());
-    assert(rh_size == Bottom()->LastPrintSize());
+    assert(lh_size == Dividend()->LastPrintSize());
+    assert(rh_size == Divider()->LastPrintSize());
   }
   // Render divider
   auto div_size = canvas->RenderDivider(
@@ -61,9 +62,10 @@ PrintSize DivOperation::Render(Canvas* canvas,
       lh_box.x = lh_box.x + (div_size.width - lh_size.width) / 2;
       lh_box.height = print_box.base_line - div_size.base_line;
       lh_box.base_line = lh_box.height - (lh_size.height - lh_size.base_line);
-      auto lh_size2 = Top()->Render(canvas, lh_box, dry_run, render_behaviour);
+      auto lh_size2 =
+          Dividend()->Render(canvas, lh_box, dry_run, render_behaviour);
       assert(lh_size2 == lh_size);
-      assert(lh_size == Top()->LastPrintSize());
+      assert(lh_size == Dividend()->LastPrintSize());
     }
     {
       // Render bottom
@@ -72,9 +74,9 @@ PrintSize DivOperation::Render(Canvas* canvas,
       rh_box.y = print_box.base_line + (div_size.height - div_size.base_line);
       rh_box.base_line = rh_box.y + rh_size.base_line;
       auto rh_size2 =
-          Bottom()->Render(canvas, rh_box, dry_run, render_behaviour);
+          Divider()->Render(canvas, rh_box, dry_run, render_behaviour);
       assert(rh_size2 == rh_size);
-      assert(rh_size == Bottom()->LastPrintSize());
+      assert(rh_size == Divider()->LastPrintSize());
     }
   }
 
@@ -83,13 +85,13 @@ PrintSize DivOperation::Render(Canvas* canvas,
 }
 
 bool DivOperation::HasFrontMinus() const {
-  bool lh_minus = Top()->HasFrontMinus();
-  bool rh_minus = Bottom()->HasFrontMinus();
+  bool lh_minus = Dividend()->HasFrontMinus();
+  bool rh_minus = Divider()->HasFrontMinus();
   return lh_minus ^ rh_minus;
 }
 
 std::optional<CanonicMult> DivOperation::GetCanonicMult() {
-  if (Constant* bottom_const = Bottom()->AsConstant()) {
+  if (Constant* bottom_const = Divider()->AsConstant()) {
     CanonicMult result = INodeHelper::GetCanonicMult(operands_[0]);
     result.b *= bottom_const->Value();
     return result;
@@ -126,8 +128,8 @@ void DivOperation::SimplifyUnMinus(HotToken token,
 void DivOperation::SimplifyDivDiv(HotToken token) {
   Operation::SimplifyDivDiv({&token});
 
-  auto* top = INodeHelper::AsDiv(Top());
-  auto* bottom = INodeHelper::AsDiv(Bottom());
+  auto* top = INodeHelper::AsDiv(Dividend());
+  auto* bottom = INodeHelper::AsDiv(Divider());
   if (!top && !bottom) {
     return;
   }
@@ -209,11 +211,11 @@ void DivOperation::SimplifyCanonicConstants(HotToken& token,
 
 void DivOperation::SimplifyMultipliers(HotToken& token,
                                        std::unique_ptr<INode>* new_node) {
-  auto* as_plus = INodeHelper::AsPlus(Top());
+  auto* as_plus = INodeHelper::AsPlus(Dividend());
   if (!as_plus)
     return;
 
-  auto divider_multipliers = ExtractMultipliers(Bottom());
+  auto divider_multipliers = ExtractMultipliers(Divider());
   for (size_t i = 0; i < as_plus->OperandsCount(); ++i) {
     auto multipliers = ExtractMultipliers(as_plus->Operand(i));
     divider_multipliers = TakeEqualNodes(&divider_multipliers, &multipliers);
@@ -228,7 +230,8 @@ void DivOperation::SimplifyMultipliers(HotToken& token,
                         INodeHelper::MakeMultIfNeeded(std::move(multipliers)));
   }
 
-  auto new_divider = ExtractMultipliers(Bottom());
+  auto new_divider = ExtractMultipliers(Divider());
   new_divider = RemoveEqualNodes(divider_multipliers, &new_divider);
-  SetOperand(Divider, INodeHelper::MakeMultIfNeeded(std::move(new_divider)));
+  SetOperand(DividerIndex,
+             INodeHelper::MakeMultIfNeeded(std::move(new_divider)));
 }
