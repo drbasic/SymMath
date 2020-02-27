@@ -78,7 +78,7 @@ std::optional<double> Factorize(double val,
   }
   max_val = std::max(std::abs(max_val), sqrt(val));
 
-  double v = 2;
+  double v = 2.0;
   for (; v <= max_val;) {
     if (std::remainder(val, v) == 0.0) {
       result->push_back(INodeHelper::MakeConst(v));
@@ -86,10 +86,10 @@ std::optional<double> Factorize(double val,
       found = true;
       continue;
     }
-    if (v == 2)
-      v += 1;
+    if (v == 2.0)
+      v += 1.0;
     else
-      v += 2;
+      v += 2.0;
   }
   if (found)
     return v;

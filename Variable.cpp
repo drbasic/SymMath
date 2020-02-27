@@ -26,7 +26,7 @@ Variable::Variable(std::wstring name, std::unique_ptr<INode> value)
 
 Variable::~Variable() {}
 
-std::wstring Variable::Print(bool with_calc, size_t base_line) const {
+std::wstring Variable::Print(bool with_calc, uint32_t base_line) const {
   RenderBehaviour render_behaviour;
 
   Canvas canvas;
@@ -57,7 +57,7 @@ std::wstring Variable::Print(bool with_calc, size_t base_line) const {
   }
   canvas.Resize(total_size);
   canvas.SetDryRun(false);
-  PrintBox print_box(0, 0, total_size);
+  PrintBox print_box(total_size,0, 0);
   auto value_size2 = Render(&canvas, print_box, false, render_behaviour);
   auto total_size2(value_size2);
   assert(value_size == value_size2);
@@ -292,7 +292,8 @@ PrintSize Variable::RenderName(Canvas* canvas,
     return name_size;
 
   print_box.base_line -= name_size.height - name_size.base_line;
-  print_box = print_box.ShrinkLeft((printable_name.size() - 1) / 2);
+  print_box = print_box.ShrinkLeft(
+      static_cast<uint32_t>(printable_name.size() - 1) / 2);
   std::wstring vector_sign(L"→");
   auto value_type_size = canvas->PrintAt(
       print_box, vector_sign, render_behaviour.GetSubSuper(), dry_run);

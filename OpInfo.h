@@ -23,14 +23,14 @@ enum class Op : int {
 };
 
 struct OpInfo {
-  Op op;
-  int priority;
-  std::wstring_view name;
   using TrivialF = double (*)(double lh, double rh);
   using CalcF = std::unique_ptr<INode> (*)(
       const OpInfo* op,
       std::vector<std::unique_ptr<INode>>* operands);
 
+  Op op;
+  int priority = 0;
+  std::wstring_view name;
   TrivialF trivial_f = nullptr;
   bool is_transitive = true;
   int operands_count = -1;

@@ -60,19 +60,19 @@ wchar_t GetSuperScript(wchar_t sym) {
 //=============================================================================
 PrintBox::PrintBox() = default;
 
-PrintBox::PrintBox(size_t x,
-                   size_t y,
-                   size_t width,
-                   size_t height,
-                   size_t base_line)
+PrintBox::PrintBox(uint32_t x,
+                   uint32_t y,
+                   uint32_t width,
+                   uint32_t height,
+                   uint32_t base_line)
     : x(x), y(y), width(width), height(height), base_line(base_line) {}
 
-PrintBox::PrintBox(size_t x, size_t y, const PrintSize& print_size)
+PrintBox::PrintBox(const PrintSize& print_size, uint32_t x, uint32_t y)
     : x(x),
       y(y),
       width(print_size.width),
       height(print_size.height),
-      base_line(print_size.base_line) {}
+      base_line(print_size.base_line + y) {}
 
 PrintBox::PrintBox(const PrintBox& rh) = default;
 
@@ -86,7 +86,7 @@ PrintBox PrintBox ::Infinite() {
   return PrintBox(0, 0, 1000, 10000, 0);
 }
 
-PrintBox PrintBox::ShrinkTop(size_t delta_height) const {
+PrintBox PrintBox::ShrinkTop(uint32_t delta_height) const {
   PrintBox result(*this);
   assert(result.height >= delta_height);
   result.y += delta_height;
@@ -94,7 +94,7 @@ PrintBox PrintBox::ShrinkTop(size_t delta_height) const {
   return result;
 }
 
-PrintBox PrintBox::ShrinkLeft(size_t delta_width) const {
+PrintBox PrintBox::ShrinkLeft(uint32_t delta_width) const {
   PrintBox result(*this);
   assert(result.width >= delta_width);
   result.x += delta_width;
@@ -102,7 +102,11 @@ PrintBox PrintBox::ShrinkLeft(size_t delta_width) const {
   return result;
 }
 
-PrintSize::PrintSize(size_t width, size_t height, size_t base_line)
+PrintSize PrintBox::Size() const {
+  return {width, height, base_line};
+}
+
+PrintSize::PrintSize(uint32_t width, uint32_t height, uint32_t base_line)
     : width(width), height(height), base_line(base_line) {}
 
 //=============================================================================
@@ -148,10 +152,10 @@ PrintSize PrintSize::GrowDown(const PrintSize& other,
 
 void Canvas::Resize(const PrintSize& print_size) {
   print_size_ = print_size;
-  size_t new_size = (print_size.width + 1) * print_size.height;
-  data_.resize(new_size);
+  uint32_t new_size = (print_size.width + 1) * print_size.height;
+  data_.resize(static_cast<size_t>(new_size));
   std::fill(std::begin(data_), std::end(data_), ' ');
-  for (size_t row = 0; row < print_size.height; ++row) {
+  for (uint32_t row = 0; row < print_size.height; ++row) {
     data_[GetIndex(print_size.width - 1, row) + 1] = '\n';
   }
 }
@@ -190,12 +194,12 @@ PrintSize Canvas::PrintAt(const PrintBox& print_box,
       }
     }
   }
-  return {str.size(), 1, 0};
+  return {static_cast<uint32_t>(str.size()), 1, 0};
 }
 
 PrintSize Canvas::RenderBrackets(PrintBox print_box,
                                  BracketType bracket_type,
-                                 PrintSize inner_size,
+                                 const PrintSize& inner_size,
                                  bool dry_run,
                                  PrintBox* inner_print_box) {
   assert(inner_print_box);
@@ -205,26 +209,25 @@ PrintSize Canvas::RenderBrackets(PrintBox print_box,
   print_box = print_box.ShrinkLeft(left_br_size.width);
 
   // Calculate PrintSize for inner value with spaces
-  auto inner_size_with_spaces = left_br_size;
-  inner_size_with_spaces.width = inner_size.width + 2;
+  PrintBox inner_size_with_spaces{inner_size, print_box.x,
+                                  print_box.base_line - left_br_size.base_line};
+  inner_size_with_spaces.width += 2;
   {
     // Render top bracket
-    auto top_print_box = print_box;
-    top_print_box.base_line = top_print_box.y;
-    top_print_box.width = inner_size_with_spaces.width;
-    RenderBracket(top_print_box, BracketSide::Top, bracket_type,
-                  inner_size_with_spaces, dry_run);
+    inner_size_with_spaces.base_line = inner_size_with_spaces.y;
+    RenderBracket(inner_size_with_spaces, BracketSide::Top, bracket_type,
+                  inner_size_with_spaces.Size(), dry_run);
   }
 
   // Calculate PrintBox for inner value
-  *inner_print_box = print_box;
+  *inner_print_box = inner_size_with_spaces;
   inner_print_box->x += 1;
   inner_print_box->width = inner_size.width;
   inner_print_box->height = inner_size.height;
-  size_t delta_y = (bracket_type == BracketType::Sqrt)
-                       ? 1
-                       : (print_box.height - inner_size.height) / 2;
-  inner_print_box->y = print_box.y + delta_y;
+  uint32_t delta_y = (bracket_type == BracketType::Sqrt)
+                         ? 1
+                         : (left_br_size.height - inner_size.height) / 2;
+  inner_print_box->y += delta_y;
   inner_print_box->base_line = inner_print_box->y + inner_size.base_line;
 
   // Render right bracket
@@ -232,7 +235,7 @@ PrintSize Canvas::RenderBrackets(PrintBox print_box,
   PrintSize right_br_size = RenderBracket(print_box, BracketSide::Right,
                                           bracket_type, inner_size, dry_run);
 
-  return left_br_size.GrowWidth(inner_size_with_spaces, false)
+  return left_br_size.GrowWidth(inner_size_with_spaces.Size(), false)
       .GrowWidth(right_br_size, false);
 }
 
@@ -251,7 +254,7 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
 PrintSize Canvas::RenderBracketLR(const PrintBox& print_box,
                                   BracketSide side,
                                   BracketType bracket_type,
-                                  size_t height,
+                                  uint32_t height,
                                   bool dry_run) {
   assert(side == BracketSide::Left || side == BracketSide::Right);
   const wchar_t* brackets = nullptr;
@@ -275,24 +278,27 @@ PrintSize Canvas::RenderBracketLR(const PrintBox& print_box,
 
   if (height == 1 && bracket_type != BracketType::Sqrt) {
     if (!dry_run) {
-      size_t y = print_box.base_line - height / 2;
+      uint32_t y = print_box.base_line - height / 2;
       data_[GetIndex(print_box.x, y)] =
           (side == BracketSide::Left ? brackets[BracketsParts::SmallLeft]
                                      : brackets[BracketsParts::SmallRight]);
     }
     return {1, 1, 0};
   }
-  size_t width = 1;
+  uint32_t width = 1;
+  uint32_t native_base_line = height / 2;
   if (bracket_type == BracketType::Sqrt) {
     height += 1;
+    native_base_line += 1;
     width += side == BracketSide::Left ? 1 : 0;
   } else if (bracket_type != BracketType::Stright) {
     height += 2;
+    native_base_line += 1;
   }
 
   if (!dry_run) {
-    size_t y = print_box.base_line - height / 2;
-    for (size_t i = 0; i < height; ++i) {
+    uint32_t y = print_box.base_line - native_base_line;
+    for (uint32_t i = 0; i < height; ++i) {
       wchar_t s = '?';
       if (i == 0) {
         s = side == BracketSide::Left ? brackets[BracketsParts::TopLeft]
@@ -314,13 +320,13 @@ PrintSize Canvas::RenderBracketLR(const PrintBox& print_box,
           brackets[BracketsParts::AdditionalBottomLeft];
     }
   }
-  return {width, height, height / 2};
+  return {width, height, native_base_line};
 }
 
 PrintSize Canvas::RenderBracketT(const PrintBox& print_box,
                                  BracketSide side,
                                  BracketType bracket_type,
-                                 size_t width,
+                                 uint32_t width,
                                  bool dry_run) {
   assert(side == BracketSide::Top);
   if (bracket_type != BracketType::Sqrt)
@@ -329,9 +335,9 @@ PrintSize Canvas::RenderBracketT(const PrintBox& print_box,
 }
 
 PrintSize Canvas::RenderDivider(const PrintBox& print_box,
-                                size_t width,
+                                uint32_t width,
                                 bool dry_run) {
-  return PrintAt(print_box, std::wstring(width, kDivider),
+  return PrintAt(print_box, std::wstring(static_cast<size_t>(width), kDivider),
                  SubSuperBehaviour::Normal, dry_run);
 }
 
@@ -339,10 +345,10 @@ void Canvas::SetDryRun(bool dry_run) {
   dry_run_ = dry_run;
 }
 
-size_t Canvas::GetIndex(size_t x, size_t y) const {
+size_t Canvas::GetIndex(uint32_t x, uint32_t y) const {
   assert(print_size_ != PrintSize{});
   assert(x < print_size_.width);
   assert(y < print_size_.height);
-  size_t indx = y * (print_size_.width + 1) + x;
-  return indx;
+  uint32_t indx = y * (print_size_.width + 1) + x;
+  return static_cast<size_t>(indx);
 }

@@ -72,15 +72,20 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
       print_box, BracketType::Sqrt, value_size, dry_run, &value_print_box);
 
   if (!dry_run) {
-    auto value_size2 = Value()->Render(canvas, value_print_box, dry_run,
-                                       value_render_behaviour);
+    Value()->Render(canvas, value_print_box, dry_run, value_render_behaviour);
   }
 
   return print_size_ = exp_size.GrowWidth(sqrt_size, true);
 }
 
 std::optional<CanonicPow> SqrtOperation::GetCanonicPow() {
-  return std::optional<CanonicPow>();
+  auto* exp_const = Exp()->AsConstant();
+  if (!exp_const || exp_const->IsNamed())
+    return std::nullopt;
+
+  CanonicPow result;
+  result.Add(1.0 / exp_const->Value(), &operands_[ValueIndex]);
+  return result;
 }
 
 void SqrtOperation::SimplifyChains(HotToken token,

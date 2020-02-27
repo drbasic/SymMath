@@ -8,9 +8,10 @@ class Variable : protected INodeImpl {
   Variable(std::wstring name);
   Variable(std::unique_ptr<INode> value);
   Variable(std::wstring name, std::unique_ptr<INode> value);
+  Variable(const Variable&) = delete;
   ~Variable() override;
 
-  std::wstring Print(bool with_calc = false, size_t base_line = 0) const;
+  std::wstring Print(bool with_calc = false, uint32_t base_line = 0) const;
   void Simplify();
   void OpenBrackets();
   void ConvertToComplex();

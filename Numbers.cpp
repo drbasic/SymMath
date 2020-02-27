@@ -143,7 +143,8 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Sqrt(a/2,4);
+  Variable t1 = Sqrt(Pow((a / 2 + 1) * (a + b), 2), 2) * a * Pow(a, 5);
+  //Variable t1 = (a / 2) * (a + b);
   // t1.ConvertToComplex();
-  std::wcout << t1.Print(false) << "\n";
+  std::wcout << t1.Print(false, 10) << "\n";
 }

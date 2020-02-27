@@ -97,7 +97,7 @@ void PowOperation::OpenBracketsImpl(HotToken token,
   double int_part;
   if (std::modf(exp, &int_part) != 0.0)
     return;
-  if (exp == 0) {
+  if (exp == 0.0) {
     *new_node = INodeHelper::MakeConst(1.0);
     return;
   }
@@ -159,7 +159,7 @@ const INodeImpl* PowOperation::Exp() const {
 
 void PowOperation::SimplifyExp(std::unique_ptr<INode>* new_node) {
   if (auto* exp_const = Exp()->AsConstant()) {
-    if (exp_const->Value() == 0) {
+    if (exp_const->Value() == 0.0) {
       *new_node = INodeHelper::MakeConst(1.0);
       return;
     }
