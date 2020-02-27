@@ -143,7 +143,7 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Pow(Imag() + 1, 0.5);
+  Variable t1 = Sqrt(a/2,4);
   // t1.ConvertToComplex();
-  std::wcout << t1.Print(true) << "\n";
+  std::wcout << t1.Print(false) << "\n";
 }

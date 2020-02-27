@@ -10,6 +10,7 @@ enum class BracketType {
   Square,
   Fugure,
   Stright,
+  Sqrt,
 };
 
 class Brackets : public INodeImpl {

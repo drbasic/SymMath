@@ -22,6 +22,7 @@ class INodeImpl;
 class MultOperation;
 class Operation;
 class PlusOperation;
+class SqrtOperation;
 class LogOperation;
 class PowOperation;
 class TrigonometricOperation;
@@ -109,6 +110,8 @@ class INodeHelper {
                                                std::unique_ptr<INode> rh);
   static std::unique_ptr<INode> MakePowIfNeeded(std::unique_ptr<INode> lh,
                                                 double exp);
+  static std::unique_ptr<SqrtOperation> MakeSqrt(std::unique_ptr<INode> value,
+                                                 std::unique_ptr<INode> exp);
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);

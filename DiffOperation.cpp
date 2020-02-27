@@ -78,6 +78,9 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
     case Op::Diff: {
       assert(false);
     } break;
+    case Op::Sqrt: {
+      assert(false);
+    } break;
   }
 
   return nullptr;

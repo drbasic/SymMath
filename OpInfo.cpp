@@ -4,6 +4,7 @@
 #include "DiffOperation.h"
 #include "Exception.h"
 #include "LogOperation.h"
+#include "SqrtOperation.h"
 #include "VectorScalarProduct.h"
 
 namespace {
@@ -20,6 +21,7 @@ constexpr OpInfo kOps[] = {
     {Op::Div, 20, L"/", [](double lh, double rh) { return lh / rh; }, false, 2},
     {Op::Pow, 30, L"^", [](double lh, double rh) { return pow(lh, rh); }, false,
      2},
+    {Op::Sqrt, 30, L"sqrt", TrivialSqrt, false, 2, NonTrivialSqrt},
     {Op::Sin, 1000, L"sin", [](double lh, double rh) { return sin(lh); }, false,
      1},
     {Op::Cos, 1000, L"cos", [](double lh, double rh) { return cos(lh); }, false,
@@ -34,9 +36,9 @@ constexpr OpInfo kOps[] = {
 
 const OpInfo* GetOpInfo(Op op) {
   if (static_cast<int>(op) >= std::extent<decltype(kOps)>::value)
-    throw  Exception("Unknown op");
+    throw Exception("Unknown op");
   auto result = &kOps[static_cast<int>(op)];
   if (result->op != op)
-    throw  Exception("Wrong op order");
+    throw Exception("Wrong op order");
   return result;
 }

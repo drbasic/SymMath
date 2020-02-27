@@ -14,6 +14,7 @@ enum class Op : int {
   VectorMult,
   Div,
   Pow,
+  Sqrt,
   Sin,
   Cos,
   Log,

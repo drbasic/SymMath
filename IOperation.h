@@ -11,6 +11,7 @@ class MultOperation;
 class VectorMultOperation;
 class PlusOperation;
 class PowOperation;
+class SqrtOperation;
 class CompareOperation;
 class UnMinusOperation;
 
@@ -50,10 +51,12 @@ class IOperation : public INodeImpl {
   virtual const DivOperation* AsDivOperation() const { return nullptr; }
   virtual PowOperation* AsPowOperation() { return nullptr; }
   virtual const PowOperation* AsPowOperation() const { return nullptr; }
+  virtual SqrtOperation* AsSqrtOperation() { return nullptr; }
+  virtual const SqrtOperation* AsSqrtOperation() const { return nullptr; }
   virtual CompareOperation* AsCompareOperation() { return nullptr; }
   virtual const CompareOperation* AsCompareOperation() const { return nullptr; }
   virtual LogOperation* AsLogOperation() { return nullptr; }
-  virtual const LogOperation* AsLogOperation() const { return nullptr; } 
+  virtual const LogOperation* AsLogOperation() const { return nullptr; }
   virtual DiffOperation* AsDiffOperation() { return nullptr; }
   virtual const DiffOperation* AsDiffOperation() const { return nullptr; }
 

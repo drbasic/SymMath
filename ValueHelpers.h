@@ -9,13 +9,13 @@
 class INode;
 
 namespace Constants {
-  const Constant* Zero();
-  const Constant* E();
-  std::unique_ptr<Constant> MakeE();
-  const Constant* PI();
-  std::unique_ptr<Constant> MakePI();
-  const Imaginary* Imag();
-}
+const Constant* Zero();
+const Constant* E();
+std::unique_ptr<Constant> MakeE();
+const Constant* PI();
+std::unique_ptr<Constant> MakePI();
+const Imaginary* Imag();
+}  // namespace Constants
 
 Variable Var(std::wstring name);
 Variable Var(std::wstring name, double val);
@@ -55,11 +55,14 @@ std::unique_ptr<INode> operator/(std::unique_ptr<INode> lh, double rh);
 
 std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
                                  std::unique_ptr<INode> rh);
-std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh,
-                                 double rh);
+std::unique_ptr<INode> operator^(std::unique_ptr<INode> lh, double rh);
 std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh,
                            std::unique_ptr<INode> rh);
 std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh, double exp);
+std::unique_ptr<INode> Sqrt(std::unique_ptr<INode> value);
+std::unique_ptr<INode> Sqrt(std::unique_ptr<INode> value, double exp);
+std::unique_ptr<INode> Sqrt(std::unique_ptr<INode> value,
+                            std::unique_ptr<INode> pow);
 
 std::unique_ptr<INode> AddBrackets(std::unique_ptr<INode> value);
 std::unique_ptr<INode> AddBrackets(BracketType bracket_type,

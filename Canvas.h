@@ -74,13 +74,25 @@ class Canvas {
   enum class BracketSide {
     Left,
     Right,
+    Top,
   };
   size_t GetIndex(size_t x, size_t y) const;
   PrintSize RenderBracket(const PrintBox& print_box,
                           BracketSide side,
                           BracketType bracket_type,
-                          size_t height,
+                          const PrintSize& inner_size,
                           bool dry_run);
+
+  PrintSize RenderBracketLR(const PrintBox& print_box,
+                            BracketSide side,
+                            BracketType bracket_type,
+                            size_t height,
+                            bool dry_run);
+  PrintSize RenderBracketT(const PrintBox& print_box,
+                           BracketSide side,
+                           BracketType bracket_type,
+                           size_t width,
+                           bool dry_run);
 
   bool dry_run_ = false;
   PrintSize print_size_;

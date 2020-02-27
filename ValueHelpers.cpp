@@ -16,6 +16,7 @@
 #include "Operation.h"
 #include "PlusOperation.h"
 #include "PowOperation.h"
+#include "SqrtOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "VariableRef.h"
@@ -169,6 +170,19 @@ std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh,
 
 std::unique_ptr<INode> Pow(std::unique_ptr<INode> lh, double exp) {
   return INodeHelper::MakePow(std::move(lh), INodeHelper::MakeConst(exp));
+}
+//=============================================================================
+std::unique_ptr<INode> Sqrt(std::unique_ptr<INode> value) {
+  return INodeHelper::MakeSqrt(std::move(value), Const(2.0));
+}
+
+std::unique_ptr<INode> Sqrt(std::unique_ptr<INode> value, double exp) {
+  return INodeHelper::MakeSqrt(std::move(value), Const(exp));
+}
+
+std::unique_ptr<INode> Sqrt(std::unique_ptr<INode> value,
+                            std::unique_ptr<INode> pow) {
+  return INodeHelper::MakeSqrt(std::move(value), std::move(pow));
 }
 //=============================================================================
 std::unique_ptr<INode> AddBrackets(std::unique_ptr<INode> value) {

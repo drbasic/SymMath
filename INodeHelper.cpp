@@ -18,6 +18,7 @@
 #include "Operation.h"
 #include "PlusOperation.h"
 #include "PowOperation.h"
+#include "SqrtOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
@@ -280,6 +281,9 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::Pow:
       return MakePow(MakeError(), MakeError());
       break;
+    case Op::Sqrt:
+      return MakeSqrt(MakeError(), MakeError());
+      break;
     case Op::Sin:
     case Op::Cos:
       return MakeTrigonometric(op, MakeError());
@@ -465,6 +469,12 @@ std::unique_ptr<PowOperation> INodeHelper::MakePow(std::unique_ptr<INode> base,
 std::unique_ptr<INode> INodeHelper::MakePowIfNeeded(std::unique_ptr<INode> base,
                                                     double exp) {
   return PowOperation::MakeIfNeeded(std::move(base), exp);
+}
+
+std::unique_ptr<SqrtOperation> INodeHelper::MakeSqrt(
+    std::unique_ptr<INode> value,
+    std::unique_ptr<INode> exp) {
+  return std::make_unique<SqrtOperation>(std::move(value), std::move(exp));
 }
 
 // static

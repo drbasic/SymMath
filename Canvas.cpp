@@ -9,21 +9,26 @@
 namespace {
 
 enum BracketsParts {
-  Left,
-  Right,
+  SmallLeft,
+  SmallRight,
+  // parts of brackets
   TopLeft,
   TopRight,
-  Stright,
+  StrightLeft,
+  StrightRight,
   BottomLeft,
   BottomRight,
   MiddleLeft,
   MiddleRight,
+  // additional part of sqrts
+  AdditionalBottomLeft,
   Last,
 };
-const wchar_t kRoundBrackets[BracketsParts::Last + 1] = L"()╭╮│╰╯││";
-const wchar_t kSquareBrackets[BracketsParts::Last + 1] = L"[]┌┐│└┘││";
-const wchar_t kFigureBrackets[BracketsParts::Last + 1] = L"{}╭╮│╰╯╮╭";
-const wchar_t kStrightBrackets[BracketsParts::Last + 1] = L"│││││││││";
+const wchar_t kRoundBrackets[BracketsParts::Last + 1] = L"()╭╮││╰╯││ ";
+const wchar_t kSquareBrackets[BracketsParts::Last + 1] = L"[]┌┐││└┘││ ";
+const wchar_t kFigureBrackets[BracketsParts::Last + 1] = L"{}╭╮││╰╯╮╭ ";
+const wchar_t kStrightBrackets[BracketsParts::Last + 1] = L"││││││││││ ";
+const wchar_t kSqrtBrackets[BracketsParts::Last + 1] = L"??┌┐│ ╯ │ ╰";
 const wchar_t kDivider = L'─';
 
 // ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghklmnopqrstuvwyz";
@@ -195,31 +200,60 @@ PrintSize Canvas::RenderBrackets(PrintBox print_box,
                                  PrintBox* inner_print_box) {
   assert(inner_print_box);
   // Render Left bracket
-  PrintSize left_br_size = RenderBracket(
-      print_box, BracketSide::Left, bracket_type, inner_size.height, dry_run);
+  PrintSize left_br_size = RenderBracket(print_box, BracketSide::Left,
+                                         bracket_type, inner_size, dry_run);
   print_box = print_box.ShrinkLeft(left_br_size.width);
+
+  // Calculate PrintSize for inner value with spaces
+  auto inner_size_with_spaces = left_br_size;
+  inner_size_with_spaces.width = inner_size.width + 2;
+  {
+    // Render top bracket
+    auto top_print_box = print_box;
+    top_print_box.base_line = top_print_box.y;
+    top_print_box.width = inner_size_with_spaces.width;
+    RenderBracket(top_print_box, BracketSide::Top, bracket_type,
+                  inner_size_with_spaces, dry_run);
+  }
 
   // Calculate PrintBox for inner value
   *inner_print_box = print_box;
-  inner_print_box->y = print_box.base_line - left_br_size.height / 2 +
-                       (left_br_size.height - inner_size.height) / 2;
-  inner_print_box->height = inner_print_box->y + inner_size.height;
+  inner_print_box->x += 1;
   inner_print_box->width = inner_size.width;
+  inner_print_box->height = inner_size.height;
+  size_t delta_y = (bracket_type == BracketType::Sqrt)
+                       ? 1
+                       : (print_box.height - inner_size.height) / 2;
+  inner_print_box->y = print_box.y + delta_y;
   inner_print_box->base_line = inner_print_box->y + inner_size.base_line;
-  print_box = print_box.ShrinkLeft(inner_size.width);
 
   // Render right bracket
-  PrintSize right_br_size = RenderBracket(
-      print_box, BracketSide::Right, bracket_type, inner_size.height, dry_run);
-  return left_br_size.GrowWidth(inner_size, false)
+  print_box = print_box.ShrinkLeft(inner_size_with_spaces.width);
+  PrintSize right_br_size = RenderBracket(print_box, BracketSide::Right,
+                                          bracket_type, inner_size, dry_run);
+
+  return left_br_size.GrowWidth(inner_size_with_spaces, false)
       .GrowWidth(right_br_size, false);
 }
 
 PrintSize Canvas::RenderBracket(const PrintBox& print_box,
                                 BracketSide side,
                                 BracketType bracket_type,
-                                size_t height,
+                                const PrintSize& inner_size,
                                 bool dry_run) {
+  if (side == BracketSide::Left || side == BracketSide::Right)
+    return RenderBracketLR(print_box, side, bracket_type, inner_size.height,
+                           dry_run);
+  return RenderBracketT(print_box, side, bracket_type, inner_size.width,
+                        dry_run);
+}
+
+PrintSize Canvas::RenderBracketLR(const PrintBox& print_box,
+                                  BracketSide side,
+                                  BracketType bracket_type,
+                                  size_t height,
+                                  bool dry_run) {
+  assert(side == BracketSide::Left || side == BracketSide::Right);
   const wchar_t* brackets = nullptr;
   switch (bracket_type) {
     case BracketType::Round:
@@ -234,19 +268,27 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
     case BracketType::Stright:
       brackets = kStrightBrackets;
       break;
+    case BracketType::Sqrt:
+      brackets = kSqrtBrackets;
+      break;
   }
-  if (height == 1) {
+
+  if (height == 1 && bracket_type != BracketType::Sqrt) {
     if (!dry_run) {
       size_t y = print_box.base_line - height / 2;
       data_[GetIndex(print_box.x, y)] =
-          (side == BracketSide::Left ? brackets[BracketsParts::Left]
-                                     : brackets[BracketsParts::Right]);
+          (side == BracketSide::Left ? brackets[BracketsParts::SmallLeft]
+                                     : brackets[BracketsParts::SmallRight]);
     }
     return {1, 1, 0};
   }
-
-  if (bracket_type != BracketType::Stright)
+  size_t width = 1;
+  if (bracket_type == BracketType::Sqrt) {
+    height += 1;
+    width += side == BracketSide::Left ? 1 : 0;
+  } else if (bracket_type != BracketType::Stright) {
     height += 2;
+  }
 
   if (!dry_run) {
     size_t y = print_box.base_line - height / 2;
@@ -262,13 +304,28 @@ PrintSize Canvas::RenderBracket(const PrintBox& print_box,
         s = side == BracketSide::Left ? brackets[BracketsParts::MiddleLeft]
                                       : brackets[BracketsParts::MiddleRight];
       } else {
-        s = kSquareBrackets[BracketsParts::Stright];
+        s = side == BracketSide::Left ? brackets[BracketsParts::StrightLeft]
+                                      : brackets[BracketsParts::StrightRight];
       }
-      data_[GetIndex(print_box.x + (side == BracketSide::Left ? 0 : 1),
-                     y + i)] = s;
+      data_[GetIndex(print_box.x + width - 1, y + i)] = s;
+    }
+    if (bracket_type == BracketType::Sqrt && side == BracketSide::Left) {
+      data_[GetIndex(print_box.x + width - 2, y + height - 1)] =
+          brackets[BracketsParts::AdditionalBottomLeft];
     }
   }
-  return {2, height, height / 2};
+  return {width, height, height / 2};
+}
+
+PrintSize Canvas::RenderBracketT(const PrintBox& print_box,
+                                 BracketSide side,
+                                 BracketType bracket_type,
+                                 size_t width,
+                                 bool dry_run) {
+  assert(side == BracketSide::Top);
+  if (bracket_type != BracketType::Sqrt)
+    return {};
+  return RenderDivider(print_box, width, dry_run);
 }
 
 PrintSize Canvas::RenderDivider(const PrintBox& print_box,
