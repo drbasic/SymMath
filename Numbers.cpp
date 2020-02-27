@@ -143,22 +143,22 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Sqrt(a/2, 3);
-  std::wcout << t1.Print(false) << "\n";
+  Variable t1 = Diff(Sqrt(a, 33), a);
+  std::wcout << t1.Print(true) << "\n";
+  /*
+    Variable t2 = Sqrt(Pow(a, 2), 2);
+    std::wcout << t2.Print(true) << "\n";
 
-  Variable t2 = Sqrt(Pow(a, 2), 2);
-  std::wcout << t2.Print(true) << "\n";
+    Variable t3 = Sqrt(Pow(a, 9), 6);
+    std::wcout << t3.Print(true) << "\n";
 
-  Variable t3 = Sqrt(Pow(a, 9), 6);
-  std::wcout << t3.Print(true) << "\n";
+    Variable t4 = Sqrt(Pow(a, 3), 6);
+    std::wcout << t4.Print(true) << "\n";
 
-  Variable t4 = Sqrt(Pow(a, 3), 6);
-  std::wcout << t4.Print(true) << "\n";
+    Variable t5 = Sqrt(Pow(a, 6), 3);
+    std::wcout << t5.Print(true) << "\n";
 
-  Variable t5 = Sqrt(Pow(a, 6), 3);
-  std::wcout << t5.Print(true) << "\n";
-
-  Variable t6 = (c)*Sqrt(a/2, 3) * Sqrt(b, 3);
-  std::wcout << t6.Print(true) << "\n";
-
+    Variable t6 = (c)*Sqrt(a/2, 3) * Sqrt(b, 3);
+    std::wcout << t6.Print(true) << "\n";
+  */
 }

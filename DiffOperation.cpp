@@ -28,6 +28,8 @@ std::unique_ptr<INode> DoDiffPlusOperation(const Operation* operation,
                                            const Variable& by_var);
 std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
                                           const Variable& by_var);
+std::unique_ptr<INode> DoDiffSqrtOperation(const Operation* operation,
+                                           const Variable& by_var);
 std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
                                           const Variable& by_var);
 
@@ -79,7 +81,7 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
       assert(false);
     } break;
     case Op::Sqrt: {
-      assert(false);
+      return DoDiffSqrtOperation(operation, by_var);
     } break;
   }
 
@@ -174,6 +176,20 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
   }
   return INodeHelper::MakeMultIfNeeded(
       std::move(a), (INodeHelper::MakePlusIfNeeded(std::move(b))));
+}
+
+std::unique_ptr<INode> DoDiffSqrtOperation(const Operation* operation,
+                                           const Variable& by_var) {
+  auto f = operation->Operand(0);
+  auto g = operation->Operand(1);
+  auto derivative_f = DoDiffNode(f, by_var);
+  auto derivative_g = DoDiffNode(g, by_var);
+  if (derivative_g->IsEqual(Constants::Zero())) {
+    return std::move(derivative_f) /
+           (g->Clone() * Sqrt(Pow(f->Clone(), g->Clone() - 1), g->Clone()));
+  }
+  assert(false);
+  return nullptr;
 }
 
 std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,

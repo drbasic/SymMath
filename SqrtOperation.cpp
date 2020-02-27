@@ -49,13 +49,13 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
     auto exp_render_behaviour = render_behaviour;
     exp_render_behaviour.SetBrackets(BracketsBehaviour::Ommit);
     exp_render_behaviour.SetMunus(MinusBehaviour::Ommit);
+    exp_render_behaviour.SetSubSuper(SubSuperBehaviour::Superscript);
     exp_size = dry_run ? Exp()->Render(canvas, print_box, dry_run,
                                        exp_render_behaviour)
                        : Exp()->LastPrintSize();
     if (!dry_run) {
-      auto exp_print_box = print_box;
-      exp_print_box.base_line =
-          print_box.y + print_box.height - 2 - exp_size.base_line;
+      PrintBox exp_print_box(exp_size, print_box.x,
+                             print_box.base_line - exp_size.base_line - 1);
       auto exp_size2 =
           Exp()->Render(canvas, exp_print_box, dry_run, exp_render_behaviour);
       assert(exp_size == exp_size2);
@@ -84,6 +84,7 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
 }
 
 std::optional<CanonicPow> SqrtOperation::GetCanonicPow() {
+  return std::nullopt;
   auto* exp_const = Exp()->AsConstant();
   if (!exp_const || exp_const->IsNamed())
     return std::nullopt;
