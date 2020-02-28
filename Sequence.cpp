@@ -12,10 +12,7 @@ bool Sequence::IsEqual(const INode* rh) const {
 }
 
 std::unique_ptr<INode> Sequence::Clone() const {
-  auto result = std::make_unique<Sequence>();
-  for (size_t i = 0; i < Size(); ++i)
-    result->Add(Value(i)->Clone());
-  return result;
+  return AbstractSequence::Clone(std::make_unique<Sequence>());
 }
 
 std::unique_ptr<INode> Sequence::SymCalc(SymCalcSettings settings) const {
@@ -26,6 +23,8 @@ PrintSize Sequence::Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
                            RenderBehaviour render_behaviour) const {
+  render_behaviour.TakeMinus();
+  render_behaviour.TakeBrackets();
   return AbstractSequence::Render(PrintDirection::Horizontal, canvas, print_box,
                                   dry_run, render_behaviour);
 }

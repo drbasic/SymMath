@@ -23,13 +23,15 @@ class AbstractSequence : public INodeImpl {
   size_t Size() const { return values_.size(); }
   std::unique_ptr<INode> TakeValue(size_t indx);
   const INode* Value(size_t indx) const { return values_[indx].get(); }
-  void Add(std::unique_ptr<INode> rh);
+  void AddValue(std::unique_ptr<INode> rh);
 
  protected:
   enum class PrintDirection {
     Horizontal,
     Vertical,
   };
+  std::unique_ptr<AbstractSequence> Clone(
+      std::unique_ptr<AbstractSequence> result) const;
   bool IsEqual(const AbstractSequence* rh) const;
   std::unique_ptr<AbstractSequence> SymCalc(
       std::unique_ptr<AbstractSequence> result,
@@ -40,6 +42,8 @@ class AbstractSequence : public INodeImpl {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const;
+
+  std::vector<std::unique_ptr<INode>> values_;
 
  private:
   PrintSize RenderAllValues(PrintDirection direction,
@@ -64,5 +68,4 @@ class AbstractSequence : public INodeImpl {
 
   mutable PrintSize print_size_;
   mutable PrintSize values_print_size_;
-  std::vector<std::unique_ptr<INode>> values_;
 };

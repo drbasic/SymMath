@@ -30,9 +30,9 @@ std::unique_ptr<INode> NonTrivialSqrt(
   auto* exp_const = INodeHelper::AsConstant((*operands)[1].get());
   if (val_const && exp_const) {
     auto result = INodeHelper::MakeSequence();
-    result->Add(INodeHelper::MakeConst(
+    result->AddValue(INodeHelper::MakeConst(
         TrivialSqrt(val_const->Value(), exp_const->Value())));
-    result->Add(INodeHelper::MakeConst(
+    result->AddValue(INodeHelper::MakeConst(
         -TrivialSqrt(val_const->Value(), exp_const->Value())));
 
     return result;

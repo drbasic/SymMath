@@ -143,7 +143,7 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Sqrt(Const(10));
+  Variable t1 = Vector2(Sqrt(Const(10)), Sqrt(Const(100)));
   // t1.ConvertToComplex();
   std::wcout << t1.Print(true) << "\n";
 }

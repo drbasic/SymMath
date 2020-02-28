@@ -81,8 +81,16 @@ std::unique_ptr<INode> AbstractSequence::TakeValue(size_t indx) {
   return std::move(values_[indx]);
 }
 
-void AbstractSequence::Add(std::unique_ptr<INode> rh) {
+void AbstractSequence::AddValue(std::unique_ptr<INode> rh) {
   values_.push_back(std::move(rh));
+}
+
+std::unique_ptr<AbstractSequence> AbstractSequence::Clone(
+    std::unique_ptr<AbstractSequence> result) const {
+  result->values_.reserve(Size());
+  for (size_t i = 0; i < Size(); ++i)
+    result->AddValue(Value(i)->Clone());
+  return result;
 }
 
 bool AbstractSequence::IsEqual(const AbstractSequence* rh) const {
