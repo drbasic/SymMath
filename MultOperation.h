@@ -41,6 +41,14 @@ class MultOperation : public Operation {
   static std::unique_ptr<INode> ProcessImaginary(
       std::vector<std::unique_ptr<INode>>* nodes);
 
+  INodeImpl* Operand(size_t indx) { return Operation::Operand(indx); }
+  const INodeImpl* Operand(size_t indx) const {
+    return Operation::Operand(indx);
+  }
+  using Operation::SetOperand;
+  using Operation::TakeAllOperands;
+  using Operation::TakeOperand;
+
  private:
   void SimplifyTheSameMult(HotToken& token, std::unique_ptr<INode>* new_node);
   void SimplifyTheSamePow(HotToken& token, std::unique_ptr<INode>* new_node);

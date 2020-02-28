@@ -188,7 +188,7 @@ CanonicMult INodeHelper::MergeCanonic(const CanonicMult& lh,
 // static
 std::unique_ptr<INode> INodeHelper::Negate(std::unique_ptr<INode> node) {
   if (auto* un_minus = AsUnMinus(node.get())) {
-    return un_minus->TakeOperand(0);
+    return un_minus->TakeOperand();
   }
   return MakeUnMinus(std::move(node));
 }
@@ -233,6 +233,11 @@ void INodeHelper::RemoveEmptyOperands(
       std::remove_if(std::begin(*nodes), std::end(*nodes),
                      [](const std::unique_ptr<INode>& node) { return !node; }),
       std::end(*nodes));
+}
+
+std::unique_ptr<INode> INodeHelper::TakeOperand(Operation* operation,
+                                                size_t indx) {
+  return operation->TakeOperand(indx);
 }
 
 // static

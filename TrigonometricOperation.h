@@ -14,5 +14,15 @@ class TrigonometricOperation : public Operation {
                    PrintBox print_box,
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
-  void ConvertToComplexImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void ConvertToComplexImpl(HotToken token,
+                            std::unique_ptr<INode>* new_node) override;
+
+  // IOperation implementation
+  TrigonometricOperation* AsTrigonometricOperation() override { return this; }
+  const TrigonometricOperation* AsTrigonometricOperation() const override {
+    return this;
+  }
+
+  INodeImpl* Operand() { return Operation::Operand(0); }
+  const INodeImpl* Operand() const { return Operation::Operand(0); }
 };

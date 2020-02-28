@@ -23,7 +23,7 @@ PrintSize TrigonometricOperation::Render(
     bool dry_run,
     RenderBehaviour render_behaviour) const {
   render_behaviour.SetBrackets(BracketsBehaviour::Force);
-  return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
+  return print_size_ = RenderOperand(Operand(), canvas, print_box, dry_run,
                                      render_behaviour, true);
 }
 
@@ -32,7 +32,7 @@ void TrigonometricOperation::ConvertToComplexImpl(
     std::unique_ptr<INode>* new_node) {
   Operation::ConvertToComplexImpl({&token}, nullptr);
 
-  auto x = Operand(0);
+  auto x = Operand();
   if (op_info_->op == Op::Sin) {
     *new_node = (Pow(Constants::MakeE(), Imag() * x->Clone()) -
                  Pow(Constants::MakeE(), -Imag() * x->Clone())) /

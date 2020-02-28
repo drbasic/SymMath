@@ -48,7 +48,7 @@ std::wstring GetBaseName(const INode* node) {
   if (const auto* as_var = INodeHelper::AsVariable(node))
     return as_var->GetName();
   if (const auto* as_un_minus = INodeHelper::AsUnMinus(node))
-    return GetBaseName(as_un_minus->Operand(0));
+    return GetBaseName(as_un_minus->Operand());
   if (const auto* as_pow = INodeHelper::AsPow(node)) {
     return GetBaseName(as_pow->Base());
   }
@@ -61,7 +61,7 @@ std::wstring GetBaseName(const INode* node) {
   }
   if (const auto* as_div = INodeHelper::AsDiv(node)) {
     std::wstring result =
-        GetBaseName(as_div->Operand(0)) + GetBaseName(as_div->Operand(1));
+        GetBaseName(as_div->Dividend()) + GetBaseName(as_div->Divider());
     return result;
   }
   return std::wstring();
@@ -275,13 +275,14 @@ void ExctractNodesWithOp(Op op,
     return;
   }
   if (operation->op() == Op::UnMinus) {
+    auto* un_minus = operation->AsUnMinusOperation();
     if (op == Op::Mult) {
-      ExctractNodesWithOp(op, operation->TakeOperand(0), positive_nodes,
+      ExctractNodesWithOp(op, un_minus->TakeOperand(), positive_nodes,
                           negative_nodes);
       negative_nodes->push_back(std::move(positive_nodes->back()));
       positive_nodes->pop_back();
     } else {
-      ExctractNodesWithOp(op, operation->TakeOperand(0), negative_nodes,
+      ExctractNodesWithOp(op, un_minus->TakeOperand(), negative_nodes,
                           positive_nodes);
     }
     return;
@@ -291,8 +292,8 @@ void ExctractNodesWithOp(Op op,
     return;
   }
   for (size_t i = 0; i < operation->OperandsCount(); ++i) {
-    ExctractNodesWithOp(op, operation->TakeOperand(i), positive_nodes,
-                        negative_nodes);
+    ExctractNodesWithOp(op, INodeHelper::TakeOperand(operation, i),
+                        positive_nodes, negative_nodes);
   }
 }
 
@@ -384,8 +385,9 @@ bool MergeCanonicToPow(HotToken& token,
         // x^a * x^b
         auto new_pow = INodeHelper::MakePow(
             lh_pow->Base()->Clone(),
-            INodeHelper::MakePlus(lh_pow->TakeOperand(PowOperation::PowIndex),
-                                  rh_pow->TakeOperand(PowOperation::PowIndex)));
+            INodeHelper::MakePlus(
+                lh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex),
+                rh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex)));
         merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
@@ -396,8 +398,9 @@ bool MergeCanonicToPow(HotToken& token,
         // x^a * x
         auto new_pow = INodeHelper::MakePow(
             lh_pow->Base()->Clone(),
-            INodeHelper::MakePlus(lh_pow->TakeOperand(PowOperation::PowIndex),
-                                  INodeHelper::MakeConst(1.0)));
+            INodeHelper::MakePlus(
+                lh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex),
+                INodeHelper::MakeConst(1.0)));
         merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
@@ -408,8 +411,9 @@ bool MergeCanonicToPow(HotToken& token,
         // x * x^b
         auto new_pow = INodeHelper::MakePow(
             rh_pow->Base()->Clone(),
-            INodeHelper::MakePlus(rh_pow->TakeOperand(PowOperation::PowIndex),
-                                  INodeHelper::MakeConst(1.0)));
+            INodeHelper::MakePlus(
+                rh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex),
+                INodeHelper::MakeConst(1.0)));
         merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
@@ -538,7 +542,7 @@ std::vector<std::unique_ptr<INode>> ExtractMultipliers(const INode* node) {
     result.push_back(as_pow->Base()->Clone());
   } else if (auto* as_un_minus = INodeHelper::AsUnMinus(node)) {
     result.push_back(INodeHelper::MakeConst(-1.0));
-    auto nodes = ExtractMultipliers(as_un_minus->Operand(0));
+    auto nodes = ExtractMultipliers(as_un_minus->Operand());
     for (auto& n : nodes)
       result.push_back(std::move(n));
   } else {

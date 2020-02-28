@@ -13,6 +13,7 @@ class PlusOperation;
 class PowOperation;
 class SqrtOperation;
 class CompareOperation;
+class TrigonometricOperation;
 class UnMinusOperation;
 
 struct CanonicMult {
@@ -60,6 +61,10 @@ class IOperation : public INodeImpl {
   virtual const CompareOperation* AsCompareOperation() const { return nullptr; }
   virtual LogOperation* AsLogOperation() { return nullptr; }
   virtual const LogOperation* AsLogOperation() const { return nullptr; }
+  virtual TrigonometricOperation* AsTrigonometricOperation() { return nullptr; }
+  virtual const TrigonometricOperation* AsTrigonometricOperation() const {
+    return nullptr;
+  }
   virtual DiffOperation* AsDiffOperation() { return nullptr; }
   virtual const DiffOperation* AsDiffOperation() const { return nullptr; }
 

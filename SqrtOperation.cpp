@@ -107,9 +107,12 @@ void SqrtOperation::SimplifyChains(HotToken token,
   Operation::SimplifyChains({&token}, nullptr);
 
   if (auto* as_sqrt = INodeHelper::AsSqrt(Value())) {
-    SetOperand(ExpIndex, INodeHelper::MakeMult(TakeOperand(ExpIndex),
-                                               as_sqrt->TakeOperand(ExpIndex)));
-    SetOperand(ValueIndex, as_sqrt->TakeOperand(ValueIndex));
+    SetOperand(
+        OperandIndex::ExpIndex,
+        INodeHelper::MakeMult(TakeOperand(OperandIndex::ExpIndex),
+                              as_sqrt->TakeOperand(OperandIndex::ExpIndex)));
+    SetOperand(OperandIndex::ValueIndex,
+               as_sqrt->TakeOperand(OperandIndex::ValueIndex));
   }
 
   if (auto* as_pow = INodeHelper::AsPow(Value())) {
@@ -120,15 +123,17 @@ void SqrtOperation::SimplifyChains(HotToken token,
       INodeHelper::RemoveEmptyOperands(&down);
       INodeHelper::RemoveEmptyOperands(&up);
       if (!up.empty()) {
-        as_pow->SetOperand(PowOperation::PowIndex,
+        as_pow->SetOperand(PowOperation::OperandIndex::PowIndex,
                            INodeHelper::MakeMultIfNeeded(std::move(up)));
       } else {
-        SetOperand(ValueIndex, as_pow->TakeOperand(PowOperation::BaseIndex));
+        SetOperand(OperandIndex::ValueIndex,
+                   as_pow->TakeOperand(PowOperation::OperandIndex::BaseIndex));
       }
       if (!down.empty()) {
-        SetOperand(ExpIndex, INodeHelper::MakeMultIfNeeded(std::move(down)));
+        SetOperand(OperandIndex::ExpIndex,
+                   INodeHelper::MakeMultIfNeeded(std::move(down)));
       } else {
-        SetOperand(ExpIndex, INodeHelper::MakeConst(1.0));
+        SetOperand(OperandIndex::ExpIndex, INodeHelper::MakeConst(1.0));
       }
     }
   }
@@ -146,7 +151,7 @@ void SqrtOperation::SimplifyExp(HotToken& token,
       }
       if (exp == 1.0) {
         token.SetChanged();
-        *new_node = TakeOperand(ValueIndex);
+        *new_node = TakeOperand(OperandIndex::ValueIndex);
         return;
       }
     }

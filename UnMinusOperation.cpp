@@ -24,27 +24,27 @@ PrintSize UnMinusOperation::Render(Canvas* canvas,
   if (minus_behaviour == MinusBehaviour::Force) {
     assert(!HasFrontMinus());
     return print_size_ =
-               Operand(0)->Render(canvas, print_box, dry_run, render_behaviour);
+               Operand()->Render(canvas, print_box, dry_run, render_behaviour);
   }
 
   // - -a => a
-  if (Operand(0)->HasFrontMinus()) {
+  if (Operand()->HasFrontMinus()) {
     render_behaviour.SetMunus(MinusBehaviour::Ommit);
     return print_size_ =
-               Operand(0)->Render(canvas, print_box, dry_run, render_behaviour);
+               Operand()->Render(canvas, print_box, dry_run, render_behaviour);
   }
 
   // don't render this minus. a + (-b) -> a - b. Minus render from (+)
   // operation.
   if (minus_behaviour == MinusBehaviour::Ommit) {
     assert(HasFrontMinus());
-    assert(!Operand(0)->HasFrontMinus());
-    return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
+    assert(!Operand()->HasFrontMinus());
+    return print_size_ = RenderOperand(Operand(), canvas, print_box, dry_run,
                                        render_behaviour, false);
   }
 
   if (minus_behaviour == MinusBehaviour::Relax) {
-    return print_size_ = RenderOperand(Operand(0), canvas, print_box, dry_run,
+    return print_size_ = RenderOperand(Operand(), canvas, print_box, dry_run,
                                        render_behaviour, true);
   }
 
@@ -53,18 +53,18 @@ PrintSize UnMinusOperation::Render(Canvas* canvas,
 }
 
 bool UnMinusOperation::HasFrontMinus() const {
-  return !Operand(0)->HasFrontMinus();
+  return !Operand()->HasFrontMinus();
 }
 
 ValueType UnMinusOperation::GetValueType() const {
-  return Operand(0)->GetValueType();
+  return Operand()->GetValueType();
 }
 
 void UnMinusOperation::OpenBracketsImpl(HotToken token,
                                         std::unique_ptr<INode>* new_node) {
   Operation::OpenBracketsImpl({&token}, nullptr);
 
-  auto* as_plus = INodeHelper::AsPlus(Operand(0));
+  auto* as_plus = INodeHelper::AsPlus(Operand());
   if (!as_plus)
     return;
 
@@ -90,20 +90,20 @@ void UnMinusOperation::SimplifyUnMinus(HotToken token,
                                        std::unique_ptr<INode>* new_node) {
   Operation::SimplifyUnMinus({&token}, nullptr);
 
-  if (Operation* sub_un_minus = INodeHelper::AsUnMinus(operands_[0].get())) {
+  if (auto sub_un_minus = INodeHelper::AsUnMinus(Operand())) {
     token.SetChanged();
-    *new_node = sub_un_minus->TakeOperand(0);
+    *new_node = sub_un_minus->TakeOperand();
     return;
   }
 
-  if (Operation* sub_mult = INodeHelper::AsMult(operands_[0].get())) {
+  if (auto* sub_mult = INodeHelper::AsMult(Operand())) {
     for (size_t i = 0; i < sub_mult->OperandsCount(); ++i) {
       if (auto* as_const = INodeHelper::AsConstant(sub_mult->Operand(i))) {
         if (!as_const->Name().empty())
           continue;
         sub_mult->SetOperand(i, INodeHelper::MakeConst(-as_const->Value()));
         token.SetChanged();
-        *new_node = TakeOperand(0);
+        *new_node = TakeOperand();
         return;
       }
     }

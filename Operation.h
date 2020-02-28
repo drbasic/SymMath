@@ -54,15 +54,17 @@ class Operation : public IOperation {
 
   Op op() const;
   size_t OperandsCount() const;
+  void CheckIntegrity() const;
+
+ protected:
+  friend class Tests;
+  friend class INodeHelper;
+
   INodeImpl* Operand(size_t indx);
   const INodeImpl* Operand(size_t indx) const;
   std::unique_ptr<INode> TakeOperand(size_t indx);
   void SetOperand(size_t indx, std::unique_ptr<INode> node);
   std::vector<std::unique_ptr<INode>> TakeAllOperands();
-  void CheckIntegrity() const;
-
- protected:
-  friend class Tests;
 
   PrintSize RenderOperandChain(Canvas* canvas,
                                PrintBox print_box,

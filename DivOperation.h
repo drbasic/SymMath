@@ -4,7 +4,7 @@
 
 class DivOperation : public Operation {
  public:
-  enum : size_t {
+  enum class OperandIndex : size_t {
     DividendIndex = 0,
     DividerIndex = 1,
   };
@@ -33,10 +33,24 @@ class DivOperation : public Operation {
   DivOperation* AsDivOperation() override { return this; }
   const DivOperation* AsDivOperation() const override { return this; }
 
-  INodeImpl* Dividend() { return Operand(DividendIndex); }
-  const INodeImpl* Dividend() const { return Operand(DividendIndex); }
-  INodeImpl* Divider() { return Operand(DividerIndex); }
-  const INodeImpl* Divider() const { return Operand(DividerIndex); }
+  INodeImpl* Dividend() {
+    return Operand(static_cast<size_t>(OperandIndex::DividendIndex));
+  }
+  const INodeImpl* Dividend() const {
+    return Operand(static_cast<size_t>(OperandIndex::DividendIndex));
+  }
+  INodeImpl* Divider() {
+    return Operand(static_cast<size_t>(OperandIndex::DividerIndex));
+  }
+  const INodeImpl* Divider() const {
+    return Operand(static_cast<size_t>(OperandIndex::DividerIndex));
+  }
+  std::unique_ptr<INode> TakeOperand(OperandIndex indx) {
+    return Operation::TakeOperand(static_cast<size_t>(indx));
+  }
+  void SetOperand(OperandIndex indx, std::unique_ptr<INode> node) {
+    Operation::SetOperand(static_cast<size_t>(indx), std::move(node));
+  }
 
  private:
   friend class Tests;

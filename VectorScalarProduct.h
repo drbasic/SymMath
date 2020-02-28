@@ -15,9 +15,8 @@ std::unique_ptr<INode> VectorProduct(
     const OpInfo* op,
     std::vector<std::unique_ptr<INode>>* operands);
 
-std::unique_ptr<INode> VectorAdd(
-    const OpInfo* op,
-    std::vector<std::unique_ptr<INode>>* operands);
+std::unique_ptr<INode> VectorAdd(const OpInfo* op,
+                                 std::vector<std::unique_ptr<INode>>* operands);
 
 std::unique_ptr<INode> VectorUnMinus(
     const OpInfo* op,

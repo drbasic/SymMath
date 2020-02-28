@@ -275,6 +275,7 @@ PrintSize Canvas::RenderBracketLR(const PrintBox& print_box,
       brackets = kSqrtBrackets;
       break;
   }
+  assert(brackets);
 
   if (height == 1 && bracket_type != BracketType::Sqrt) {
     if (!dry_run) {

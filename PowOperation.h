@@ -4,7 +4,7 @@
 
 class PowOperation : public Operation {
  public:
-  enum : size_t {
+  enum class OperandIndex : size_t {
     BaseIndex = 0,
     PowIndex = 1,
   };
@@ -32,10 +32,24 @@ class PowOperation : public Operation {
   void SimplifyConsts(HotToken token,
                       std::unique_ptr<INode>* new_node) override;
 
-  INodeImpl* Base() { return Operand(BaseIndex); }
-  const INodeImpl* Base() const { return Operand(BaseIndex); }
-  INodeImpl* Exp() { return Operand(PowIndex); }
-  const INodeImpl* Exp() const { return Operand(PowIndex); }
+  INodeImpl* Base() {
+    return Operand(static_cast<size_t>(OperandIndex::BaseIndex));
+  }
+  const INodeImpl* Base() const {
+    return Operand(static_cast<size_t>(OperandIndex::BaseIndex));
+  }
+  INodeImpl* Exp() {
+    return Operand(static_cast<size_t>(OperandIndex::PowIndex));
+  }
+  const INodeImpl* Exp() const {
+    return Operand(static_cast<size_t>(OperandIndex::PowIndex));
+  }
+  std::unique_ptr<INode> TakeOperand(OperandIndex indx) {
+    return Operation::TakeOperand(static_cast<size_t>(indx));
+  }
+  void SetOperand(OperandIndex indx, std::unique_ptr<INode> node) {
+    Operation::SetOperand(static_cast<size_t>(indx), std::move(node));
+  }
 
  private:
   void SimplifyExp(HotToken& token, std::unique_ptr<INode>* new_node);

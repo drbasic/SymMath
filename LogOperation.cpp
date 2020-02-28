@@ -90,15 +90,17 @@ void LogOperation::OpenBracketsImpl(HotToken token,
     std::vector<std::unique_ptr<INode>> sum_operands;
     sum_operands.reserve(as_div->OperandsCount());
     for (size_t i = 0; i < as_div->OperandsCount(); ++i) {
-      auto node =
-          INodeHelper::MakeLogIfNeeded(Base()->Clone(), as_div->TakeOperand(i));
+      DivOperation::OperandIndex op_indx =
+          static_cast<DivOperation::OperandIndex>(i);
+      auto node = INodeHelper::MakeLogIfNeeded(Base()->Clone(),
+                                               as_div->TakeOperand(op_indx));
       {
         std::unique_ptr<INode> new_node;
         node->AsNodeImpl()->OpenBracketsImpl({&token}, &new_node);
         if (new_node)
           node = std::move(new_node);
       }
-      if (i == 1)
+      if (op_indx == DivOperation::OperandIndex::DividerIndex)
         node = INodeHelper::Negate(std::move(node));
       sum_operands.push_back(std::move(node));
     }
@@ -107,10 +109,10 @@ void LogOperation::OpenBracketsImpl(HotToken token,
   }
   if (auto* as_pow = INodeHelper::AsPow(Value())) {
     *new_node = INodeHelper::MakeMultIfNeeded(
-        as_pow->TakeOperand(PowOperation::BaseIndex),
+        as_pow->TakeOperand(PowOperation::OperandIndex::BaseIndex),
         INodeHelper::MakeLogIfNeeded(
-            TakeOperand(LogOperation::BaseIndex),
-            as_pow->TakeOperand(PowOperation::PowIndex)));
+            TakeOperand(LogOperation::OperandIndex::BaseIndex),
+            as_pow->TakeOperand(PowOperation::OperandIndex::PowIndex)));
     return;
   }
 }

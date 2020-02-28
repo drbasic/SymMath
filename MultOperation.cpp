@@ -208,8 +208,9 @@ void MultOperation::SimplifyDivMul(HotToken token,
   std::vector<std::unique_ptr<INode>> new_bottom;
   for (auto& node : operands_) {
     if (auto* div = INodeHelper::AsDiv(node.get())) {
-      new_bottom.push_back(div->TakeOperand(1));
-      node = div->TakeOperand(0);
+      new_bottom.push_back(
+          div->TakeOperand(DivOperation::OperandIndex::DividerIndex));
+      node = div->TakeOperand(DivOperation::OperandIndex::DividendIndex);
     }
   }
   if (new_bottom.empty())

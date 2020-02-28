@@ -29,5 +29,13 @@ class PlusOperation : public Operation {
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
 
+  INodeImpl* Operand(size_t indx) { return Operation::Operand(indx); }
+  const INodeImpl* Operand(size_t indx) const {
+    return Operation::Operand(indx);
+  }
+  using Operation::SetOperand;
+  using Operation::TakeAllOperands;
+  using Operation::TakeOperand;
+
  private:
 };

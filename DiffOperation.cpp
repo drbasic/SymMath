@@ -9,6 +9,9 @@
 #include "LogOperation.h"
 #include "MultOperation.h"
 #include "PlusOperation.h"
+#include "PowOperation.h"
+#include "SqrtOperation.h"
+#include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
 #include "Variable.h"
@@ -20,17 +23,17 @@ std::unique_ptr<INode> DoDiffVariable(const Variable* var,
                                       const Variable& by_var);
 std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
                                        const Variable& by_var);
-std::unique_ptr<INode> DoDiffMultOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffMultOperation(const MultOperation* operation,
                                            const Variable& by_var);
-std::unique_ptr<INode> DoDiffDivOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffDivOperation(const DivOperation* operation,
                                           const Variable& by_var);
-std::unique_ptr<INode> DoDiffPlusOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffPlusOperation(const PlusOperation* operation,
                                            const Variable& by_var);
-std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffPowOperation(const PowOperation* operation,
                                           const Variable& by_var);
-std::unique_ptr<INode> DoDiffSqrtOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffSqrtOperation(const SqrtOperation* operation,
                                            const Variable& by_var);
-std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffLogOperation(const LogOperation* operation,
                                           const Variable& by_var);
 
 std::unique_ptr<INode> DoDiffVariable(const Variable* var,
@@ -42,37 +45,37 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
                                        const Variable& by_var) {
   switch (operation->op()) {
     case Op::UnMinus: {
-      return INodeHelper::MakeUnMinus(
-          DoDiffNode(operation->Operand(0), by_var));
+      auto* un_minus = operation->AsUnMinusOperation();
+      return INodeHelper::MakeUnMinus(DoDiffNode(un_minus->Operand(), by_var));
     } break;
     case Op::Minus: {
       assert(false);
     } break;
     case Op::Plus: {
-      return DoDiffPlusOperation(operation, by_var);
+      return DoDiffPlusOperation(operation->AsPlusOperation(), by_var);
     } break;
     case Op::Mult: {
-      return DoDiffMultOperation(operation, by_var);
+      return DoDiffMultOperation(operation->AsMultOperation(), by_var);
     } break;
     case Op::Pow: {
-      return DoDiffPowOperation(operation, by_var);
+      return DoDiffPowOperation(operation->AsPowOperation(), by_var);
     } break;
     case Op::VectorMult: {
       assert(false);
     } break;
     case Op::Div: {
-      return DoDiffDivOperation(operation, by_var);
+      return DoDiffDivOperation(operation->AsDivOperation(), by_var);
     } break;
     case Op::Sin: {
-      auto f = operation->Operand(0);
+      auto f = operation->AsTrigonometricOperation()->Operand();
       return DoDiffNode(f, by_var) * Cos(f->Clone());
     }
     case Op::Cos: {
-      auto f = operation->Operand(0);
+      auto f = operation->AsTrigonometricOperation()->Operand();
       return -DoDiffNode(f, by_var) * Sin(f->Clone());
     } break;
     case Op::Log: {
-      return DoDiffLogOperation(operation, by_var);
+      return DoDiffLogOperation(operation->AsLogOperation(), by_var);
     } break;
     case Op::Equal: {
       assert(false);
@@ -81,14 +84,14 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
       assert(false);
     } break;
     case Op::Sqrt: {
-      return DoDiffSqrtOperation(operation, by_var);
+      return DoDiffSqrtOperation(operation->AsSqrtOperation(), by_var);
     } break;
   }
 
   return nullptr;
 }
 
-std::unique_ptr<INode> DoDiffMultOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffMultOperation(const MultOperation* operation,
                                            const Variable& by_var) {
   std::vector<std::unique_ptr<INode>> new_plus_operands;
   new_plus_operands.reserve(operation->OperandsCount());
@@ -118,17 +121,17 @@ std::unique_ptr<INode> DoDiffMultOperation(const Operation* operation,
   return INodeHelper::MakePlusIfNeeded(std::move(new_plus_operands));
 }
 
-std::unique_ptr<INode> DoDiffDivOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffDivOperation(const DivOperation* operation,
                                           const Variable& by_var) {
-  auto f = operation->Operand(0);
-  auto g = operation->Operand(1);
+  auto f = operation->Dividend();
+  auto g = operation->Divider();
 
   return (INodeHelper::MakeMultIfNeeded(DoDiffNode(f, by_var), g->Clone()) -
           INodeHelper::MakeMultIfNeeded(f->Clone(), DoDiffNode(g, by_var))) /
          Pow(g->Clone(), 2);
 }
 
-std::unique_ptr<INode> DoDiffPlusOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffPlusOperation(const PlusOperation* operation,
                                            const Variable& by_var) {
   std::vector<std::unique_ptr<INode>> new_plus_operands;
   new_plus_operands.reserve(operation->OperandsCount());
@@ -138,10 +141,10 @@ std::unique_ptr<INode> DoDiffPlusOperation(const Operation* operation,
   return INodeHelper::MakePlusIfNeeded(std::move(new_plus_operands));
 }
 
-std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffPowOperation(const PowOperation* operation,
                                           const Variable& by_var) {
-  auto f = operation->Operand(0);
-  auto g = operation->Operand(1);
+  auto f = operation->Base();
+  auto g = operation->Exp();
   auto derivative_f = DoDiffNode(f, by_var);
   auto derivative_g = DoDiffNode(g, by_var);
   if (derivative_f->IsEqual(Constants::Zero()) &&
@@ -178,10 +181,10 @@ std::unique_ptr<INode> DoDiffPowOperation(const Operation* operation,
       std::move(a), (INodeHelper::MakePlusIfNeeded(std::move(b))));
 }
 
-std::unique_ptr<INode> DoDiffSqrtOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffSqrtOperation(const SqrtOperation* operation,
                                            const Variable& by_var) {
-  auto f = operation->Operand(0);
-  auto g = operation->Operand(1);
+  auto f = operation->Value();
+  auto g = operation->Exp();
   auto derivative_f = DoDiffNode(f, by_var);
   auto derivative_g = DoDiffNode(g, by_var);
 
@@ -209,10 +212,10 @@ std::unique_ptr<INode> DoDiffSqrtOperation(const Operation* operation,
   return (std::move(a) * std::move(b)) / std::move(c);
 }
 
-std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
+std::unique_ptr<INode> DoDiffLogOperation(const LogOperation* operation,
                                           const Variable& by_var) {
-  auto base = operation->Operand(0);
-  auto f = operation->Operand(1);
+  auto base = operation->Base();
+  auto f = operation->Value();
   auto derivative_base = DoDiffNode(base, by_var);
   if (!INodeHelper::AsConstant(derivative_base.get())) {
     return INodeHelper::MakeError(L"base is not constant");
@@ -272,11 +275,13 @@ PrintSize DiffOperation::Render(Canvas* canvas,
 }
 
 const INode* DiffOperation::Value() const {
-  return Operand(0);
+  return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
 }
 
 const Variable* DiffOperation::ByVar() const {
-  return Operand(1)->AsNodeImpl()->AsVariable();
+  return Operand(static_cast<size_t>(OperandIndex::ByValIndex))
+      ->AsNodeImpl()
+      ->AsVariable();
 }
 
 PrintSize DiffOperation::RenderPrefix(Canvas* canvas,

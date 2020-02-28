@@ -9,7 +9,7 @@ std::unique_ptr<INode> NonTrivialSqrt(
 
 class SqrtOperation : public Operation {
  public:
-  enum : size_t {
+  enum class OperandIndex : size_t {
     ValueIndex = 0,
     ExpIndex = 1,
   };
@@ -34,10 +34,24 @@ class SqrtOperation : public Operation {
   void SimplifyChains(HotToken token,
                       std::unique_ptr<INode>* new_node) override;
 
-  INodeImpl* Value() { return Operand(ValueIndex); }
-  const INodeImpl* Value() const { return Operand(ValueIndex); }
-  INodeImpl* Exp() { return Operand(ExpIndex); }
-  const INodeImpl* Exp() const { return Operand(ExpIndex); }
+  INodeImpl* Value() {
+    return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+  }
+  const INodeImpl* Value() const {
+    return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+  }
+  INodeImpl* Exp() {
+    return Operand(static_cast<size_t>(OperandIndex::ExpIndex));
+  }
+  const INodeImpl* Exp() const {
+    return Operand(static_cast<size_t>(OperandIndex::ExpIndex));
+  }
+  std::unique_ptr<INode> TakeOperand(OperandIndex indx) {
+    return Operation::TakeOperand(static_cast<size_t>(indx));
+  }
+  void SetOperand(OperandIndex indx, std::unique_ptr<INode> node) {
+    Operation::SetOperand(static_cast<size_t>(indx), std::move(node));
+  }
 
  private:
   void SimplifyExp(HotToken& token, std::unique_ptr<INode>* new_node);

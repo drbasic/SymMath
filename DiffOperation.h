@@ -26,7 +26,12 @@ class DiffOperation : public Operation {
 
   const INode* Value() const;
   const Variable* ByVar() const;
+
  private:
+  enum class OperandIndex : size_t {
+    ValueIndex = 0,
+    ByValIndex = 1,
+  };
   PrintSize RenderPrefix(Canvas* canvas,
                          PrintBox print_box,
                          bool dry_run,
