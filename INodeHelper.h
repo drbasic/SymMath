@@ -114,6 +114,12 @@ class INodeHelper {
                                                 double exp);
   static std::unique_ptr<SqrtOperation> MakeSqrt(std::unique_ptr<INode> value,
                                                  std::unique_ptr<INode> exp);
+  static std::unique_ptr<INode> MakeSqrtIfNeeded(std::unique_ptr<INode> value,
+                                                 double exp);
+  static std::unique_ptr<INode> MakePowAndSqrtIfNeeded(
+      std::unique_ptr<INode> lh,
+      double exp_up,
+      double exp_down);
   static std::unique_ptr<TrigonometricOperation> MakeTrigonometric(
       Op op,
       std::unique_ptr<INode> value);

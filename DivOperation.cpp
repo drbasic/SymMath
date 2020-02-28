@@ -103,7 +103,7 @@ std::optional<CanonicPow> DivOperation::GetCanonicPow() {
   CanonicPow dividend = INodeHelper::GetCanonicPow(operands_[0]);
   CanonicPow divider = INodeHelper::GetCanonicPow(operands_[1]);
   for (auto& pow_info : divider.base_nodes)
-    pow_info.exp *= -1.0;
+    pow_info.exp_up *= -1.0;
   dividend.Merge(std::move(divider));
   return dividend;
 }
@@ -193,7 +193,7 @@ void DivOperation::SimplifyCanonicConstants(HotToken& token,
   CanonicPow canonic_top = INodeHelper::GetCanonicPow(operands_[0]);
   CanonicPow canonic_bottom = INodeHelper::GetCanonicPow(operands_[1]);
   for (auto& node_info : canonic_bottom.base_nodes)
-    node_info.exp *= -1.0;
+    node_info.exp_up *= -1.0;
   std::vector<std::unique_ptr<INode>> new_top_nodes;
   std::vector<std::unique_ptr<INode>> new_bottom_nodes;
   bool is_combined = MergeCanonicToPow(token, canonic_top, canonic_bottom,

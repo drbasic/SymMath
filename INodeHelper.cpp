@@ -167,7 +167,7 @@ CanonicPow INodeHelper::GetCanonicPow(std::unique_ptr<INode>& node) {
       return *inner_canonic;
   }
   CanonicPow result;
-  result.Add(1, &node);
+  result.Add(1.0, 1.0, &node);
   return result;
 }
 
@@ -487,6 +487,24 @@ std::unique_ptr<SqrtOperation> INodeHelper::MakeSqrt(
     std::unique_ptr<INode> value,
     std::unique_ptr<INode> exp) {
   return std::make_unique<SqrtOperation>(std::move(value), std::move(exp));
+}
+
+std::unique_ptr<INode> INodeHelper::MakeSqrtIfNeeded(
+    std::unique_ptr<INode> value,
+    double exp) {
+  if (exp == 1.0)
+    return std::move(value);
+  if (exp == 0.0)
+    return Const(1.0);
+
+  return std::make_unique<SqrtOperation>(std::move(value), Const(exp));
+}
+
+std::unique_ptr<INode> INodeHelper::MakePowAndSqrtIfNeeded(
+    std::unique_ptr<INode> lh,
+    double exp_up,
+    double exp_down) {
+  return MakeSqrtIfNeeded(MakePowIfNeeded(std::move(lh), exp_up), exp_down);
 }
 
 // static

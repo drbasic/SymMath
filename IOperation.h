@@ -23,10 +23,13 @@ struct CanonicMult {
 
 struct CanonicPow {
   void Merge(CanonicPow rh);
-  void Add(double exp, std::unique_ptr<INode>* node);
+  void Add(double exp_up, double exp_down, std::unique_ptr<INode>* node);
 
   struct NodeInfo {
-    double exp = 1;
+    void Apply(double e_up, double e_down);
+
+    double exp_up = 1;
+    double exp_down = 1;
     std::unique_ptr<INode>* node = nullptr;
   };
   std::vector<NodeInfo> base_nodes;

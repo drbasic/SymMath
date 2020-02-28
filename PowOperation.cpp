@@ -131,7 +131,7 @@ std::optional<CanonicPow> PowOperation::GetCanonicPow() {
     return std::nullopt;
   CanonicPow result = INodeHelper::GetCanonicPow(operands_[0]);
   for (auto& node_info : result.base_nodes)
-    node_info.exp *= exp_const->Value();
+    node_info.exp_up *= exp_const->Value();
   return result;
 }
 

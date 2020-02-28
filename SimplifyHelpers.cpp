@@ -96,6 +96,57 @@ std::optional<double> Factorize(double val,
   return std::nullopt;
 }
 
+void Factorize(double val, std::vector<double>* result) {
+  if (val < 0) {
+    val = -val;
+    result->push_back(-1.0);
+  }
+  double max_val = sqrt(val);
+
+  double v = 2.0;
+  for (; v <= max_val;) {
+    if (std::remainder(val, v) == 0.0) {
+      result->push_back(v);
+      val /= v;
+      max_val = sqrt(val);
+      continue;
+    }
+    if (v == 2.0)
+      v += 1.0;
+    else
+      v += 2.0;
+  }
+  result->push_back(val);
+}
+
+void DoShorten(double* v1, double* v2) {
+  if (*v1 == 0.0 || *v2 == 0.0)
+    return;
+  if (*v1 == 1.0 || *v2 == 1.0)
+    return;
+  std::vector<double> m1;
+  std::vector<double> m2;
+  Factorize(*v1, &m1);
+  Factorize(*v2, &m2);
+
+  for (auto& a : m1) {
+    for (auto& b : m2) {
+      if (a == b)
+        a = b = 0;
+    }
+  }
+  *v1 = 1.0;
+  for (auto a : m1) {
+    if (a)
+      *v1 *= a;
+  }
+  *v2 = 1.0;
+  for (auto b : m2) {
+    if (b)
+      *v2 *= b;
+  }
+}
+
 }  // namespace
 
 bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
@@ -311,9 +362,10 @@ bool MergeCanonicToPow(HotToken& token,
                        std::vector<std::unique_ptr<INode>>* top,
                        std::vector<std::unique_ptr<INode>>* bottom) {
   struct NodeAndExp {
-    NodeAndExp(double exp, std::unique_ptr<INode> node)
-        : exp(exp), node(std::move(node)) {}
-    double exp;
+    NodeAndExp(double exp_up, double exp_down, std::unique_ptr<INode> node)
+        : exp_up(exp_up), exp_down(exp_down), node(std::move(node)) {}
+    double exp_up;
+    double exp_down;
     std::unique_ptr<INode> node;
   };
   std::vector<NodeAndExp> merged_nodes;
@@ -334,7 +386,7 @@ bool MergeCanonicToPow(HotToken& token,
             lh_pow->Base()->Clone(),
             INodeHelper::MakePlus(lh_pow->TakeOperand(PowOperation::PowIndex),
                                   rh_pow->TakeOperand(PowOperation::PowIndex)));
-        merged_nodes.emplace_back(1.0, std::move(new_pow));
+        merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
         break;
@@ -346,7 +398,7 @@ bool MergeCanonicToPow(HotToken& token,
             lh_pow->Base()->Clone(),
             INodeHelper::MakePlus(lh_pow->TakeOperand(PowOperation::PowIndex),
                                   INodeHelper::MakeConst(1.0)));
-        merged_nodes.emplace_back(1.0, std::move(new_pow));
+        merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
         break;
@@ -358,15 +410,16 @@ bool MergeCanonicToPow(HotToken& token,
             rh_pow->Base()->Clone(),
             INodeHelper::MakePlus(rh_pow->TakeOperand(PowOperation::PowIndex),
                                   INodeHelper::MakeConst(1.0)));
-        merged_nodes.emplace_back(1.0, std::move(new_pow));
+        merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
         break;
       }
 
       if (lh_node_info.node->get()->IsEqual(rh_node_info.node->get())) {
-        // x^3 * x^2
-        merged_nodes.emplace_back(lh_node_info.exp + rh_node_info.exp,
+        // x^3 * x^2, sqrt(a^3) * sqrt(a^2, 3)
+        lh_node_info.Apply(rh_node_info.exp_up, rh_node_info.exp_down);
+        merged_nodes.emplace_back(lh_node_info.exp_up, lh_node_info.exp_down,
                                   std::move(*lh_node_info.node));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
@@ -374,21 +427,21 @@ bool MergeCanonicToPow(HotToken& token,
       }
 
       auto* lh_const = INodeHelper::AsConstant(lh_node_info.node->get());
-      if (!lh_const)
+      if (!lh_const || lh_const->IsNamed())
         continue;
       auto* rh_const = INodeHelper::AsConstant(rh_node_info.node->get());
-      if (!rh_const)
+      if (!rh_const || rh_const->IsNamed())
         continue;
-      double new_lh = 0;
-      double new_rh = 0;
-      if (ReduceFullMultiplicity(lh_const->Value(), rh_const->Value(), &new_lh,
-                                 &new_rh)) {
+      double new_lh = lh_const->Value();
+      double new_rh = rh_const->Value();
+      DoShorten(&new_lh, &new_rh);
+      if (new_lh != lh_const->Value() || new_rh != rh_const->Value()) {
         if (new_lh != 1.0) {
-          merged_nodes.emplace_back(lh_node_info.exp,
+          merged_nodes.emplace_back(lh_node_info.exp_up, lh_node_info.exp_down,
                                     INodeHelper::MakeConst(new_lh));
         }
         if (new_rh != 1.0) {
-          merged_nodes.emplace_back(rh_node_info.exp,
+          merged_nodes.emplace_back(rh_node_info.exp_up, rh_node_info.exp_down,
                                     INodeHelper::MakeConst(new_rh));
         }
         lh_node_info.node = nullptr;
@@ -405,18 +458,22 @@ bool MergeCanonicToPow(HotToken& token,
     for (auto& node_info : canonic.base_nodes) {
       if (!node_info.node)
         continue;
-      new_pows->emplace_back(node_info.exp, std::move(*node_info.node));
+      new_pows->emplace_back(node_info.exp_up, node_info.exp_down,
+                             std::move(*node_info.node));
     }
   };
 
   pow_node_maker(lh, &merged_nodes);
   pow_node_maker(rh, &merged_nodes);
   for (auto& node_and_exp : merged_nodes) {
-    bool to_bottom = bottom && node_and_exp.exp < 0;
+    DoShorten(&node_and_exp.exp_up, &node_and_exp.exp_down);
+
+    bool to_bottom = bottom && node_and_exp.exp_up < 0;
     if (to_bottom)
-      node_and_exp.exp *= -1.0;
-    auto new_node = INodeHelper::MakePowIfNeeded(std::move(node_and_exp.node),
-                                                 node_and_exp.exp);
+      node_and_exp.exp_up *= -1.0;
+    auto new_node = INodeHelper::MakePowAndSqrtIfNeeded(
+        std::move(node_and_exp.node), node_and_exp.exp_up,
+        node_and_exp.exp_down);
     if (new_node)
       (to_bottom ? bottom : top)->push_back(std::move(new_node));
   }
