@@ -14,6 +14,8 @@ class AbstractSequence : public INodeImpl {
   PrintSize LastPrintSize() const override { return print_size_; }
   bool HasFrontMinus() const override { return false; }
   bool CheckCircular(const INodeImpl* other) const override;
+  AbstractSequence* AsAbstractSequence() override { return this; }
+  const AbstractSequence* AsAbstractSequence() const override { return this; }
   void SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
@@ -24,6 +26,7 @@ class AbstractSequence : public INodeImpl {
   std::unique_ptr<INode> TakeValue(size_t indx);
   const INode* Value(size_t indx) const { return values_[indx].get(); }
   void AddValue(std::unique_ptr<INode> rh);
+  void Unfold();
 
  protected:
   enum class PrintDirection {
@@ -32,7 +35,7 @@ class AbstractSequence : public INodeImpl {
   };
   std::unique_ptr<AbstractSequence> Clone(
       std::unique_ptr<AbstractSequence> result) const;
-  bool IsEqual(const AbstractSequence* rh) const;
+  bool IsEqualSequence(const AbstractSequence* rh) const;
   std::unique_ptr<AbstractSequence> SymCalc(
       std::unique_ptr<AbstractSequence> result,
       SymCalcSettings settings) const;
@@ -65,6 +68,8 @@ class AbstractSequence : public INodeImpl {
                         bool dry_run,
                         RenderBehaviour render_behaviour,
                         bool with_comma) const;
+
+  void DoUnfold(std::vector<std::unique_ptr<INode>>* result);
 
   mutable PrintSize print_size_;
   mutable PrintSize values_print_size_;

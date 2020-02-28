@@ -29,7 +29,7 @@ bool Vector::IsEqual(const INode* rh) const {
   const Vector* rh_vector = rh->AsNodeImpl()->AsVector();
   if (!rh_vector)
     return false;
-  return AbstractSequence::IsEqual(rh_vector);
+  return AbstractSequence::IsEqualSequence(rh_vector);
 }
 
 std::unique_ptr<INode> Vector::Clone() const {

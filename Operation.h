@@ -77,6 +77,10 @@ class Operation : public IOperation {
                           RenderBehaviour render_behaviour,
                           bool with_op) const;
 
+  std::unique_ptr<INode> SymCalcValue(
+      std::vector<std::unique_ptr<INode>> calculated_operands,
+      SymCalcSettings settings) const;
+
   bool IsAllOperandsConst(
       SymCalcSettings settings,
       const std::vector<std::unique_ptr<INode>>& operands) const;

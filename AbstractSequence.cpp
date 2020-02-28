@@ -85,6 +85,12 @@ void AbstractSequence::AddValue(std::unique_ptr<INode> rh) {
   values_.push_back(std::move(rh));
 }
 
+void AbstractSequence::Unfold() {
+  std::vector<std::unique_ptr<INode>> new_values;
+  DoUnfold(&new_values);
+  values_.swap(new_values);
+}
+
 std::unique_ptr<AbstractSequence> AbstractSequence::Clone(
     std::unique_ptr<AbstractSequence> result) const {
   result->values_.reserve(Size());
@@ -93,7 +99,7 @@ std::unique_ptr<AbstractSequence> AbstractSequence::Clone(
   return result;
 }
 
-bool AbstractSequence::IsEqual(const AbstractSequence* rh) const {
+bool AbstractSequence::IsEqualSequence(const AbstractSequence* rh) const {
   if (!rh)
     return false;
   if (values_.size() != rh->values_.size())
@@ -185,4 +191,14 @@ PrintSize AbstractSequence::RenderValue(const INode* value,
   auto valaue_size =
       value->AsNodeImpl()->Render(canvas, print_box, dry_run, render_behaviour);
   return total_value_size.GrowWidth(valaue_size, true);
+}
+
+void AbstractSequence::DoUnfold(std::vector<std::unique_ptr<INode>>* result) {
+  for (auto& value : values_) {
+    if (auto* seq = value->AsNodeImpl()->AsAbstractSequence()) {
+      seq->DoUnfold(result);
+    } else {
+      result->push_back(std::move(value));
+    }
+  }
 }

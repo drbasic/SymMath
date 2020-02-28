@@ -5,6 +5,7 @@
 #include "INode.h"
 #include "RenderBehaviour.h"
 
+class AbstractSequence;
 class Constant;
 class ErrorNode;
 class Imaginary;
@@ -45,6 +46,8 @@ class INodeImpl : public INode {
   virtual const Vector* AsVector() const { return nullptr; }
   virtual Sequence* AsSequence() { return nullptr; }
   virtual const Sequence* AsSequence() const { return nullptr; }
+  virtual AbstractSequence* AsAbstractSequence() { return nullptr; }
+  virtual const AbstractSequence* AsAbstractSequence() const { return nullptr; }
   virtual Imaginary* AsImaginary() { return nullptr; }
   virtual const Imaginary* AsImaginary() const { return nullptr; }
   virtual const ErrorNode* AsError() const { return nullptr; }

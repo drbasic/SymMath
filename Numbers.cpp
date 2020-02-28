@@ -127,8 +127,8 @@ int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
-  //BacMinusCab();
-  //EulerEquation();
+  // BacMinusCab();
+  // EulerEquation();
   // return 0;
   auto a = Var(L"a");
   auto b = Var(L"b");
@@ -143,7 +143,7 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Vector2(Sqrt(Const(10)), Sqrt(Const(100)));
+  Variable t1 = Sin( Sqrt(Const(100)) + Sqrt(Const(81)));
   // t1.ConvertToComplex();
   std::wcout << t1.Print(true) << "\n";
 }

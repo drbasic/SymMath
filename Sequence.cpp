@@ -8,7 +8,7 @@ bool Sequence::IsEqual(const INode* rh) const {
   auto as_seq = INodeHelper::AsSequence(rh);
   if (!as_seq)
     return false;
-  return AbstractSequence::IsEqual(as_seq);
+  return AbstractSequence::IsEqualSequence(as_seq);
 }
 
 std::unique_ptr<INode> Sequence::Clone() const {

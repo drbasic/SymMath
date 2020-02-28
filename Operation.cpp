@@ -15,6 +15,7 @@
 #include "MultOperation.h"
 #include "OpInfo.h"
 #include "Operation.h"
+#include "Sequence.h"
 #include "SimplifyHelpers.h"
 #include "UnMinusOperation.h"
 #include "ValueHelpers.h"
@@ -108,6 +109,37 @@ int Operation::Priority() const {
 std::unique_ptr<INode> Operation::SymCalc(SymCalcSettings settings) const {
   std::vector<std::unique_ptr<INode>> calculated_operands =
       CalcOperands(settings, operands_);
+  auto result = SymCalcValue(std::move(calculated_operands), settings);
+  if (auto* as_seq = INodeHelper::AsSequence(result.get())) {
+    as_seq->Unfold();
+  }
+  return result;
+}
+
+std::unique_ptr<INode> Operation::SymCalcValue(
+    std::vector<std::unique_ptr<INode>> calculated_operands,
+    SymCalcSettings settings) const {
+  auto clone_operands =
+      [](const std::vector<std::unique_ptr<INode>>& operands) {
+        std::vector<std::unique_ptr<INode>> result;
+        result.reserve(operands.size());
+        for (auto& operand : operands)
+          result.push_back(operand->Clone());
+        return result;
+      };
+
+  for (size_t i = 0; i < calculated_operands.size(); ++i) {
+    if (auto* as_seq = INodeHelper::AsSequence(calculated_operands[i].get())) {
+      std::unique_ptr<INode> seq = std::move(calculated_operands[i]);
+      auto new_seq = INodeHelper::MakeSequence();
+      for (size_t j = 0; j < as_seq->Size(); ++j) {
+        calculated_operands[i] = as_seq->TakeValue(j);
+        new_seq->AddValue(
+            SymCalcValue(clone_operands(calculated_operands), settings));
+      }
+      return new_seq;
+    }
+  }
 
   if (op_info_->op == Op::Mult) {
     auto i_node = MultOperation::ProcessImaginary(&calculated_operands);
@@ -496,4 +528,5 @@ PrintSize Operation::RenderOperand(const INodeImpl* node,
 
   return total_operand_size;
 }
+
 //=============================================================================
