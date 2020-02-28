@@ -24,6 +24,7 @@ class Operation;
 class PlusOperation;
 class SqrtOperation;
 class LogOperation;
+class Sequence;
 class PowOperation;
 class TrigonometricOperation;
 class UnMinusOperation;
@@ -39,6 +40,8 @@ class INodeHelper {
   static const Constant* AsConstant(const INode* lh);
   static Imaginary* AsImaginary(INode* lh);
   static const Imaginary* AsImaginary(const INode* lh);
+  static Sequence* AsSequence(INode* lh);
+  static const Sequence* AsSequence(const INode* lh);
   static Operation* AsOperation(INode* lh);
   static const Operation* AsOperation(const INode* lh);
   static UnMinusOperation* AsUnMinus(INode* lh);
@@ -82,6 +85,7 @@ class INodeHelper {
   static std::unique_ptr<Constant> MakeConst(double value, std::wstring name);
   static std::unique_ptr<Constant> MakeConst(bool value);
   static std::unique_ptr<Imaginary> MakeImaginary();
+  static std::unique_ptr<Sequence> MakeSequence();
   static std::unique_ptr<UnMinusOperation> MakeUnMinus(
       std::unique_ptr<INode> value);
   static std::unique_ptr<PlusOperation> MakeMinus(std::unique_ptr<INode> lh,

@@ -2,7 +2,6 @@
 
 #include "Operation.h"
 
-double TrivialSqrt(double lh, double rh);
 std::unique_ptr<INode> NonTrivialSqrt(
     const OpInfo* op,
     std::vector<std::unique_ptr<INode>>* operands);

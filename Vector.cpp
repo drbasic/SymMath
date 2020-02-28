@@ -167,7 +167,7 @@ PrintSize Vector::RenderValue(const INode* value,
     print_box = print_box.ShrinkLeft(comma_size.width);
   }
 
-  // Render valaue
+  // Render value
   auto valaue_size =
       value->AsNodeImpl()->Render(canvas, print_box, dry_run, render_behaviour);
   return total_value_size.GrowWidth(valaue_size, true);

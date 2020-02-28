@@ -10,6 +10,7 @@
 #include "INodeHelper.h"
 #include "MultOperation.h"
 #include "PowOperation.h"
+#include "Sequence.h"
 #include "SimplifyHelpers.h"
 
 double TrivialSqrt(double lh, double rh) {
@@ -23,6 +24,20 @@ double TrivialSqrt(double lh, double rh) {
 std::unique_ptr<INode> NonTrivialSqrt(
     const OpInfo* op,
     std::vector<std::unique_ptr<INode>>* operands) {
+  assert(op->op == Op::Sqrt);
+  assert(operands->size() == 2);
+  auto* val_const = INodeHelper::AsConstant((*operands)[0].get());
+  auto* exp_const = INodeHelper::AsConstant((*operands)[1].get());
+  if (val_const && exp_const) {
+    auto result = INodeHelper::MakeSequence();
+    result->Add(INodeHelper::MakeConst(
+        TrivialSqrt(val_const->Value(), exp_const->Value())));
+    result->Add(INodeHelper::MakeConst(
+        -TrivialSqrt(val_const->Value(), exp_const->Value())));
+
+    return result;
+  }
+  assert(false);
   return std::unique_ptr<INode>();
 }
 
@@ -111,8 +126,7 @@ void SqrtOperation::SimplifyChains(HotToken token,
         OperandIndex::ExpIndex,
         INodeHelper::MakeMult(TakeOperand(OperandIndex::ExpIndex),
                               as_sqrt->TakeOperand(OperandIndex::ExpIndex)));
-    SetOperand(OperandIndex::Value,
-               as_sqrt->TakeOperand(OperandIndex::Value));
+    SetOperand(OperandIndex::Value, as_sqrt->TakeOperand(OperandIndex::Value));
   }
 
   if (auto* as_pow = INodeHelper::AsPow(Value())) {

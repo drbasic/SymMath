@@ -18,6 +18,7 @@
 #include "Operation.h"
 #include "PlusOperation.h"
 #include "PowOperation.h"
+#include "Sequence.h"
 #include "SqrtOperation.h"
 #include "TrigonometricOperation.h"
 #include "UnMinusOperation.h"
@@ -48,6 +49,15 @@ Imaginary* INodeHelper::AsImaginary(INode* lh) {
 // static
 const Imaginary* INodeHelper::AsImaginary(const INode* lh) {
   return lh->AsNodeImpl()->AsImaginary();
+}
+
+// static
+Sequence* INodeHelper::AsSequence(INode* lh) {
+  return lh->AsNodeImpl()->AsSequence();
+}
+// static
+const Sequence* INodeHelper::AsSequence(const INode* lh) {
+  return lh->AsNodeImpl()->AsSequence();
 }
 
 // static
@@ -345,6 +355,11 @@ std::unique_ptr<Constant> INodeHelper::MakeConst(bool value) {
 // static
 std::unique_ptr<Imaginary> INodeHelper::MakeImaginary() {
   return std::make_unique<Imaginary>();
+}
+
+// static
+std::unique_ptr<Sequence> INodeHelper::MakeSequence() {
+  return std::make_unique<Sequence>();
 }
 
 // static

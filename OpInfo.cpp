@@ -21,7 +21,7 @@ constexpr OpInfo kOps[] = {
     {Op::Div, 20, L"/", [](double lh, double rh) { return lh / rh; }, false, 2},
     {Op::Pow, 30, L"^", [](double lh, double rh) { return pow(lh, rh); }, false,
      2},
-    {Op::Sqrt, 30, L"sqrt", TrivialSqrt, false, 2, NonTrivialSqrt},
+    {Op::Sqrt, 30, L"sqrt", nullptr, false, 2, NonTrivialSqrt},
     {Op::Sin, 1000, L"sin", [](double lh, double rh) { return sin(lh); }, false,
      1},
     {Op::Cos, 1000, L"cos", [](double lh, double rh) { return cos(lh); }, false,

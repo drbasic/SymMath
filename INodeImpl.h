@@ -1,22 +1,24 @@
 #pragma once
 
 #include "Canvas.h"
+#include "HotToken.h"
 #include "INode.h"
 #include "RenderBehaviour.h"
-#include "HotToken.h"
 
 class Constant;
 class ErrorNode;
 class Imaginary;
 class Variable;
 class Vector;
+class Sequence;
 class Operation;
 
 enum class ValueType {
   Scalar = 0,
   Vector = 1,
   Matrix = 2,
-  Last = Matrix,
+  Sequence = 3,
+  Last = Sequence,
 };
 
 class INodeImpl : public INode {
@@ -41,6 +43,8 @@ class INodeImpl : public INode {
   virtual const Constant* AsConstant() const { return nullptr; }
   virtual Vector* AsVector() { return nullptr; }
   virtual const Vector* AsVector() const { return nullptr; }
+  virtual Sequence* AsSequence() { return nullptr; }
+  virtual const Sequence* AsSequence() const { return nullptr; }
   virtual Imaginary* AsImaginary() { return nullptr; }
   virtual const Imaginary* AsImaginary() const { return nullptr; }
   virtual const ErrorNode* AsError() const { return nullptr; }

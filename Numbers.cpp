@@ -127,8 +127,8 @@ int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
-  BacMinusCab();
-  EulerEquation();
+  //BacMinusCab();
+  //EulerEquation();
   // return 0;
   auto a = Var(L"a");
   auto b = Var(L"b");
@@ -143,26 +143,7 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Diff(Sqrt(Sin(x), Cos(x)), x);
+  Variable t1 = Sqrt(Const(10));
   // t1.ConvertToComplex();
   std::wcout << t1.Print(true) << "\n";
-  /*
-  Variable t1 = Sqrt(a, 3) * Sqrt(a, 2);
-  std::wcout << t1.Print(true) << "\n";
-
-  Variable t2 = Sqrt(Pow(a, 2), 2);
-  std::wcout << t2.Print(true) << "\n";
-
-  Variable t3 = Sqrt(Pow(a, 9), 6);
-  std::wcout << t3.Print(true) << "\n";
-
-  Variable t4 = Sqrt(Pow(a, 3), 6);
-  std::wcout << t4.Print(true) << "\n";
-
-  Variable t5 = Sqrt(Pow(a, 6), 3);
-  std::wcout << t5.Print(true) << "\n";
-
-  Variable t6 = (c)*Sqrt(Constants::MakeE() * a, 2) / Sqrt(Constants::MakeE(),
-  2) ; std::wcout << t6.Print(true) << "\n";
-  */
 }

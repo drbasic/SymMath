@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractSequence.cpp" />
     <ClCompile Include="Brackets.cpp" />
     <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="CompareOperation.cpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="PlusOperation.cpp" />
     <ClCompile Include="PowOperation.cpp" />
     <ClCompile Include="RenderBehaviour.cpp" />
+    <ClCompile Include="Sequence.cpp" />
     <ClCompile Include="SimplifyHelpers.cpp" />
     <ClCompile Include="SqrtOperation.cpp" />
     <ClCompile Include="Tests.cpp" />
@@ -192,6 +194,7 @@
     <ClCompile Include="VectorMultOperation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractSequence.h" />
     <ClInclude Include="Brackets.h" />
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="CompareOperation.h" />
@@ -212,6 +215,7 @@
     <ClInclude Include="PlusOperation.h" />
     <ClInclude Include="PowOperation.h" />
     <ClInclude Include="RenderBehaviour.h" />
+    <ClInclude Include="Sequence.h" />
     <ClInclude Include="SimplifyHelpers.h" />
     <ClInclude Include="SqrtOperation.h" />
     <ClInclude Include="Tests.h" />
