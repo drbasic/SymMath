@@ -29,6 +29,8 @@ class SqrtOperation : public Operation {
   std::optional<CanonicPow> GetCanonicPow() override;
   SqrtOperation* AsSqrtOperation() override { return this; }
   const SqrtOperation* AsSqrtOperation() const override { return this; }
+  void SimplifyConsts(HotToken token,
+                      std::unique_ptr<INode>* new_node) override;
   void SimplifyChains(HotToken token,
                       std::unique_ptr<INode>* new_node) override;
 
@@ -38,7 +40,7 @@ class SqrtOperation : public Operation {
   const INodeImpl* Exp() const { return Operand(ExpIndex); }
 
  private:
-  void SimplifyExp(std::unique_ptr<INode>* new_node);
+  void SimplifyExp(HotToken& token, std::unique_ptr<INode>* new_node);
 
   mutable PrintSize value_print_size_;
   mutable PrintSize pow_print_size_;

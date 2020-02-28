@@ -23,7 +23,7 @@ std::unique_ptr<INode> PowOperation::MakeIfNeeded(std::unique_ptr<INode> base,
   auto pow = INodeHelper::MakePow(std::move(base), INodeHelper::MakeConst(exp));
 
   std::unique_ptr<INode> result;
-  pow->SimplifyExp(&result);
+  pow->SimplifyConsts({}, &result);
   if (!result)
     result = std::move(pow);
 
@@ -135,36 +135,25 @@ std::optional<CanonicPow> PowOperation::GetCanonicPow() {
   return result;
 }
 
-void PowOperation::SimplifyChains(HotToken token,
+void PowOperation::SimplifyConsts(HotToken token,
                                   std::unique_ptr<INode>* new_node) {
-  Operation::SimplifyChains({&token}, nullptr);
+  Operation::SimplifyConsts({&token}, new_node);
+  if (*new_node)
+    return;
 
-  SimplifyExp(new_node);
+  SimplifyExp(token, new_node);
 }
 
-INodeImpl* PowOperation::Base() {
-  return Operand(BaseIndex);
-}
-
-const INodeImpl* PowOperation::Base() const {
-  return Operand(BaseIndex);
-}
-
-INodeImpl* PowOperation::Exp() {
-  return Operand(PowIndex);
-}
-
-const INodeImpl* PowOperation::Exp() const {
-  return Operand(PowIndex);
-}
-
-void PowOperation::SimplifyExp(std::unique_ptr<INode>* new_node) {
+void PowOperation::SimplifyExp(HotToken& token,
+                               std::unique_ptr<INode>* new_node) {
   if (auto* exp_const = Exp()->AsConstant()) {
     if (exp_const->Value() == 0.0) {
+      token.SetChanged();
       *new_node = INodeHelper::MakeConst(1.0);
       return;
     }
     if (exp_const->Value() == 1.0) {
+      token.SetChanged();
       *new_node = TakeOperand(BaseIndex);
       return;
     }
@@ -189,6 +178,7 @@ void PowOperation::SimplifyExp(std::unique_ptr<INode>* new_node) {
       auto node = INodeHelper::MakePowIfNeeded(Imag(), remains_exp);
       if (negate)
         node = INodeHelper::Negate(std::move(node));
+      token.SetChanged();
       *new_node = std::move(node);
       return;
     }

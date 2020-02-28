@@ -22,21 +22,23 @@ class PowOperation : public Operation {
                    bool dry_run,
                    RenderBehaviour render_behaviour) const override;
   bool HasFrontMinus() const override { return false; }
-  void OpenBracketsImpl(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void OpenBracketsImpl(HotToken token,
+                        std::unique_ptr<INode>* new_node) override;
 
   // IOperation implementation
   std::optional<CanonicPow> GetCanonicPow() override;
   PowOperation* AsPowOperation() override { return this; }
   const PowOperation* AsPowOperation() const override { return this; }
-  void SimplifyChains(HotToken token, std::unique_ptr<INode>* new_node) override;
+  void SimplifyConsts(HotToken token,
+                      std::unique_ptr<INode>* new_node) override;
 
-  INodeImpl* Base();
-  const INodeImpl* Base() const;
-  INodeImpl* Exp();
-  const INodeImpl* Exp() const;
+  INodeImpl* Base() { return Operand(BaseIndex); }
+  const INodeImpl* Base() const { return Operand(BaseIndex); }
+  INodeImpl* Exp() { return Operand(PowIndex); }
+  const INodeImpl* Exp() const { return Operand(PowIndex); }
 
  private:
-  void SimplifyExp(std::unique_ptr<INode>* new_node);
+  void SimplifyExp(HotToken& token, std::unique_ptr<INode>* new_node);
 
   mutable PrintSize base_print_size_;
   mutable PrintSize pow_print_size_;

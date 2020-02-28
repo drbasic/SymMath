@@ -143,8 +143,12 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Diff(Sqrt(a, 33), a);
-  std::wcout << t1.Print(true) << "\n";
+  Variable t1 = Diff(Sqrt(a, 10), a);
+  //Variable t1 = Pow(a, Const(2) -1);
+  t1 = t1.SymCalc(SymCalcSettings::KeepNamedConstants);
+  std::wcout << t1.Print(false) << "\n";
+  t1.Simplify();
+  std::wcout << t1.Print(false) << "\n";
   /*
     Variable t2 = Sqrt(Pow(a, 2), 2);
     std::wcout << t2.Print(true) << "\n";

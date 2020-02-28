@@ -84,14 +84,22 @@ PrintSize SqrtOperation::Render(Canvas* canvas,
 }
 
 std::optional<CanonicPow> SqrtOperation::GetCanonicPow() {
-  return std::nullopt;
   auto* exp_const = Exp()->AsConstant();
   if (!exp_const || exp_const->IsNamed())
     return std::nullopt;
 
-  CanonicPow result;
-  result.Add(1.0 / exp_const->Value(), &operands_[ValueIndex]);
+  CanonicPow result = INodeHelper::GetCanonicPow(operands_[0]);
+  for (auto& node_info : result.base_nodes)
+    node_info.exp /= exp_const->Value();
   return result;
+}
+
+void SqrtOperation::SimplifyConsts(HotToken token,
+                                   std::unique_ptr<INode>* new_node) {
+  Operation::SimplifyConsts({&token}, new_node);
+  if (*new_node)
+    return;
+  SimplifyExp(token, new_node);
 }
 
 void SqrtOperation::SimplifyChains(HotToken token,
@@ -124,20 +132,23 @@ void SqrtOperation::SimplifyChains(HotToken token,
       }
     }
   }
+}
 
+void SqrtOperation::SimplifyExp(HotToken& token,
+                                std::unique_ptr<INode>* new_node) {
   if (auto* as_const = INodeHelper::AsConstant(Exp())) {
     if (!as_const->IsNamed()) {
       double exp = as_const->Value();
       if (exp == 0.0) {
+        token.SetChanged();
         *new_node = INodeHelper::MakeConst(1.0);
         return;
       }
       if (exp == 1.0) {
+        token.SetChanged();
         *new_node = TakeOperand(ValueIndex);
         return;
       }
     }
   }
 }
-
-void SqrtOperation::SimplifyExp(std::unique_ptr<INode>* new_node) {}
