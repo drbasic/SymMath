@@ -209,8 +209,8 @@ void MultOperation::SimplifyDivMul(HotToken token,
   for (auto& node : operands_) {
     if (auto* div = INodeHelper::AsDiv(node.get())) {
       new_bottom.push_back(
-          div->TakeOperand(DivOperation::OperandIndex::DividerIndex));
-      node = div->TakeOperand(DivOperation::OperandIndex::DividendIndex);
+          div->TakeOperand(DivOperation::OperandIndex::Divider));
+      node = div->TakeOperand(DivOperation::OperandIndex::Dividend);
     }
   }
   if (new_bottom.empty())

@@ -232,6 +232,6 @@ void DivOperation::SimplifyMultipliers(HotToken& token,
 
   auto new_divider = ExtractMultipliers(Divider());
   new_divider = RemoveEqualNodes(divider_multipliers, &new_divider);
-  SetOperand(OperandIndex::DividerIndex,
+  SetOperand(OperandIndex::Divider,
              INodeHelper::MakeMultIfNeeded(std::move(new_divider)));
 }

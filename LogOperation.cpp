@@ -100,7 +100,7 @@ void LogOperation::OpenBracketsImpl(HotToken token,
         if (new_node)
           node = std::move(new_node);
       }
-      if (op_indx == DivOperation::OperandIndex::DividerIndex)
+      if (op_indx == DivOperation::OperandIndex::Divider)
         node = INodeHelper::Negate(std::move(node));
       sum_operands.push_back(std::move(node));
     }
@@ -109,10 +109,10 @@ void LogOperation::OpenBracketsImpl(HotToken token,
   }
   if (auto* as_pow = INodeHelper::AsPow(Value())) {
     *new_node = INodeHelper::MakeMultIfNeeded(
-        as_pow->TakeOperand(PowOperation::OperandIndex::BaseIndex),
+        as_pow->TakeOperand(PowOperation::OperandIndex::Base),
         INodeHelper::MakeLogIfNeeded(
-            TakeOperand(LogOperation::OperandIndex::BaseIndex),
-            as_pow->TakeOperand(PowOperation::OperandIndex::PowIndex)));
+            TakeOperand(LogOperation::OperandIndex::Base),
+            as_pow->TakeOperand(PowOperation::OperandIndex::Pow)));
     return;
   }
 }

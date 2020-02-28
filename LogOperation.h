@@ -7,8 +7,8 @@ double TrivialLogCalc(double lh, double rh);
 class LogOperation : public Operation {
  public:
   enum class OperandIndex : size_t {
-    BaseIndex = 0,
-    ValueIndex = 1,
+    Base = 0,
+    Value = 1,
   };
   LogOperation(std::unique_ptr<INode> base, std::unique_ptr<INode> value);
 
@@ -29,16 +29,16 @@ class LogOperation : public Operation {
                         std::unique_ptr<INode>* new_node) override;
 
   INodeImpl* Base() {
-    return Operand(static_cast<size_t>(OperandIndex::BaseIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Base));
   }
   const INodeImpl* Base() const {
-    return Operand(static_cast<size_t>(OperandIndex::BaseIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Base));
   }
   INodeImpl* Value() {
-    return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Value));
   }
   const INodeImpl* Value() const {
-    return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Value));
   }
   std::unique_ptr<INode> TakeOperand(OperandIndex indx) {
     return Operation::TakeOperand(static_cast<size_t>(indx));

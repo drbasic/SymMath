@@ -29,8 +29,8 @@ class DiffOperation : public Operation {
 
  private:
   enum class OperandIndex : size_t {
-    ValueIndex = 0,
-    ByValIndex = 1,
+    Value = 0,
+    ByVal = 1,
   };
   PrintSize RenderPrefix(Canvas* canvas,
                          PrintBox print_box,

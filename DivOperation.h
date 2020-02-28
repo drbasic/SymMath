@@ -5,8 +5,8 @@
 class DivOperation : public Operation {
  public:
   enum class OperandIndex : size_t {
-    DividendIndex = 0,
-    DividerIndex = 1,
+    Dividend = 0,
+    Divider = 1,
   };
   DivOperation(std::unique_ptr<INode> top, std::unique_ptr<INode> bottom);
 
@@ -34,16 +34,16 @@ class DivOperation : public Operation {
   const DivOperation* AsDivOperation() const override { return this; }
 
   INodeImpl* Dividend() {
-    return Operand(static_cast<size_t>(OperandIndex::DividendIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Dividend));
   }
   const INodeImpl* Dividend() const {
-    return Operand(static_cast<size_t>(OperandIndex::DividendIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Dividend));
   }
   INodeImpl* Divider() {
-    return Operand(static_cast<size_t>(OperandIndex::DividerIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Divider));
   }
   const INodeImpl* Divider() const {
-    return Operand(static_cast<size_t>(OperandIndex::DividerIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Divider));
   }
   std::unique_ptr<INode> TakeOperand(OperandIndex indx) {
     return Operation::TakeOperand(static_cast<size_t>(indx));

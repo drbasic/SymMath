@@ -275,11 +275,11 @@ PrintSize DiffOperation::Render(Canvas* canvas,
 }
 
 const INode* DiffOperation::Value() const {
-  return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+  return Operand(static_cast<size_t>(OperandIndex::Value));
 }
 
 const Variable* DiffOperation::ByVar() const {
-  return Operand(static_cast<size_t>(OperandIndex::ByValIndex))
+  return Operand(static_cast<size_t>(OperandIndex::ByVal))
       ->AsNodeImpl()
       ->AsVariable();
 }

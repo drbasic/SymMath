@@ -386,8 +386,8 @@ bool MergeCanonicToPow(HotToken& token,
         auto new_pow = INodeHelper::MakePow(
             lh_pow->Base()->Clone(),
             INodeHelper::MakePlus(
-                lh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex),
-                rh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex)));
+                lh_pow->TakeOperand(PowOperation::OperandIndex::Pow),
+                rh_pow->TakeOperand(PowOperation::OperandIndex::Pow)));
         merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
         rh_node_info.node = nullptr;
@@ -399,7 +399,7 @@ bool MergeCanonicToPow(HotToken& token,
         auto new_pow = INodeHelper::MakePow(
             lh_pow->Base()->Clone(),
             INodeHelper::MakePlus(
-                lh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex),
+                lh_pow->TakeOperand(PowOperation::OperandIndex::Pow),
                 INodeHelper::MakeConst(1.0)));
         merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;
@@ -412,7 +412,7 @@ bool MergeCanonicToPow(HotToken& token,
         auto new_pow = INodeHelper::MakePow(
             rh_pow->Base()->Clone(),
             INodeHelper::MakePlus(
-                rh_pow->TakeOperand(PowOperation::OperandIndex::PowIndex),
+                rh_pow->TakeOperand(PowOperation::OperandIndex::Pow),
                 INodeHelper::MakeConst(1.0)));
         merged_nodes.emplace_back(1.0, 1.0, std::move(new_pow));
         lh_node_info.node = nullptr;

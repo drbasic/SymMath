@@ -10,7 +10,7 @@ std::unique_ptr<INode> NonTrivialSqrt(
 class SqrtOperation : public Operation {
  public:
   enum class OperandIndex : size_t {
-    ValueIndex = 0,
+    Value = 0,
     ExpIndex = 1,
   };
   SqrtOperation(std::unique_ptr<INode> value, std::unique_ptr<INode> exp);
@@ -35,10 +35,10 @@ class SqrtOperation : public Operation {
                       std::unique_ptr<INode>* new_node) override;
 
   INodeImpl* Value() {
-    return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Value));
   }
   const INodeImpl* Value() const {
-    return Operand(static_cast<size_t>(OperandIndex::ValueIndex));
+    return Operand(static_cast<size_t>(OperandIndex::Value));
   }
   INodeImpl* Exp() {
     return Operand(static_cast<size_t>(OperandIndex::ExpIndex));

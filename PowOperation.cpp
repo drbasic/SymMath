@@ -154,7 +154,7 @@ void PowOperation::SimplifyExp(HotToken& token,
     }
     if (exp_const->Value() == 1.0) {
       token.SetChanged();
-      *new_node = TakeOperand(OperandIndex::BaseIndex);
+      *new_node = TakeOperand(OperandIndex::Base);
       return;
     }
   }
