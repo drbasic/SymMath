@@ -143,7 +143,10 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  // Variable t1 = Diff(Sqrt(a, 10), a);
+  Variable t1 = Diff(Sqrt(Sin(x), Cos(x)), x);
+  //t1.ConvertToComplex();
+  std::wcout << t1.Print(true) << "\n";
+  /*
   Variable t1 = Sqrt(a, 3) * Sqrt(a, 2);
   std::wcout << t1.Print(true) << "\n";
 
@@ -159,6 +162,7 @@ int main() {
   Variable t5 = Sqrt(Pow(a, 6), 3);
   std::wcout << t5.Print(true) << "\n";
 
-  Variable t6 = (c)*Sqrt(a / 2, 3) * Sqrt(b, 3);
-  std::wcout << t6.Print(true) << "\n";
+  Variable t6 = (c)*Sqrt(Constants::MakeE() * a, 2) / Sqrt(Constants::MakeE(),
+  2) ; std::wcout << t6.Print(true) << "\n";
+  */
 }

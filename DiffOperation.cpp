@@ -184,12 +184,29 @@ std::unique_ptr<INode> DoDiffSqrtOperation(const Operation* operation,
   auto g = operation->Operand(1);
   auto derivative_f = DoDiffNode(f, by_var);
   auto derivative_g = DoDiffNode(g, by_var);
+
+  if (derivative_f->IsEqual(Constants::Zero())) {
+    // d/dx(a^(1/g(x))) = -(log(a) a^(1/g(x)) g'(x))/g(x)^2
+    return -(Log(f->Clone()) * Sqrt(f->Clone(), g->Clone()) *
+             std::move(derivative_g)) /
+           (Pow(g->Clone(), 2));
+  }
   if (derivative_g->IsEqual(Constants::Zero())) {
+    // sqrt(x, n) -> (x') / (n * sqrt(x^(n-1)), n)
     return std::move(derivative_f) /
            (g->Clone() * Sqrt(Pow(f->Clone(), g->Clone() - 1), g->Clone()));
   }
-  assert(false);
-  return nullptr;
+  // d/dx(f(x)^(1/g(x))) =
+  // (f(x)^(1/g(x) - 1) (g(x) f'(x) - f(x) log(f(x)) g'(x)))/g(x)^2
+  // a = f(x)^(1/g(x) - 1)
+  // b = g(x) f'(x) - f(x) log(f(x)) g'(x)
+  // c = g(x)^2
+  // a * b / c
+  auto a = Sqrt(f->Clone(), f->Clone() - 1);
+  auto b = g->Clone() * std::move(derivative_f) -
+           f->Clone() * Log(f->Clone()) * std::move(derivative_g);
+  auto c = Pow(g->Clone(), 2);
+  return (std::move(a) * std::move(b)) / std::move(c);
 }
 
 std::unique_ptr<INode> DoDiffLogOperation(const Operation* operation,
