@@ -290,9 +290,6 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::UnMinus:
       return MakeUnMinus(MakeError());
       break;
-    case Op::Minus:
-      assert(false);
-      break;
     case Op::Plus:
       return MakePlus(MakeError(), MakeError());
       break;
@@ -557,7 +554,7 @@ std::unique_ptr<LogOperation> INodeHelper::MakeLog(
 std::unique_ptr<INode> INodeHelper::MakeLogIfNeeded(
     std::unique_ptr<INode> base,
     std::unique_ptr<INode> value) {
-  if (base->IsEqual(value.get()))
+  if (base->Compare(value.get()) == CompareResult::Equal) 
     return Const(1.0);
   return MakeLog(std::move(base), std::move(value));
 }

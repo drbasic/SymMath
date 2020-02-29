@@ -159,7 +159,7 @@ void PowOperation::SimplifyExp(HotToken& token,
     }
   }
 
-  if (!Base()->IsEqual(Constants::Imag()))
+  if (Base()->Compare(Constants::Imag()) != CompareResult::Equal)
     return;
   if (auto* exp_const = Exp()->AsConstant()) {
     double remains_exp = exp_const->Value();

@@ -103,23 +103,24 @@ bool Variable::CheckCircular(const INodeImpl* other) const {
   return this == other || (Value() && Value()->CheckCircular(other));
 }
 
-bool Variable::IsEqual(const INode* rh) const {
-  if (!name_.empty()) {
-    const Variable* rh_var = rh->AsNodeImpl()->AsVariable();
-    return rh_var && (name_ == rh_var->name_);
-  }
-  if (value_)
-    return value_->IsEqual(rh);
-  return false;
-}
-
 CompareResult Variable::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)
     return result;
   const Variable* rh_variable = rh->AsNodeImpl()->AsVariable();
   assert(rh_variable);
+
   result = CompareTrivial(GetName(), rh_variable->GetName());
+  if (result != CompareResult::Equal)
+    return result;
+
+  result = CompareTrivial(value_ != nullptr, rh_variable->value_ != nullptr);
+  if (result != CompareResult::Equal)
+    return result;
+  if (value_)
+    result = value_->Compare(rh_variable->value_.get());
+  else
+    result = CompareResult::Equal;
   return result;
 }
 

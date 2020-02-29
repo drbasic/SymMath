@@ -28,10 +28,6 @@ std::unique_ptr<INode> VariableRef::SymCalc(SymCalcSettings settings) const {
   return var_->SymCalc(settings);
 }
 
-bool VariableRef::IsEqual(const INode* rh) const {
-  return var_->IsEqual(rh);
-}
-
 CompareResult VariableRef::Compare(const INode* rh) const {
   return var_->Compare(rh);
 }

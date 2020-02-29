@@ -48,9 +48,6 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
       auto* un_minus = operation->AsUnMinusOperation();
       return INodeHelper::MakeUnMinus(DoDiffNode(un_minus->Operand(), by_var));
     } break;
-    case Op::Minus: {
-      assert(false);
-    } break;
     case Op::Plus: {
       return DoDiffPlusOperation(operation->AsPlusOperation(), by_var);
     } break;
@@ -147,16 +144,16 @@ std::unique_ptr<INode> DoDiffPowOperation(const PowOperation* operation,
   auto g = operation->Exp();
   auto derivative_f = DoDiffNode(f, by_var);
   auto derivative_g = DoDiffNode(g, by_var);
-  if (derivative_f->IsEqual(Constants::Zero()) &&
-      derivative_g->IsEqual(Constants::Zero())) {
+  if ((derivative_f->Compare(Constants::Zero()) == CompareResult::Equal) &&
+      (derivative_g->Compare(Constants::Zero()) == CompareResult::Equal)) {
     return Const(0.0);
   }
 
-  if (derivative_f->IsEqual(Constants::Zero())) {
+  if (derivative_f->Compare(Constants::Zero()) == CompareResult::Equal) {
     // 10^x = 10^x * log(10);
     return std::move(derivative_g) * operation->Clone() * Log(f->Clone());
   }
-  if (derivative_g->IsEqual(Constants::Zero())) {
+  if (derivative_g->Compare(Constants::Zero()) == CompareResult::Equal) {
     // x ^ a = a *( x ^ (a-1))
     return std::move(derivative_f) * g->Clone() *
            Pow(f->Clone(), g->Clone() - 1.0);
@@ -171,7 +168,7 @@ std::unique_ptr<INode> DoDiffPowOperation(const PowOperation* operation,
   b.push_back(
       INodeHelper::MakeMultIfNeeded(g->Clone(), std::move(derivative_f)));
 
-  if (!derivative_g->IsEqual(Constants::Zero())) {
+  if (derivative_g->Compare(Constants::Zero()) != CompareResult::Equal) {
     b.push_back(
         f->Clone() *
         INodeHelper::MakeLogIfNeeded(Constants::E()->Clone(), f->Clone()) *
@@ -188,13 +185,13 @@ std::unique_ptr<INode> DoDiffSqrtOperation(const SqrtOperation* operation,
   auto derivative_f = DoDiffNode(f, by_var);
   auto derivative_g = DoDiffNode(g, by_var);
 
-  if (derivative_f->IsEqual(Constants::Zero())) {
+  if (derivative_f->Compare(Constants::Zero()) == CompareResult::Equal) {
     // d/dx(a^(1/g(x))) = -(log(a) a^(1/g(x)) g'(x))/g(x)^2
     return -(Log(f->Clone()) * Sqrt(f->Clone(), g->Clone()) *
              std::move(derivative_g)) /
            (Pow(g->Clone(), 2));
   }
-  if (derivative_g->IsEqual(Constants::Zero())) {
+  if (derivative_g->Compare(Constants::Zero()) == CompareResult::Equal) {
     // sqrt(x, n) -> (x') / (n * sqrt(x^(n-1)), n)
     return std::move(derivative_f) /
            (g->Clone() * Sqrt(Pow(f->Clone(), g->Clone() - 1), g->Clone()));

@@ -4,18 +4,12 @@
 
 Imaginary::Imaginary() {}
 
-bool Imaginary::IsEqual(const INode* rh) const {
-  const Imaginary* rh_img = rh->AsNodeImpl()->AsImaginary();
-  return rh_img;
-}
-
 CompareResult Imaginary::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)
     return result;
   const Imaginary* rh_imaginary = rh->AsNodeImpl()->AsImaginary();
   assert(rh_imaginary);
-  result = CompareResult::Equal;
   return result;
 }
 

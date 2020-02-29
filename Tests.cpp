@@ -52,7 +52,7 @@ bool Tests::TestSimplifyMultChain() {
     return false;
   auto expected_result = Const(-120);
   auto result = s.SymCalc(SymCalcSettings::Full);
-  if (!result->IsEqual(expected_result.get()))
+  if (result->Compare(expected_result.get()) != CompareResult::Equal)
     return false;
   return true;
 }
@@ -70,7 +70,8 @@ bool Tests::TestSimplifyPlusChain() {
   if (op->operands_.size() != 5)
     return false;
   auto expected_result = Const(-9);
-  if (!s.SymCalc(SymCalcSettings::Full)->IsEqual(expected_result.get()))
+  if (s.SymCalc(SymCalcSettings::Full)->Compare(expected_result.get()) !=
+      CompareResult::Equal)
     return false;
   return true;
 }
@@ -93,7 +94,8 @@ bool Tests::TestSimplifyChainRecursive() {
       return false;
   }
   auto expected_result = Const(216);
-  if (!s.SymCalc(SymCalcSettings::Full)->IsEqual(expected_result.get()))
+  if (s.SymCalc(SymCalcSettings::Full)->Compare(expected_result.get()) !=
+      CompareResult::Equal)
     return false;
   return true;
 }
@@ -117,7 +119,7 @@ bool Tests::TestSimplifyDivDiv() {
     return false;
   auto expected_result = Const(2);
   auto result = s.SymCalc(SymCalcSettings::Full);
-  if (!result->IsEqual(expected_result.get()))
+  if (result->Compare(expected_result.get()) != CompareResult::Equal)
     return false;
   return true;
 }
@@ -129,7 +131,7 @@ bool Tests::TestSimplifyImaginary() {
   Variable s = Imag() * Imag() + a;
   auto expected_result = Const(99);
   auto result = s.SymCalc(SymCalcSettings::Full);
-  if (!result->IsEqual(expected_result.get()))
+  if (result->Compare(expected_result.get()) != CompareResult::Equal)
     return false;
   return true;
 }
@@ -152,7 +154,7 @@ bool Tests::TestOpenBrackets() {
     return false;
   auto expected_result = Const(405);
   auto result = s.SymCalc(SymCalcSettings::Full);
-  if (!result->IsEqual(expected_result.get()))
+  if (result->Compare(expected_result.get()) != CompareResult::Equal)
     return false;
   return true;
 }

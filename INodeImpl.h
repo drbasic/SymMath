@@ -36,15 +36,16 @@ enum class NodeType {
   DivOperation,
   MultOperation,
   PlusOperation,
+  MinusOperation,
   DiffOperation,
   PowOperation,
   SqrtOperation,
-  TrigonometricOperation,
+  SinOperation,
+  CosOperation,
   UnMinusOperation,
   VectorMultOperation,
   LogOperation,
   CompareOperation,
-
 };
 
 class INodeImpl : public INode {

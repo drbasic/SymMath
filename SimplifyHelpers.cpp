@@ -237,7 +237,7 @@ std::vector<std::unique_ptr<INode>> TakeEqualNodes(
     for (size_t j = 0; j < rhs->size(); ++j) {
       if (!(*rhs)[j])
         continue;
-      if (!(*lhs)[i]->IsEqual((*rhs)[j].get()))
+      if ((*lhs)[i]->Compare((*rhs)[j].get()) != CompareResult::Equal)
         continue;
       result.push_back(std::move((*lhs)[i]));
       (*lhs)[i].reset();
@@ -255,7 +255,7 @@ std::vector<std::unique_ptr<INode>> RemoveEqualNodes(
     for (size_t j = 0; j < rhs->size(); ++j) {
       if (!(*rhs)[j])
         continue;
-      if (lhs[i]->IsEqual((*rhs)[j].get())) {
+      if (lhs[i]->Compare((*rhs)[j].get()) == CompareResult::Equal) {
         (*rhs)[j].reset();
         break;
       }
@@ -404,7 +404,8 @@ bool MergeCanonicToPow(HotToken& token,
 
       auto* lh_pow = INodeHelper::AsPow(lh_node_info.node->get());
       auto* rh_pow = INodeHelper::AsPow(rh_node_info.node->get());
-      if (lh_pow && rh_pow && lh_pow->Base()->IsEqual(rh_pow->Base())) {
+      if (lh_pow && rh_pow &&
+          lh_pow->Base()->Compare(rh_pow->Base()) == CompareResult::Equal) {
         // x^a * x^b
         auto new_pow = INodeHelper::MakePow(
             lh_pow->Base()->Clone(),
@@ -417,7 +418,8 @@ bool MergeCanonicToPow(HotToken& token,
         break;
       }
       if (lh_pow && !rh_pow &&
-          lh_pow->Base()->IsEqual(rh_node_info.node->get())) {
+          lh_pow->Base()->Compare(rh_node_info.node->get()) ==
+              CompareResult::Equal) {
         // x^a * x
         auto new_pow = INodeHelper::MakePow(
             lh_pow->Base()->Clone(),
@@ -430,7 +432,8 @@ bool MergeCanonicToPow(HotToken& token,
         break;
       }
       if (rh_pow && !lh_pow &&
-          rh_pow->Base()->IsEqual(lh_node_info.node->get())) {
+          rh_pow->Base()->Compare(lh_node_info.node->get()) ==
+              CompareResult::Equal) {
         // x * x^b
         auto new_pow = INodeHelper::MakePow(
             rh_pow->Base()->Clone(),
@@ -443,7 +446,8 @@ bool MergeCanonicToPow(HotToken& token,
         break;
       }
 
-      if (lh_node_info.node->get()->IsEqual(rh_node_info.node->get())) {
+      if (lh_node_info.node->get()->Compare(rh_node_info.node->get()) ==
+          CompareResult::Equal) {
         // x^3 * x^2, sqrt(a^3) * sqrt(a^2, 3)
         lh_node_info.Apply(rh_node_info.exp_up, rh_node_info.exp_down);
         merged_nodes.emplace_back(lh_node_info.exp_up, lh_node_info.exp_down,

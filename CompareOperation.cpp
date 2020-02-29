@@ -24,7 +24,8 @@ std::unique_ptr<INode> CompareEqual(
         break;
     }
   }
-  bool is_equal = (*operands)[0]->IsEqual((*operands)[1].get());
+  bool is_equal =
+      (*operands)[0]->Compare((*operands)[1].get()) == CompareResult::Equal;
   return INodeHelper::MakeConst(is_equal);
 }
 

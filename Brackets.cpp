@@ -36,10 +36,6 @@ std::unique_ptr<INode> Brackets::SymCalc(SymCalcSettings settings) const {
   return value_->SymCalc(settings);
 }
 
-bool Brackets::IsEqual(const INode* rh) const {
-  return value_->IsEqual(rh);
-}
-
 CompareResult Brackets::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)

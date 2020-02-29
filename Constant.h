@@ -13,7 +13,6 @@ class Constant : public INodeImpl {
   Constant(double val, std::wstring name);
 
   // INode implementation
-  bool IsEqual(const INode* rh) const override;
   CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;

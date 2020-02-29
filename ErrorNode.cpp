@@ -38,11 +38,6 @@ void ErrorNode::ConvertToComplexImpl(HotToken token,
   token.Disarm();
 }
 
-bool ErrorNode::IsEqual(const INode* rh) const {
-  const ErrorNode* rh_error = rh->AsNodeImpl()->AsError();
-  return rh_error && (error_ == rh_error->error_);
-}
-
 CompareResult ErrorNode::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)

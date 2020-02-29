@@ -19,6 +19,7 @@ enum class CompareResult {
 class INode {
  public:
   virtual ~INode() {}
+
   virtual CompareResult Compare(const INode* rh) const = 0;
   virtual std::unique_ptr<INode> Clone() const = 0;
   virtual std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const = 0;

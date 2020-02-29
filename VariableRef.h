@@ -8,7 +8,6 @@ class VariableRef : public INodeImpl {
   explicit VariableRef(const Variable* var);
 
   // INode interface
-  bool IsEqual(const INode* rh) const override;
   CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;

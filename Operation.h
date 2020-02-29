@@ -19,11 +19,11 @@ class Operation : public IOperation {
             std::vector<std::unique_ptr<INode>> operands);
 
   // INode implementation
-  bool IsEqual(const INode* rh) const override;
   CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override { return op_info_->node_type; }
   PrintSize LastPrintSize() const override;
   int Priority() const override;
   bool HasFrontMinus() const override { return false; }

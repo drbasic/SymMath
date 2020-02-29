@@ -55,19 +55,6 @@ void Constant::ConvertToComplexImpl(HotToken token,
   token.Disarm();
 }
 
-bool Constant::IsEqual(const INode* rh) const {
-  const Constant* rh_const = rh->AsNodeImpl()->AsConstant();
-  if (!rh_const)
-    return false;
-  if (Name() != rh_const->Name())
-    return false;
-  if (bool_value_ != rh_const->bool_value_)
-    return false;
-  if (bool_value_)
-    return (*bool_value_) == (*rh_const->bool_value_);
-  return Value() == rh_const->Value();
-}
-
 CompareResult Constant::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)

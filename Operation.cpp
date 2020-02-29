@@ -222,24 +222,6 @@ bool Operation::CheckCircular(const INodeImpl* other) const {
   return false;
 }
 
-bool Operation::IsEqual(const INode* rh) const {
-  const Operation* rh_op = rh->AsNodeImpl()->AsOperation();
-  if (!rh_op)
-    return false;
-  if (op_info_ != rh_op->op_info_)
-    return false;
-  if (operands_.size() != rh_op->operands_.size())
-    return false;
-  if (!op_info_->is_transitive) {
-    for (size_t i = 0; i < operands_.size(); ++i) {
-      if (!operands_[i]->IsEqual(rh_op->operands_[i].get()))
-        return false;
-    }
-    return true;
-  }
-  return IsNodesTransitiveEqual(operands_, rh_op->operands_) == CompareResult::Equal;
-}
-
 CompareResult Operation::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)

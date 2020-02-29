@@ -3,6 +3,7 @@
 #include <string_view>
 #include <vector>
 
+enum class NodeType;
 class INode;
 class Operation;
 
@@ -29,6 +30,7 @@ struct OpInfo {
       std::vector<std::unique_ptr<INode>>* operands);
 
   Op op;
+  NodeType node_type;
   int priority = 0;
   std::wstring_view name;
   TrivialF trivial_f = nullptr;
