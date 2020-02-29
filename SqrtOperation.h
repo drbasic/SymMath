@@ -18,6 +18,7 @@ class SqrtOperation : public Operation {
   std::unique_ptr<INode> Clone() const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override { return NodeType::SqrtOperation; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,

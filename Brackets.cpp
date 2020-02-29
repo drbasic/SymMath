@@ -40,6 +40,15 @@ bool Brackets::IsEqual(const INode* rh) const {
   return value_->IsEqual(rh);
 }
 
+CompareResult Brackets::Compare(const INode* rh) const {
+  auto result = CompareType(rh);
+  if (result != CompareResult::Equal)
+    return result;
+
+  return CompareTrivial(bracket_type_,
+                        rh->AsNodeImpl()->AsBrackets()->bracket_type_);
+}
+
 std::unique_ptr<INode> Brackets::Clone() const {
   return std::make_unique<Brackets>(bracket_type_, value_->Clone());
 }

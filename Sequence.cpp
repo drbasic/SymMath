@@ -1,5 +1,7 @@
 #include "Sequence.h"
 
+#include <algorithm>
+
 #include "INodeHelper.h"
 
 Sequence::Sequence() {}
@@ -27,4 +29,18 @@ PrintSize Sequence::Render(Canvas* canvas,
   render_behaviour.TakeBrackets();
   return AbstractSequence::Render(PrintDirection::Horizontal, canvas, print_box,
                                   dry_run, render_behaviour);
+}
+
+void Sequence::Unique() {
+  auto less_cmp = [](const std::unique_ptr<INode>& lh,
+                     const std::unique_ptr<INode>& rh) {
+    return lh->Compare(rh.get()) == CompareResult::Less;
+  };
+  std::sort(values_.begin(), values_.end(), less_cmp);
+  auto eq_cmp = [](const std::unique_ptr<INode>& lh,
+                   const std::unique_ptr<INode>& rh) {
+    return lh->Compare(rh.get()) == CompareResult::Equal;
+  };
+  auto it = std::unique(values_.begin(), values_.end(), eq_cmp);
+  values_.erase(it, values_.end());
 }

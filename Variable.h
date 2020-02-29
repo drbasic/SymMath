@@ -24,11 +24,13 @@ class Variable : protected INodeImpl {
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
+  CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
  protected:
   // INodeImpl interface
+  NodeType GetNodeType() const override;
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,

@@ -149,9 +149,9 @@ std::unique_ptr<INode> SymCalcValue(
   }
 
   if (calculated_operands.size() == 2 && op_info->operands_count == 2) {
-    double result = trivial_f(
-        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
-        calculated_operands[1]->AsNodeImpl()->AsConstant()->Value());
+    double result =
+        trivial_f(calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
+                  calculated_operands[1]->AsNodeImpl()->AsConstant()->Value());
     return INodeHelper::MakeConst(result);
   }
 
@@ -203,6 +203,9 @@ std::unique_ptr<INode> Operation::SymCalc(SymCalcSettings settings) const {
       SymCalcValue(op_info_, std::move(calculated_operands), settings);
   if (auto* as_seq = INodeHelper::AsSequence(result.get())) {
     as_seq->Unfold();
+    as_seq->Unique();
+    if (as_seq->Size() == 1)
+      return as_seq->TakeValue(0);
   }
   return result;
 }
@@ -235,6 +238,23 @@ bool Operation::IsEqual(const INode* rh) const {
     return true;
   }
   return IsNodesTransitiveEqual(operands_, rh_op->operands_);
+}
+
+CompareResult Operation::Compare(const INode* rh) const {
+  auto result = CompareType(rh);
+  if (result != CompareResult::Equal)
+    return result;
+  auto* rh_operation = INodeHelper::AsOperation(rh);
+  assert(rh_operation);
+  result = CompareTrivial(OperandsCount(), rh_operation->OperandsCount());
+  if (result != CompareResult::Equal)
+    return result;
+  for (size_t i = 0; i < OperandsCount(); ++i) {
+    result = Operand(i)->Compare(rh_operation->Operand(i));
+    if (result != CompareResult::Equal)
+      return result;
+  }
+  return CompareResult::Equal;
 }
 
 void Operation::SimplifyImpl(HotToken token, std::unique_ptr<INode>* new_node) {

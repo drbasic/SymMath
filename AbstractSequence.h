@@ -10,6 +10,9 @@ class AbstractSequence : public INodeImpl {
   AbstractSequence();
   AbstractSequence(std::vector<std::unique_ptr<INode>> values);
 
+  // INode interface
+  CompareResult Compare(const INode* rh) const override;
+
   // INodeImpl interface
   PrintSize LastPrintSize() const override { return print_size_; }
   bool HasFrontMinus() const override { return false; }

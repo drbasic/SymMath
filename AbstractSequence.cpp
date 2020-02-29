@@ -9,6 +9,25 @@ AbstractSequence::AbstractSequence() {}
 AbstractSequence::AbstractSequence(std::vector<std::unique_ptr<INode>> values)
     : values_(std::move(values)) {}
 
+CompareResult AbstractSequence::Compare(const INode* rh) const
+{
+  auto result = CompareType(rh);
+  if (result != CompareResult::Equal)
+    return result;
+  const AbstractSequence* rh_seq = rh->AsNodeImpl()->AsAbstractSequence();
+  assert(rh_seq);
+
+  result = CompareTrivial(Size(), rh_seq->Size());
+  if (result != CompareResult::Equal)
+    return result;
+  for (size_t i = 0; i < Size(); ++i) {
+    result = Value(i)->Compare(rh_seq->Value(i));
+    if (result != CompareResult::Equal)
+      return result;
+  }
+  return CompareResult::Equal;
+}
+
 PrintSize AbstractSequence::Render(PrintDirection direction,
                                    Canvas* canvas,
                                    PrintBox print_box,

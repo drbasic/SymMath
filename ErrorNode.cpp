@@ -1,5 +1,7 @@
 #include "ErrorNode.h"
 
+#include <cassert>
+
 ErrorNode::ErrorNode(std::wstring error) : error_(error) {}
 
 std::unique_ptr<INode> ErrorNode::SymCalc(SymCalcSettings settings) const {
@@ -39,4 +41,14 @@ void ErrorNode::ConvertToComplexImpl(HotToken token,
 bool ErrorNode::IsEqual(const INode* rh) const {
   const ErrorNode* rh_error = rh->AsNodeImpl()->AsError();
   return rh_error && (error_ == rh_error->error_);
+}
+
+CompareResult ErrorNode::Compare(const INode* rh) const {
+  auto result = CompareType(rh);
+  if (result != CompareResult::Equal)
+    return result;
+  const ErrorNode* rh_err = rh->AsNodeImpl()->AsError();
+  assert(rh_err);
+  result = CompareTrivial(error_, rh_err->error_);
+  return result;
 }

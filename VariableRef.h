@@ -9,10 +9,12 @@ class VariableRef : public INodeImpl {
 
   // INode interface
   bool IsEqual(const INode* rh) const override;
+  CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override;
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,

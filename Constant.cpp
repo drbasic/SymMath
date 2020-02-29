@@ -68,6 +68,23 @@ bool Constant::IsEqual(const INode* rh) const {
   return Value() == rh_const->Value();
 }
 
+CompareResult Constant::Compare(const INode* rh) const {
+  auto result = CompareType(rh);
+  if (result != CompareResult::Equal)
+    return result;
+  const Constant* rh_const = rh->AsNodeImpl()->AsConstant();
+  result = CompareTrivial(Name(), rh_const->Name());
+  if (result != CompareResult::Equal)
+    return result;
+  if (bool_value_) {
+    result = CompareTrivial(*bool_value_, *rh_const->bool_value_);
+    if (result != CompareResult::Equal)
+      return result;
+  }
+  result = CompareTrivial(Value(), rh_const->Value());
+  return result;
+}
+
 std::unique_ptr<INode> Constant::SymCalc(SymCalcSettings settings) const {
   return Clone();
 }

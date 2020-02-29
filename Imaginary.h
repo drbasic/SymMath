@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <string>
-#include <vector>
 
 #include "INodeImpl.h"
 
@@ -12,10 +10,12 @@ class Imaginary : public INodeImpl {
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
+  CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override { return NodeType::Imaginary; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,

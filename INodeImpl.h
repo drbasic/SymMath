@@ -6,6 +6,7 @@
 #include "RenderBehaviour.h"
 
 class AbstractSequence;
+class Brackets;
 class Constant;
 class ErrorNode;
 class Imaginary;
@@ -22,6 +23,30 @@ enum class ValueType {
   Last = Sequence,
 };
 
+enum class NodeType {
+  INodeImpl,
+  Brackets,
+  Operation,
+  Constant,
+  Variable,
+  ErrorNode,
+  Imaginary,
+  Sequence,
+  Vector,
+  DivOperation,
+  MultOperation,
+  PlusOperation,
+  DiffOperation,
+  PowOperation,
+  SqrtOperation,
+  TrigonometricOperation,
+  UnMinusOperation,
+  VectorMultOperation,
+  LogOperation,
+  CompareOperation,
+
+};
+
 class INodeImpl : public INode {
  public:
   // INode implementation
@@ -29,6 +54,7 @@ class INodeImpl : public INode {
   const INodeImpl* AsNodeImpl() const override { return this; }
 
   // INodeImpl interface
+  virtual NodeType GetNodeType() const = 0;
   virtual PrintSize Render(Canvas* canvas,
                            PrintBox print_box,
                            bool dry_run,
@@ -50,6 +76,8 @@ class INodeImpl : public INode {
   virtual const AbstractSequence* AsAbstractSequence() const { return nullptr; }
   virtual Imaginary* AsImaginary() { return nullptr; }
   virtual const Imaginary* AsImaginary() const { return nullptr; }
+  virtual Brackets* AsBrackets() { return nullptr; }
+  virtual const Brackets* AsBrackets() const { return nullptr; }
   virtual const ErrorNode* AsError() const { return nullptr; }
   virtual Variable* AsVariable() { return nullptr; }
   virtual const Variable* AsVariable() const { return nullptr; }
@@ -62,4 +90,6 @@ class INodeImpl : public INode {
                                 std::unique_ptr<INode>* new_node) = 0;
   virtual void ConvertToComplexImpl(HotToken token,
                                     std::unique_ptr<INode>* new_node) = 0;
+
+  CompareResult CompareType(const INode* rh) const;
 };

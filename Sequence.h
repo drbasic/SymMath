@@ -15,6 +15,7 @@ class Sequence : public AbstractSequence {
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override { return NodeType::Sequence; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
@@ -23,6 +24,8 @@ class Sequence : public AbstractSequence {
   ValueType GetValueType() const override { return ValueType::Sequence; }
   Sequence* AsSequence() override { return this; }
   const Sequence* AsSequence() const override { return this; }
+
+  void Unique();
 
  private:
 };

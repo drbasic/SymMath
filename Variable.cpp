@@ -57,7 +57,7 @@ std::wstring Variable::Print(bool with_calc, uint32_t base_line) const {
   }
   canvas.Resize(total_size);
   canvas.SetDryRun(false);
-  PrintBox print_box(total_size,0, 0);
+  PrintBox print_box(total_size, 0, 0);
   auto value_size2 = Render(&canvas, print_box, false, render_behaviour);
   auto total_size2(value_size2);
   assert(value_size == value_size2);
@@ -111,6 +111,16 @@ bool Variable::IsEqual(const INode* rh) const {
   if (value_)
     return value_->IsEqual(rh);
   return false;
+}
+
+CompareResult Variable::Compare(const INode* rh) const {
+  auto result = CompareType(rh);
+  if (result != CompareResult::Equal)
+    return result;
+  const Variable* rh_variable = rh->AsNodeImpl()->AsVariable();
+  assert(rh_variable);
+  result = CompareTrivial(GetName(), rh_variable->GetName());
+  return result;
 }
 
 std::wstring Variable::GetName() const {
@@ -207,6 +217,12 @@ std::unique_ptr<INode> Variable::SymCalc(SymCalcSettings settings) const {
 std::unique_ptr<INode> Variable::Clone() const {
   assert(false);
   return std::unique_ptr<INode>();
+}
+
+NodeType Variable::GetNodeType() const {
+  if (auto vn = GetVisibleNode())
+    return (vn != this) ? vn->GetNodeType() : NodeType::Variable;
+  return NodeType::Variable;
 }
 
 PrintSize Variable::Render(Canvas* canvas,

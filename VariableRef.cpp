@@ -32,8 +32,16 @@ bool VariableRef::IsEqual(const INode* rh) const {
   return var_->IsEqual(rh);
 }
 
+CompareResult VariableRef::Compare(const INode* rh) const {
+  return var_->Compare(rh);
+}
+
 std::unique_ptr<INode> VariableRef::Clone() const {
   return std::make_unique<VariableRef>(var_);
+}
+
+NodeType VariableRef::GetNodeType() const {
+  return var_->GetNodeType();
 }
 
 PrintSize VariableRef::Render(Canvas* canvas,

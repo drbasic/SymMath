@@ -9,10 +9,12 @@ class ErrorNode : public INodeImpl {
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
+  CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override { return NodeType::ErrorNode; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
@@ -28,9 +30,7 @@ class ErrorNode : public INodeImpl {
   void ConvertToComplexImpl(HotToken token,
                             std::unique_ptr<INode>* new_node) override;
 
- protected:
  private:
   mutable PrintSize print_size_;
   std::wstring error_;
-  std::unique_ptr<INode> value_;
 };

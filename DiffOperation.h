@@ -16,6 +16,7 @@ class DiffOperation : public Operation {
   std::unique_ptr<INode> Clone() const override;
 
   // INodeImpl implementation
+  NodeType GetNodeType() const override { return NodeType::DiffOperation; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,

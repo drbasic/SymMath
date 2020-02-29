@@ -26,10 +26,12 @@ class Brackets : public INodeImpl {
 
   // INode implementation
   bool IsEqual(const INode* rh) const override;
+  CompareResult Compare(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl implementation
+  NodeType GetNodeType() const override { return NodeType::Brackets; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
@@ -38,6 +40,8 @@ class Brackets : public INodeImpl {
   int Priority() const override { return 1000; }
   bool HasFrontMinus() const override { return false; }
   bool CheckCircular(const INodeImpl* other) const override;
+  Brackets* AsBrackets() override { return this; }
+  const Brackets* AsBrackets() const override { return this; }
   Constant* AsConstant() override;
   const Constant* AsConstant() const override;
   const ErrorNode* AsError() const override;

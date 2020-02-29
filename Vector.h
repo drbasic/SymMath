@@ -19,6 +19,7 @@ class Vector : public AbstractSequence {
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 
   // INodeImpl interface
+  NodeType GetNodeType() const override { return NodeType::Vector; }
   PrintSize Render(Canvas* canvas,
                    PrintBox print_box,
                    bool dry_run,
