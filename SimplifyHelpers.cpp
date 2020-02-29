@@ -149,32 +149,56 @@ void DoShorten(double* v1, double* v2) {
 
 }  // namespace
 
-bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
-                            const std::vector<const INode*>& rhs) {
-  if (lhs.size() != rhs.size())
-    return false;
+CompareResult IsNodesTransitiveEqual(std::vector<const INode*> lhs,
+                                     std::vector<const INode*> rhs) {
+  auto result = CompareTrivial(lhs.size(), rhs.size());
+  if (result != CompareResult::Equal)
+    return result;
 
-  std::vector<bool> used;
-  used.resize(rhs.size());
-  for (size_t i = 0; i < lhs.size(); ++i) {
-    bool equal_found = false;
-    for (size_t j = 0; j < rhs.size(); ++j) {
-      if (used[j])
+  // n^n; 5*5 = 25
+  // n log(n) *2 + n ;  5*2*2+5 = 25
+  if (lhs.size() <= 5) {
+    std::vector<bool> used;
+    used.resize(rhs.size());
+    for (size_t i = 0; i < lhs.size(); ++i) {
+      bool equal_found = false;
+      for (size_t j = 0; j < rhs.size(); ++j) {
+        if (used[j])
+          continue;
+        auto r = lhs[i]->Compare(rhs[j]);
+        if (r != CompareResult::Equal)
+          continue;
+        used[j] = true;
+        equal_found = true;
+        break;
+      }
+      if (equal_found)
         continue;
-      if (!lhs[i]->IsEqual(rhs[j]))
-        continue;
-      used[j] = true;
-      equal_found = true;
-      break;
+      for (size_t j = 0; j < rhs.size(); ++j) {
+        if (used[j])
+          continue;
+        // return comparation result with first not used element in rh.
+        return lhs[i]->Compare(rhs[j]);
+      }
     }
-    if (!equal_found)
-      return false;
+  } else {
+    auto less_cmp = [](const INode* lh, const INode* rh) {
+      return lh->Compare(rh) == CompareResult::Less;
+    };
+    std::sort(lhs.begin(), lhs.end(), less_cmp);
+    std::sort(rhs.begin(), rhs.end(), less_cmp);
+    for (size_t i = 0; i < lhs.size(); ++i) {
+      auto r = lhs[i]->Compare(rhs[i]);
+      if (r != CompareResult::Equal)
+        return r;
+    }
   }
-  return true;
+  return CompareResult::Equal;
 }
 
-bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>*>& lhs,
-                            const std::vector<std::unique_ptr<INode>*>& rhs) {
+CompareResult IsNodesTransitiveEqual(
+    const std::vector<std::unique_ptr<INode>*>& lhs,
+    const std::vector<std::unique_ptr<INode>*>& rhs) {
   auto transform = [](const std::vector<std::unique_ptr<INode>*>& nodes)
       -> std::vector<const INode*> {
     std::vector<const INode*> result;
@@ -187,8 +211,9 @@ bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>*>& lhs,
   return IsNodesTransitiveEqual(transform(lhs), transform(rhs));
 }
 
-bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
-                            const std::vector<std::unique_ptr<INode>>& rhs) {
+CompareResult IsNodesTransitiveEqual(
+    const std::vector<std::unique_ptr<INode>>& lhs,
+    const std::vector<std::unique_ptr<INode>>& rhs) {
   auto transform = [](const std::vector<std::unique_ptr<INode>>& nodes)
       -> std::vector<const INode*> {
     std::vector<const INode*> result;
@@ -302,8 +327,7 @@ bool MergeCanonicToPlus(HotToken& token,
                         const CanonicMult& rh,
                         std::unique_ptr<INode>* lh_node,
                         std::unique_ptr<INode>* rh_node) {
-  bool is_tr_equal = IsNodesTransitiveEqual(lh.nodes, rh.nodes);
-  if (!is_tr_equal)
+  if (IsNodesTransitiveEqual(lh.nodes, rh.nodes) != CompareResult::Equal)
     return false;
 
   double dividend = lh.a * rh.b + rh.a * lh.b;
@@ -323,8 +347,7 @@ bool MergeCanonicToMult(HotToken& token,
                         const CanonicMult& rh,
                         std::unique_ptr<INode>* lh_node,
                         std::unique_ptr<INode>* rh_node) {
-  bool is_tr_equal = IsNodesTransitiveEqual(lh.nodes, rh.nodes);
-  if (!is_tr_equal)
+  if (IsNodesTransitiveEqual(lh.nodes, rh.nodes) != CompareResult::Equal)
     return false;
 
   double dividend = lh.a * rh.a;

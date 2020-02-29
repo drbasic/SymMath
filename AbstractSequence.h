@@ -11,6 +11,7 @@ class AbstractSequence : public INodeImpl {
   AbstractSequence(std::vector<std::unique_ptr<INode>> values);
 
   // INode interface
+  bool IsEqual(const INode* rh) const;
   CompareResult Compare(const INode* rh) const override;
 
   // INodeImpl interface
@@ -39,7 +40,7 @@ class AbstractSequence : public INodeImpl {
   };
   std::unique_ptr<AbstractSequence> Clone(
       std::unique_ptr<AbstractSequence> result) const;
-  bool IsEqualSequence(const AbstractSequence* rh) const;
+
   std::unique_ptr<AbstractSequence> SymCalc(
       std::unique_ptr<AbstractSequence> result,
       SymCalcSettings settings) const;

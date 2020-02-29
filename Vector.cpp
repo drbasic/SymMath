@@ -25,13 +25,6 @@ Vector::Vector(std::unique_ptr<INode> a,
 Vector::Vector(std::vector<std::unique_ptr<INode>> values)
     : AbstractSequence(std::move(values)) {}
 
-bool Vector::IsEqual(const INode* rh) const {
-  const Vector* rh_vector = rh->AsNodeImpl()->AsVector();
-  if (!rh_vector)
-    return false;
-  return AbstractSequence::IsEqualSequence(rh_vector);
-}
-
 std::unique_ptr<INode> Vector::Clone() const {
   return AbstractSequence::Clone(std::make_unique<Vector>());
 }

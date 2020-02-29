@@ -237,7 +237,7 @@ bool Operation::IsEqual(const INode* rh) const {
     }
     return true;
   }
-  return IsNodesTransitiveEqual(operands_, rh_op->operands_);
+  return IsNodesTransitiveEqual(operands_, rh_op->operands_) == CompareResult::Equal;
 }
 
 CompareResult Operation::Compare(const INode* rh) const {
@@ -249,11 +249,18 @@ CompareResult Operation::Compare(const INode* rh) const {
   result = CompareTrivial(OperandsCount(), rh_operation->OperandsCount());
   if (result != CompareResult::Equal)
     return result;
-  for (size_t i = 0; i < OperandsCount(); ++i) {
-    result = Operand(i)->Compare(rh_operation->Operand(i));
+  if (op_info_->is_transitive) {
+    result = IsNodesTransitiveEqual(operands_, rh_operation->operands_);
     if (result != CompareResult::Equal)
       return result;
+  } else {
+    for (size_t i = 0; i < OperandsCount(); ++i) {
+      result = Operand(i)->Compare(rh_operation->Operand(i));
+      if (result != CompareResult::Equal)
+        return result;
+    }
   }
+
   return CompareResult::Equal;
 }
 

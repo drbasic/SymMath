@@ -6,13 +6,6 @@
 
 Sequence::Sequence() {}
 
-bool Sequence::IsEqual(const INode* rh) const {
-  auto as_seq = INodeHelper::AsSequence(rh);
-  if (!as_seq)
-    return false;
-  return AbstractSequence::IsEqualSequence(as_seq);
-}
-
 std::unique_ptr<INode> Sequence::Clone() const {
   return AbstractSequence::Clone(std::make_unique<Sequence>());
 }

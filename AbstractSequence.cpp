@@ -9,8 +9,11 @@ AbstractSequence::AbstractSequence() {}
 AbstractSequence::AbstractSequence(std::vector<std::unique_ptr<INode>> values)
     : values_(std::move(values)) {}
 
-CompareResult AbstractSequence::Compare(const INode* rh) const
-{
+bool AbstractSequence::IsEqual(const INode* rh) const {
+  return Compare(rh) == CompareResult::Equal;
+}
+
+CompareResult AbstractSequence::Compare(const INode* rh) const {
   auto result = CompareType(rh);
   if (result != CompareResult::Equal)
     return result;
@@ -104,8 +107,7 @@ void AbstractSequence::AddValue(std::unique_ptr<INode> rh) {
   values_.push_back(std::move(rh));
 }
 
-void AbstractSequence::SetValue(size_t indx, std::unique_ptr<INode> node)
-{
+void AbstractSequence::SetValue(size_t indx, std::unique_ptr<INode> node) {
   assert(indx < values_.size());
   values_[indx] = std::move(node);
 }
@@ -122,18 +124,6 @@ std::unique_ptr<AbstractSequence> AbstractSequence::Clone(
   for (size_t i = 0; i < Size(); ++i)
     result->AddValue(Value(i)->Clone());
   return result;
-}
-
-bool AbstractSequence::IsEqualSequence(const AbstractSequence* rh) const {
-  if (!rh)
-    return false;
-  if (values_.size() != rh->values_.size())
-    return false;
-  for (size_t i = 0; i < values_.size(); ++i) {
-    if (!values_[i]->IsEqual(rh->values_[i].get()))
-      return false;
-  }
-  return true;
 }
 
 std::unique_ptr<AbstractSequence> AbstractSequence::SymCalc(

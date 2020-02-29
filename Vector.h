@@ -14,7 +14,6 @@ class Vector : public AbstractSequence {
   Vector(std::vector<std::unique_ptr<INode>> values);
 
   // INode implementation
-  bool IsEqual(const INode* rh) const override;
   std::unique_ptr<INode> Clone() const override;
   std::unique_ptr<INode> SymCalc(SymCalcSettings settings) const override;
 

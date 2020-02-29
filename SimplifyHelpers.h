@@ -7,16 +7,20 @@
 #include "HotToken.h"
 
 enum class Op;
+enum class CompareResult;
 struct CanonicMult;
 struct CanonicPow;
 class INode;
 
-bool IsNodesTransitiveEqual(const std::vector<const INode*>& lhs,
-                            const std::vector<const INode*>& rhs);
-bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>*>& lhs,
-                            const std::vector<std::unique_ptr<INode>*>& rhs);
-bool IsNodesTransitiveEqual(const std::vector<std::unique_ptr<INode>>& lhs,
-                            const std::vector<std::unique_ptr<INode>>& rhs);
+CompareResult IsNodesTransitiveEqual(std::vector<const INode*> lhs,
+                                     std::vector<const INode*> rhs);
+CompareResult IsNodesTransitiveEqual(
+    const std::vector<std::unique_ptr<INode>*>& lhs,
+    const std::vector<std::unique_ptr<INode>*>& rhs);
+CompareResult IsNodesTransitiveEqual(
+    const std::vector<std::unique_ptr<INode>>& lhs,
+    const std::vector<std::unique_ptr<INode>>& rhs);
+
 std::vector<std::unique_ptr<INode>> TakeEqualNodes(
     std::vector<std::unique_ptr<INode>>* lhs,
     std::vector<std::unique_ptr<INode>>* rhs);
