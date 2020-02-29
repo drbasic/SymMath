@@ -10,10 +10,10 @@ class Brackets;
 class Constant;
 class ErrorNode;
 class Imaginary;
+class Operation;
+class Sequence;
 class Variable;
 class Vector;
-class Sequence;
-class Operation;
 
 enum class ValueType {
   Scalar = 0,

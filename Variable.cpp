@@ -119,8 +119,6 @@ CompareResult Variable::Compare(const INode* rh) const {
     return result;
   if (value_)
     result = value_->Compare(rh_variable->value_.get());
-  else
-    result = CompareResult::Equal;
   return result;
 }
 
