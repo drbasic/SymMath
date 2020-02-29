@@ -127,8 +127,8 @@ int main() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
-  BacMinusCab();
-  EulerEquation();
+  // BacMinusCab();
+  // EulerEquation();
   // return 0;
   auto a = Var(L"a");
   auto b = Var(L"b");
@@ -143,8 +143,15 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Sqrt(a);
-  t1 = t1.SymCalc(SymCalcSettings::KeepNamedConstants);
+  Variable t1 = -1 / (-1 + x) + 4 / x + (-1 - 3 * x) / (1 + x + (x ^ 2));
+  t1.OpenBrackets();
+  t1.Simplify();
+  t1 = Diff(t1, x);
   // t1.ConvertToComplex();
-  std::wcout << t1.Print(false) << "\n";
+  std::wcout << t1.Print(true) << "\n";
+  t1 = t1.SymCalc(SymCalcSettings::KeepNamedConstants);
+  t1.OpenBrackets();
+  t1.Simplify();
+  x = 10;
+  std::wcout << t1.Print(true) << "\n";
 }

@@ -11,7 +11,6 @@
 #include "Vector.h"
 
 namespace {
-
 template <int I>
 struct Int2Type {
   enum { value = I };
@@ -161,7 +160,6 @@ std::unique_ptr<INode> DoMult(HotToken token,
   return INodeHelper::MakePlus(std::move(values))
       ->SymCalc(SymCalcSettings::KeepNamedConstants);
 }
-
 }  // namespace
 
 ValueType GetMultResultType(ValueType lh, ValueType rh) {

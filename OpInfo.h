@@ -26,8 +26,7 @@ enum class Op : int {
 struct OpInfo {
   using TrivialF = double (*)(double lh, double rh);
   using CalcF = std::unique_ptr<INode> (*)(
-      const OpInfo* op,
-      std::vector<std::unique_ptr<INode>>* operands);
+      const OpInfo *op, std::vector<std::unique_ptr<INode>> *operands);
 
   Op op;
   NodeType node_type;

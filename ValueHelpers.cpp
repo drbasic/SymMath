@@ -24,7 +24,6 @@
 #include "VectorMultOperation.h"
 
 namespace Constants {
-
 const Constant* Zero() {
   static const auto kZero = INodeHelper::MakeConst(0.0);
   return kZero.get();
@@ -51,7 +50,6 @@ const Imaginary* Imag() {
   static const auto kImag = INodeHelper::MakeImaginary();
   return kImag.get();
 }
-
 }  // namespace Constants
 
 Variable Var(std::wstring name) {

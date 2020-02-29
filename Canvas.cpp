@@ -7,7 +7,6 @@
 #include "RenderBehaviour.h"
 
 namespace {
-
 enum BracketsParts {
   SmallLeft,
   SmallRight,

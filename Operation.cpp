@@ -26,7 +26,6 @@ class HotTokenHelper {
 };
 
 namespace {
-
 using SimplificatorFunc = void (*)(HotToken& token,
                                    Operation* operation,
                                    std::unique_ptr<INode>* new_node);
@@ -167,7 +166,6 @@ std::unique_ptr<INode> SymCalcValue(
       node_adaptor);
   return INodeHelper::MakeConst(result);
 }
-
 }  // namespace
 
 Operation::Operation(const OpInfo* op_info, std::unique_ptr<INode> lh)

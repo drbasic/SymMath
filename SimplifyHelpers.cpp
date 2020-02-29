@@ -16,7 +16,6 @@
 #include "Variable.h"
 
 namespace {
-
 bool ReduceFullMultiplicity(double top,
                             double bottom,
                             double* new_top,
@@ -146,7 +145,6 @@ void DoShorten(double* v1, double* v2) {
       *v2 *= b;
   }
 }
-
 }  // namespace
 
 CompareResult IsNodesTransitiveEqual(std::vector<const INode*> lhs,

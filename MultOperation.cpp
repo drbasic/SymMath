@@ -15,7 +15,6 @@
 #include "VectorScalarProduct.h"
 
 namespace {
-
 bool NextPermutation(
     std::vector<std::pair<size_t, size_t>>* permutation_indexes) {
   for (auto ii = std::rbegin(*permutation_indexes);
@@ -28,7 +27,6 @@ bool NextPermutation(
   }
   return false;
 }
-
 }  // namespace
 
 MultOperation::MultOperation(std::unique_ptr<INode> lh,

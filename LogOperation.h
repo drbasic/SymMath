@@ -28,9 +28,7 @@ class LogOperation : public Operation {
   void OpenBracketsImpl(HotToken token,
                         std::unique_ptr<INode>* new_node) override;
 
-  INodeImpl* Base() {
-    return Operand(static_cast<size_t>(OperandIndex::Base));
-  }
+  INodeImpl *Base() { return Operand(static_cast<size_t>(OperandIndex::Base)); }
   const INodeImpl* Base() const {
     return Operand(static_cast<size_t>(OperandIndex::Base));
   }

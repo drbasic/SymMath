@@ -554,7 +554,7 @@ std::unique_ptr<LogOperation> INodeHelper::MakeLog(
 std::unique_ptr<INode> INodeHelper::MakeLogIfNeeded(
     std::unique_ptr<INode> base,
     std::unique_ptr<INode> value) {
-  if (base->Compare(value.get()) == CompareResult::Equal) 
+  if (base->Compare(value.get()) == CompareResult::Equal)
     return Const(1.0);
   return MakeLog(std::move(base), std::move(value));
 }

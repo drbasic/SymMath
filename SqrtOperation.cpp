@@ -29,12 +29,16 @@ std::unique_ptr<INode> NonTrivialSqrt(
   auto* val_const = INodeHelper::AsConstant((*operands)[0].get());
   auto* exp_const = INodeHelper::AsConstant((*operands)[1].get());
   if (val_const && exp_const) {
-    auto result = INodeHelper::MakeSequence();
-    result->AddValue(INodeHelper::MakeConst(
-        TrivialSqrt(val_const->Value(), exp_const->Value())));
-    result->AddValue(INodeHelper::MakeConst(
-        -TrivialSqrt(val_const->Value(), exp_const->Value())));
-    return result;
+    if (std::fmod(exp_const->Value(), 2.0) == 0.0) {
+      auto result = INodeHelper::MakeSequence();
+      result->AddValue(INodeHelper::MakeConst(
+          TrivialSqrt(val_const->Value(), exp_const->Value())));
+      result->AddValue(INodeHelper::MakeConst(
+          -TrivialSqrt(val_const->Value(), exp_const->Value())));
+      return result;
+    }
+    return INodeHelper::MakeConst(
+        TrivialSqrt(val_const->Value(), exp_const->Value()));
   }
   return INodeHelper::MakeSqrt(std::move((*operands)[0]),
                                std::move((*operands)[1]));
