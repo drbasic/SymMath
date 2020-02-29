@@ -143,7 +143,8 @@ int main() {
   auto pi = Var(L"PI");
   pi = 3.1415926;
 
-  Variable t1 = Sin( Sqrt(Const(100)) + Sqrt(Const(81)));
+  Variable t1 = Sqrt(Const(64)) * Sqrt(100 + Sqrt(Const(81)));
+  t1 = t1.SymCalc(SymCalcSettings::KeepNamedConstants);
   // t1.ConvertToComplex();
-  std::wcout << t1.Print(true) << "\n";
+  std::wcout << t1.Print(false) << "\n";
 }

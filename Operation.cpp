@@ -67,6 +67,18 @@ void ApplySimplifications(HotToken token,
   }
 }
 
+bool IsAllOperandsConst(SymCalcSettings settings,
+                        const std::vector<std::unique_ptr<INode>>& operands) {
+  for (const auto& operand : operands) {
+    Constant* constant = operand->AsNodeImpl()->AsConstant();
+    if (!constant)
+      return false;
+    if (settings == SymCalcSettings::KeepNamedConstants && constant->IsNamed())
+      return false;
+  }
+  return true;
+}
+
 std::vector<std::unique_ptr<INode>> CalcOperands(
     SymCalcSettings settings,
     const std::vector<std::unique_ptr<INode>>& operands) {
@@ -76,6 +88,84 @@ std::vector<std::unique_ptr<INode>> CalcOperands(
     result.push_back(operand->SymCalc(settings));
   }
   return result;
+}
+
+std::unique_ptr<INode> SymCalcValue(
+    const OpInfo* op_info,
+    std::vector<std::unique_ptr<INode>> calculated_operands,
+    SymCalcSettings settings) {
+  auto clone_operands =
+      [](const std::vector<std::unique_ptr<INode>>& operands) {
+        std::vector<std::unique_ptr<INode>> result;
+        result.reserve(operands.size());
+        for (auto& operand : operands)
+          result.push_back(operand->Clone());
+        return result;
+      };
+
+  for (size_t i = 0; i < calculated_operands.size(); ++i) {
+    if (auto* as_seq = INodeHelper::AsSequence(calculated_operands[i].get())) {
+      std::unique_ptr<INode> seq = std::move(calculated_operands[i]);
+      for (size_t j = 0; j < as_seq->Size(); ++j) {
+        calculated_operands[i] = as_seq->Value(j)->SymCalc(settings);
+        as_seq->SetValue(
+            j, SymCalcValue(op_info, clone_operands(calculated_operands),
+                            settings));
+      }
+      return seq;
+    }
+  }
+
+  if (op_info->op == Op::Mult) {
+    auto i_node = MultOperation::ProcessImaginary(&calculated_operands);
+    if (i_node)
+      return i_node;
+  }
+
+  if (op_info->calc_f) {
+    std::unique_ptr<INode> result =
+        op_info->calc_f(op_info, &calculated_operands);
+    if (result)
+      return result;
+  }
+
+  if (!IsAllOperandsConst(settings, calculated_operands) ||
+      !op_info->trivial_f) {
+    return INodeHelper::MakeOperation(op_info->op,
+                                      std::move(calculated_operands));
+  }
+
+  auto trivial_f = op_info->trivial_f;
+  assert(trivial_f);
+
+  if (calculated_operands.size() == 1 && op_info->operands_count == 1) {
+    double result = trivial_f(
+        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(), 0.0);
+    return INodeHelper::MakeConst(result);
+  }
+
+  if (calculated_operands.size() == 1 && op_info->operands_count == -1) {
+    return std::move(calculated_operands[0]);
+  }
+
+  if (calculated_operands.size() == 2 && op_info->operands_count == 2) {
+    double result = trivial_f(
+        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
+        calculated_operands[1]->AsNodeImpl()->AsConstant()->Value());
+    return INodeHelper::MakeConst(result);
+  }
+
+  auto node_adaptor = [trivial_f](double lh, const std::unique_ptr<INode>& rh) {
+    auto rh_val = rh->AsNodeImpl()->AsConstant();
+    assert(rh_val);
+    return trivial_f(lh, rh_val->Value());
+  };
+
+  double result = std::accumulate(
+      std::begin(calculated_operands) + 1, std::end(calculated_operands),
+      calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
+      node_adaptor);
+  return INodeHelper::MakeConst(result);
 }
 
 }  // namespace
@@ -109,86 +199,12 @@ int Operation::Priority() const {
 std::unique_ptr<INode> Operation::SymCalc(SymCalcSettings settings) const {
   std::vector<std::unique_ptr<INode>> calculated_operands =
       CalcOperands(settings, operands_);
-  auto result = SymCalcValue(std::move(calculated_operands), settings);
+  auto result =
+      SymCalcValue(op_info_, std::move(calculated_operands), settings);
   if (auto* as_seq = INodeHelper::AsSequence(result.get())) {
     as_seq->Unfold();
   }
   return result;
-}
-
-std::unique_ptr<INode> Operation::SymCalcValue(
-    std::vector<std::unique_ptr<INode>> calculated_operands,
-    SymCalcSettings settings) const {
-  auto clone_operands =
-      [](const std::vector<std::unique_ptr<INode>>& operands) {
-        std::vector<std::unique_ptr<INode>> result;
-        result.reserve(operands.size());
-        for (auto& operand : operands)
-          result.push_back(operand->Clone());
-        return result;
-      };
-
-  for (size_t i = 0; i < calculated_operands.size(); ++i) {
-    if (auto* as_seq = INodeHelper::AsSequence(calculated_operands[i].get())) {
-      std::unique_ptr<INode> seq = std::move(calculated_operands[i]);
-      auto new_seq = INodeHelper::MakeSequence();
-      for (size_t j = 0; j < as_seq->Size(); ++j) {
-        calculated_operands[i] = as_seq->TakeValue(j);
-        new_seq->AddValue(
-            SymCalcValue(clone_operands(calculated_operands), settings));
-      }
-      return new_seq;
-    }
-  }
-
-  if (op_info_->op == Op::Mult) {
-    auto i_node = MultOperation::ProcessImaginary(&calculated_operands);
-    if (i_node)
-      return i_node;
-  }
-
-  if (op_info_->calc_f) {
-    std::unique_ptr<INode> result =
-        op_info_->calc_f(op_info_, &calculated_operands);
-    if (result)
-      return result;
-  }
-
-  if (!IsAllOperandsConst(settings, operands_) || !op_info_->trivial_f) {
-    auto result = INodeHelper::MakeEmpty(op_info_->op);
-    INodeHelper::AsOperation(result.get())->operands_.swap(calculated_operands);
-    return result;
-  }
-
-  if (calculated_operands.size() == 1 && op_info_->operands_count == 1) {
-    double result = op_info_->trivial_f(
-        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(), 0.0);
-    return INodeHelper::MakeConst(result);
-  }
-
-  if (calculated_operands.size() == 1 && op_info_->operands_count == -1) {
-    return std::move(calculated_operands[0]);
-  }
-
-  if (calculated_operands.size() == 2 && op_info_->operands_count == 2) {
-    double result = op_info_->trivial_f(
-        calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
-        calculated_operands[1]->AsNodeImpl()->AsConstant()->Value());
-    return INodeHelper::MakeConst(result);
-  }
-
-  auto trivial_f = op_info_->trivial_f;
-  auto node_adaptor = [trivial_f](double lh, const std::unique_ptr<INode>& rh) {
-    auto rh_val = rh->AsNodeImpl()->AsConstant();
-    assert(rh_val);
-    return trivial_f(lh, rh_val->Value());
-  };
-
-  double result = std::accumulate(
-      std::begin(calculated_operands) + 1, std::end(calculated_operands),
-      calculated_operands[0]->AsNodeImpl()->AsConstant()->Value(),
-      node_adaptor);
-  return INodeHelper::MakeConst(result);
 }
 
 PrintSize Operation::LastPrintSize() const {
@@ -307,19 +323,6 @@ void Operation::CheckIntegrity() const {
   for (const auto& operand : operands_) {
     assert(operand);
   }
-}
-
-bool Operation::IsAllOperandsConst(
-    SymCalcSettings settings,
-    const std::vector<std::unique_ptr<INode>>& operands) const {
-  for (const auto& operand : operands) {
-    Constant* constant = operand->AsNodeImpl()->AsConstant();
-    if (!constant)
-      return false;
-    if (settings == SymCalcSettings::KeepNamedConstants && constant->IsNamed())
-      return false;
-  }
-  return true;
 }
 
 void Operation::UnfoldChains(HotToken token) {

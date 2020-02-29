@@ -329,10 +329,21 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
   return nullptr;
 }
 
+// static
+std::unique_ptr<Operation> INodeHelper::MakeOperation(
+    Op op,
+    std::vector<std::unique_ptr<INode>> operands) {
+  auto result = MakeEmpty(op);
+  result->operands_.swap(operands);
+  return result;
+}
+
+// static
 std::unique_ptr<INode> INodeHelper::MakeError() {
   return std::make_unique<ErrorNode>(std::wstring());
 }
 
+// static
 std::unique_ptr<INode> INodeHelper::MakeError(std::wstring err) {
   return std::make_unique<ErrorNode>(std::move(err));
 }
@@ -342,6 +353,7 @@ std::unique_ptr<Constant> INodeHelper::MakeConst(double value) {
   return std::make_unique<Constant>(std::move(value));
 }
 
+// static
 std::unique_ptr<Constant> INodeHelper::MakeConst(double value,
                                                  std::wstring name) {
   return std::make_unique<Constant>(std::move(value), std::move(name));

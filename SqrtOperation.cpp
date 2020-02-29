@@ -34,11 +34,10 @@ std::unique_ptr<INode> NonTrivialSqrt(
         TrivialSqrt(val_const->Value(), exp_const->Value())));
     result->AddValue(INodeHelper::MakeConst(
         -TrivialSqrt(val_const->Value(), exp_const->Value())));
-
     return result;
   }
-  assert(false);
-  return std::unique_ptr<INode>();
+  return INodeHelper::MakeSqrt(std::move((*operands)[0]),
+                               std::move((*operands)[1]));
 }
 
 SqrtOperation::SqrtOperation(std::unique_ptr<INode> value,

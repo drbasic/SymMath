@@ -26,6 +26,7 @@ class AbstractSequence : public INodeImpl {
   std::unique_ptr<INode> TakeValue(size_t indx);
   const INode* Value(size_t indx) const { return values_[indx].get(); }
   void AddValue(std::unique_ptr<INode> rh);
+  void SetValue(size_t indx, std::unique_ptr<INode> node);
   void Unfold();
 
  protected:

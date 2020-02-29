@@ -79,6 +79,9 @@ class INodeHelper {
       ValueType value_type);
 
   static std::unique_ptr<Operation> MakeEmpty(Op op);
+  static std::unique_ptr<Operation> MakeOperation(
+      Op op,
+      std::vector<std::unique_ptr<INode>> operands);
   static std::unique_ptr<INode> MakeError();
   static std::unique_ptr<INode> MakeError(std::wstring err);
   static std::unique_ptr<Constant> MakeConst(double value);

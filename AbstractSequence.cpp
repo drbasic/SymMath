@@ -85,6 +85,12 @@ void AbstractSequence::AddValue(std::unique_ptr<INode> rh) {
   values_.push_back(std::move(rh));
 }
 
+void AbstractSequence::SetValue(size_t indx, std::unique_ptr<INode> node)
+{
+  assert(indx < values_.size());
+  values_[indx] = std::move(node);
+}
+
 void AbstractSequence::Unfold() {
   std::vector<std::unique_ptr<INode>> new_values;
   DoUnfold(&new_values);
