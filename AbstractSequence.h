@@ -38,18 +38,18 @@ class AbstractSequence : public INodeImpl {
     Horizontal,
     Vertical,
   };
-  std::unique_ptr<AbstractSequence> Clone(
+  std::unique_ptr<AbstractSequence> DoClone(
       std::unique_ptr<AbstractSequence> result) const;
 
-  std::unique_ptr<AbstractSequence> SymCalc(
+  std::unique_ptr<AbstractSequence> DoSymCalc(
       std::unique_ptr<AbstractSequence> result,
       SymCalcSettings settings) const;
 
-  PrintSize Render(PrintDirection direction,
-                   Canvas* canvas,
-                   PrintBox print_box,
-                   bool dry_run,
-                   RenderBehaviour render_behaviour) const;
+  PrintSize DoRender(PrintDirection direction,
+                     Canvas* canvas,
+                     PrintBox print_box,
+                     bool dry_run,
+                     RenderBehaviour render_behaviour) const;
 
   std::vector<std::unique_ptr<INode>> values_;
 

@@ -31,11 +31,11 @@ CompareResult AbstractSequence::Compare(const INode* rh) const {
   return CompareResult::Equal;
 }
 
-PrintSize AbstractSequence::Render(PrintDirection direction,
-                                   Canvas* canvas,
-                                   PrintBox print_box,
-                                   bool dry_run,
-                                   RenderBehaviour render_behaviour) const {
+PrintSize AbstractSequence::DoRender(PrintDirection direction,
+                                     Canvas* canvas,
+                                     PrintBox print_box,
+                                     bool dry_run,
+                                     RenderBehaviour render_behaviour) const {
   render_behaviour.TakeMinus();
   render_behaviour.TakeBrackets();
 
@@ -118,7 +118,7 @@ void AbstractSequence::Unfold() {
   values_.swap(new_values);
 }
 
-std::unique_ptr<AbstractSequence> AbstractSequence::Clone(
+std::unique_ptr<AbstractSequence> AbstractSequence::DoClone(
     std::unique_ptr<AbstractSequence> result) const {
   result->values_.reserve(Size());
   for (size_t i = 0; i < Size(); ++i)
@@ -126,7 +126,7 @@ std::unique_ptr<AbstractSequence> AbstractSequence::Clone(
   return result;
 }
 
-std::unique_ptr<AbstractSequence> AbstractSequence::SymCalc(
+std::unique_ptr<AbstractSequence> AbstractSequence::DoSymCalc(
     std::unique_ptr<AbstractSequence> result,
     SymCalcSettings settings) const {
   result->values_.reserve(values_.size());

@@ -290,6 +290,9 @@ std::unique_ptr<Operation> INodeHelper::MakeEmpty(Op op) {
     case Op::UnMinus:
       return MakeUnMinus(MakeError());
       break;
+    case Op::Minus:
+      assert(false);
+      break;
     case Op::Plus:
       return MakePlus(MakeError(), MakeError());
       break;
@@ -522,7 +525,7 @@ std::unique_ptr<INode> INodeHelper::MakeSqrtIfNeeded(
     std::unique_ptr<INode> value,
     double exp) {
   if (exp == 1.0)
-    return std::move(value);
+    return value;
   if (exp == 0.0)
     return Const(1.0);
 

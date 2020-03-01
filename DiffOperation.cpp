@@ -48,6 +48,9 @@ std::unique_ptr<INode> DoDiffOperation(const Operation* operation,
       auto* un_minus = operation->AsUnMinusOperation();
       return INodeHelper::MakeUnMinus(DoDiffNode(un_minus->Operand(), by_var));
     } break;
+    case Op::Minus: {
+      assert(false);
+    } break;
     case Op::Plus: {
       return DoDiffPlusOperation(operation->AsPlusOperation(), by_var);
     } break;

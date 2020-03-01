@@ -7,11 +7,11 @@
 Sequence::Sequence() {}
 
 std::unique_ptr<INode> Sequence::Clone() const {
-  return AbstractSequence::Clone(std::make_unique<Sequence>());
+  return AbstractSequence::DoClone(std::make_unique<Sequence>());
 }
 
 std::unique_ptr<INode> Sequence::SymCalc(SymCalcSettings settings) const {
-  return AbstractSequence::SymCalc(std::make_unique<Sequence>(), settings);
+  return AbstractSequence::DoSymCalc(std::make_unique<Sequence>(), settings);
 }
 
 PrintSize Sequence::Render(Canvas* canvas,
@@ -20,8 +20,8 @@ PrintSize Sequence::Render(Canvas* canvas,
                            RenderBehaviour render_behaviour) const {
   render_behaviour.TakeMinus();
   render_behaviour.TakeBrackets();
-  return AbstractSequence::Render(PrintDirection::Horizontal, canvas, print_box,
-                                  dry_run, render_behaviour);
+  return AbstractSequence::DoRender(PrintDirection::Horizontal, canvas,
+                                    print_box, dry_run, render_behaviour);
 }
 
 void Sequence::Unique() {

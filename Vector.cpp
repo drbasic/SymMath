@@ -26,11 +26,11 @@ Vector::Vector(std::vector<std::unique_ptr<INode>> values)
     : AbstractSequence(std::move(values)) {}
 
 std::unique_ptr<INode> Vector::Clone() const {
-  return AbstractSequence::Clone(std::make_unique<Vector>());
+  return AbstractSequence::DoClone(std::make_unique<Vector>());
 }
 
 std::unique_ptr<INode> Vector::SymCalc(SymCalcSettings settings) const {
-  return AbstractSequence::SymCalc(std::make_unique<Vector>(), settings);
+  return AbstractSequence::DoSymCalc(std::make_unique<Vector>(), settings);
 }
 
 PrintSize Vector::Render(Canvas* canvas,
@@ -39,8 +39,8 @@ PrintSize Vector::Render(Canvas* canvas,
                          RenderBehaviour render_behaviour) const {
   render_behaviour.TakeMinus();
   render_behaviour.TakeBrackets();
-  return AbstractSequence::Render(PrintDirection::Vertical, canvas, print_box,
-                                  dry_run, render_behaviour);
+  return AbstractSequence::DoRender(PrintDirection::Vertical, canvas, print_box,
+                                    dry_run, render_behaviour);
 }
 
 void Vector::Add(std::unique_ptr<Vector> rh) {
