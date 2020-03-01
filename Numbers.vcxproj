@@ -97,6 +97,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>boost/container/include;boost/numeric_conversion/include;boost/lexical_cast/include;boost/iostreams/include;boost/smart_ptr/include;boost/array/include;boost/math/include;boost/function_types/include;boost/bind/include;boost/function/include;boost/optional/include;boost/regex/include;boost/integer/include;boost/move/include;boost/throw_exception/include;boost/container_hash/include;boost/type_index/include;boost/foreach/include;boost/variant/include;boost/assert/include;boost/concept_check/include;boost/detail/include;boost/iterator/include;boost/range/include;boost/typeof/include;boost/static_assert/include;boost/core/include;boost/proto/include;boost/predef/include;boost/phoenix/include;boost/config/include;boost/mpl/include;boost/fusion/include;boost/type_traits/include;boost/utility/include;boost/preprocessor/include;boost/spirit/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,6 +113,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>boost/container/include;boost/numeric_conversion/include;boost/lexical_cast/include;boost/iostreams/include;boost/smart_ptr/include;boost/array/include;boost/math/include;boost/function_types/include;boost/bind/include;boost/function/include;boost/optional/include;boost/regex/include;boost/integer/include;boost/move/include;boost/throw_exception/include;boost/container_hash/include;boost/type_index/include;boost/foreach/include;boost/variant/include;boost/assert/include;boost/concept_check/include;boost/detail/include;boost/iterator/include;boost/range/include;boost/typeof/include;boost/static_assert/include;boost/core/include;boost/proto/include;boost/predef/include;boost/phoenix/include;boost/config/include;boost/mpl/include;boost/fusion/include;boost/type_traits/include;boost/utility/include;boost/preprocessor/include;boost/spirit/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,6 +131,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>boost/container/include;boost/numeric_conversion/include;boost/lexical_cast/include;boost/iostreams/include;boost/smart_ptr/include;boost/array/include;boost/math/include;boost/function_types/include;boost/bind/include;boost/function/include;boost/optional/include;boost/regex/include;boost/integer/include;boost/move/include;boost/throw_exception/include;boost/container_hash/include;boost/type_index/include;boost/foreach/include;boost/variant/include;boost/assert/include;boost/concept_check/include;boost/detail/include;boost/iterator/include;boost/range/include;boost/typeof/include;boost/static_assert/include;boost/core/include;boost/proto/include;boost/predef/include;boost/phoenix/include;boost/config/include;boost/mpl/include;boost/fusion/include;boost/type_traits/include;boost/utility/include;boost/preprocessor/include;boost/spirit/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,6 +151,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>boost/container/include;boost/numeric_conversion/include;boost/lexical_cast/include;boost/iostreams/include;boost/smart_ptr/include;boost/array/include;boost/math/include;boost/function_types/include;boost/bind/include;boost/function/include;boost/optional/include;boost/regex/include;boost/integer/include;boost/move/include;boost/throw_exception/include;boost/container_hash/include;boost/type_index/include;boost/foreach/include;boost/variant/include;boost/assert/include;boost/concept_check/include;boost/detail/include;boost/iterator/include;boost/range/include;boost/typeof/include;boost/static_assert/include;boost/core/include;boost/proto/include;boost/predef/include;boost/phoenix/include;boost/config/include;boost/mpl/include;boost/fusion/include;boost/type_traits/include;boost/utility/include;boost/preprocessor/include;boost/spirit/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -175,6 +179,7 @@
     <ClCompile Include="LogOperation.cpp" />
     <ClCompile Include="MultOperation.cpp" />
     <ClCompile Include="OpInfo.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="PlusOperation.cpp" />
     <ClCompile Include="PowOperation.cpp" />
     <ClCompile Include="RenderBehaviour.cpp" />
@@ -212,6 +217,7 @@
     <ClInclude Include="LogOperation.h" />
     <ClInclude Include="MultOperation.h" />
     <ClInclude Include="OpInfo.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="PlusOperation.h" />
     <ClInclude Include="PowOperation.h" />
     <ClInclude Include="RenderBehaviour.h" />

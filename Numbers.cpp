@@ -123,7 +123,7 @@ void EulerEquation() {
   }
 }
 
-int main() {
+int main2() {
   _setmode(_fileno(stdout), _O_U16TEXT);
   // Tests::Run();
 
@@ -154,4 +154,5 @@ int main() {
   t1.Simplify();
   x = 10;
   std::wcout << t1.Print(true) << "\n";
+  return 0;
 }
